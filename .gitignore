@@ -1,0 +1,73 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+
+# Visual Studio
+.vs/
+.vscode/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Publish output
+publish/
+artifacts/
+
+# Environment files
+.env
+.env.*
+
+# App settings (si contienen información sensible)
+appsettings.Development.json
+
+# Secrets
+secrets.json
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Entity Framework
+*.dbmdl
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Test Results
+TestResults/
+coverage/
+coverage.xml
+
+# Dotnet tools
+.dotnet/
+
+# JetBrains Rider
+*.sln.iml
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Azure
+.localhistory/
+
+# Generated files
+Generated/
