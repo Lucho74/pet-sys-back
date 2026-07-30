@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "LAST_CLAUDE_COMMIT=$(git log -1 --format=%H -- CLAUDE.md 2>/dev/null); HIST_CHANGED=\"\"; if [ -n \"$LAST_CLAUDE_COMMIT\" ]; then HIST_CHANGED=$(git log \"$LAST_CLAUDE_COMMIT\"..HEAD --name-only --pretty=format: -- '*.cs' '*.csproj' '*.sln' ':!*/bin/*' ':!*/obj/*' 2>/dev/null | grep -E '\\.(cs|csproj|sln)$'); fi; WT_CHANGED=$(git status --porcelain -- . ':!CLAUDE.md' ':!*/bin/*' ':!*/obj/*' 2>/dev/null | grep -E '\\.(cs|csproj|sln)$'); WT_CLAUDE_CHANGED=$(git status --porcelain -- CLAUDE.md 2>/dev/null); if [ -n \"$WT_CLAUDE_CHANGED\" ]; then echo '{}'; elif [ -n \"$HIST_CHANGED\" ] || [ -n \"$WT_CHANGED\" ]; then echo '{\"decision\":\"block\",\"reason\":\"Hay cambios de codigo (.cs/.csproj/.sln), commiteados o no, que no se reflejaron en CLAUDE.md. Revisa si CLAUDE.md necesita actualizarse (nuevas entidades, capas, comandos o decisiones de arquitectura) antes de terminar.\"}'; else echo '{}'; fi",
+            "timeout": 15,
+            "statusMessage": "Checking if CLAUDE.md needs updating..."
+          }
+        ]
+      }
+    ]
+  }
+}
