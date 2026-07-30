@@ -20,8 +20,6 @@ namespace Domain.Entities
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
         [Required]
-        public string Time { get; set; }
-        [Required]
         public StatusConsultation Status { get; set; }
         [Required]
         [ForeignKey(nameof(Pet))]

@@ -24,7 +24,7 @@ namespace Domain.Entities
         public string Breed { get; set; }
         [Required]
         [DataType(DataType.Date)]
-        public DateTime BirthDate { get; set; }
+        public DateOnly BirthDate { get; set; }
         [Required]
         [ForeignKey(nameof(Client))]
         public string ClientId { get; set; }
