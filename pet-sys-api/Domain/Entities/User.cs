@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace Domain.Entities
         public string FullName { get; set; }
         [Required]
         [StringLength(100, MinimumLength = 6)]
+        [PasswordPropertyText]
         public string Password { get; set; }
         [Required]
         [EmailAddress]
