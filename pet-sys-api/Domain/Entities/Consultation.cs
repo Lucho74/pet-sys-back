@@ -12,7 +12,7 @@ namespace Domain.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public int Id { get; set; }
         [Required]
         [StringLength(500)]
         public string Description { get; set; }
@@ -23,12 +23,12 @@ namespace Domain.Entities
         public StatusConsultation Status { get; set; }
         [Required]
         [ForeignKey(nameof(Pet))]
-        public string PetId { get; set; }
+        public int PetId { get; set; }
         public Pet Pet { get; set; }
 
         [Required]
         [ForeignKey(nameof(Veterinarian))]
-        public string VeterinarianId { get; set; }
+        public int VeterinarianId { get; set; }
         public Veterinarian Veterinarian { get; set; }
     }
 }

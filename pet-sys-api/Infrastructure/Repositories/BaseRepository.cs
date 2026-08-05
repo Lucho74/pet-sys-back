@@ -12,10 +12,10 @@ namespace Infrastructure.Repositories
     {
         protected readonly List<T> _items = new();
 
-        public Task<T> GetByIdAsync(string id)
+        public Task<T> GetByIdAsync(int id)
         {
             var idProperty = typeof(T).GetProperty("Id");
-            var entity = _items.FirstOrDefault(e => (string)idProperty.GetValue(e) == id);
+            var entity = _items.FirstOrDefault(e => (int)idProperty.GetValue(e) == id);
             return Task.FromResult(entity);
         }
 
@@ -40,21 +40,21 @@ namespace Infrastructure.Repositories
         public Task UpdateAsync(T entity)
         {
             var idProperty = typeof(T).GetProperty("Id");
-            var id = (string)idProperty.GetValue(entity);
-            var index = _items.FindIndex(e => (string)idProperty.GetValue(e) == id);
+            var id = (int)idProperty.GetValue(entity);
+            var index = _items.FindIndex(e => (int)idProperty.GetValue(e) == id);
             if (index != -1)
                 _items[index] = entity;
             return Task.CompletedTask;
         }
 
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(int id)
         {
             var entity = await GetByIdAsync(id);
             if (entity != null)
                 _items.Remove(entity);
         }
 
-        public async Task<bool> ExistsAsync(string id)
+        public async Task<bool> ExistsAsync(int id)
         {
             var entity = await GetByIdAsync(id);
             return entity != null;
