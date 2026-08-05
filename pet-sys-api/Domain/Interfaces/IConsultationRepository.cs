@@ -9,7 +9,7 @@ namespace Domain.Interfaces
 {
     public interface IConsultationRepository : IBaseRepository<Consultation>
     {
-        Task<IEnumerable<Consultation>> GetByVeterinarianIdAsync(string veterinarianId);
+        Task<IEnumerable<Consultation>> GetByVeterinarianIdAsync(int veterinarianId);
         Task<IEnumerable<Consultation>> GetByStatusAsync(StatusConsultation status);
     }
 }

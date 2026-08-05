@@ -12,7 +12,7 @@ namespace Domain.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public int Id { get; set; }
         [Required]
         [StringLength(50)]
         public string Name { get; set; }
@@ -27,7 +27,7 @@ namespace Domain.Entities
         public DateOnly BirthDate { get; set; }
         [Required]
         [ForeignKey(nameof(Client))]
-        public string ClientId { get; set; }
+        public int ClientId { get; set; }
         public Client Client { get; set; }
 
         public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
