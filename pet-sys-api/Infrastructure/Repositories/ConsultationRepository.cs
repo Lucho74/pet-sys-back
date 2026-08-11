@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    internal class ConsultationRepository : BaseRepository<Consultation>, IConsultationRepository
+    public class ConsultationRepository : BaseRepository<Consultation>, IConsultationRepository
     {
         public ConsultationRepository(ApplicationDbContext context) : base(context)
         {
