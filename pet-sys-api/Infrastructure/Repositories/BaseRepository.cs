@@ -1,72 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Domain.Interfaces;
+using Infrastructure.Context;
 
 namespace Infrastructure.Repositories
 {
-    public class BaseRepository<T> : IBaseRepository<T> where T : class
+    public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
     {
-        protected readonly List<T> _items = new();
+        public readonly ApplicationDbContext _context;
 
-        private static readonly PropertyInfo IdProperty = typeof(T).GetProperty("Id")
-            ?? throw new InvalidOperationException($"{typeof(T).Name} does not have an 'Id' property.");
-
-        public Task<T> GetByIdAsync(int id)
+        public BaseRepository(ApplicationDbContext context)
         {
-            var entity = FindById(id);
-            if (entity == null)
-                throw new KeyNotFoundException($"{typeof(T).Name} with Id {id} was not found.");
-            return Task.FromResult(entity);
+            _context = context;
         }
 
-        private T? FindById(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
-            return _items.FirstOrDefault(e => (int)IdProperty.GetValue(e)! == id);
+            var entity = await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
+            return entity;
         }
 
-        public Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return Task.FromResult(_items.AsEnumerable());
+            return await _context.Set<T>().ToListAsync();
         }
 
-        public Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            var compiled = predicate.Compile();
-            var result = _items.Where(compiled);
-            return Task.FromResult(result);
+            return await _context.Set<T>().Where(predicate).ToListAsync();
         }
 
-        public Task<T> AddAsync(T entity)
+        public async Task<T> AddAsync(T entity)
         {
-            _items.Add(entity);
-            return Task.FromResult(entity);
+            _context.Set<T>().Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
 
-        public Task UpdateAsync(T entity)
+        public async Task<T?> UpdateAsync(int id, T entity)
         {
-            var id = (int)IdProperty.GetValue(entity)!;
-            var index = _items.FindIndex(e => (int)IdProperty.GetValue(e)! == id);
-            if (index != -1)
-                _items[index] = entity;
-            return Task.CompletedTask;
+            var existingEntity = await _context.Set<T>().FindAsync(id);
+            if (existingEntity == null)
+            {
+                return null;
+            }
+
+            _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+            await _context.SaveChangesAsync();
+            return existingEntity;
         }
 
-        public Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            var entity = FindById(id);
-            if (entity != null)
-                _items.Remove(entity);
-            return Task.CompletedTask;
+            var entity = await _context.Set<T>().FindAsync(id);
+
+            if (entity is not null)
+            {
+                _context.Set<T>().Remove(entity);
+                await _context.SaveChangesAsync();
+            }
         }
 
-        public Task<bool> ExistsAsync(int id)
+        public async Task<bool> ExistsAsync(int id)
         {
-            return Task.FromResult(FindById(id) != null);
+            return await _context.Set<T>().AnyAsync(e => e.Id == id);
         }
     }
 }
