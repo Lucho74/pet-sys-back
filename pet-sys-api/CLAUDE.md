@@ -32,6 +32,8 @@ dotnet run --project Web           # run the API (Swagger UI opens automatically
 dotnet watch --project Web run     # run with hot reload
 dotnet ef migrations add <Name> --project Infrastructure --startup-project Web   # add an EF Core migration
 dotnet ef database update --project Infrastructure --startup-project Web        # apply migrations to the DB
+dotnet test                                                                      # run every test project
+dotnet test --filter FullyQualifiedName~TestName                                 # run a single test
 ```
 
 First-time setup needs the Postgres connection string in user secrets (never in `appsettings.json` — see Cross-cutting decisions):
@@ -39,8 +41,6 @@ First-time setup needs the Postgres connection string in user secrets (never in 
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<value>" --project Web
 ```
 Get `<value>` from a teammate out-of-band (password manager / DM), not from git.
-
-There is no test project yet. When one is added, run a single test with `dotnet test --filter FullyQualifiedName~TestName`.
 
 The Web project launches on `http://localhost:5079` (see `Web/Properties/launchSettings.json`), with Swagger UI at `/swagger` in the Development environment. `Web/Web.http` is a scratch file for manual REST Client requests against the running API.
 
@@ -76,5 +76,5 @@ Domain  <-  Application  <-  Infrastructure  <-  Web
 - **Auth**: JWT-based authentication, with ASP.NET Core Identity used specifically for password hashing (not the full Identity user-management stack).
 - **DTO mapping**: manual mapping (constructors/explicit mapper methods) between `Domain` entities and Application/Web DTOs — no AutoMapper or similar.
 - **Persistence**: PostgreSQL via EF Core/Npgsql (decided — see Architecture/Infrastructure above). Connection string is **never committed**: it lives in `dotnet user-secrets` locally (`Web`/`Infrastructure` share one `UserSecretsId` so the `dotnet ef` design-time factory can read it too) and must be injected as a `ConnectionStrings__DefaultConnection` env var / GitHub Actions secret in CI. `Web/appsettings.json` only holds an empty placeholder for that key — do not put a real value back into it.
-- **Testing**: no test project exists yet; framework not decided.
+- **Testing**: xUnit, one test project per layer (mirrors the Clean Architecture split), added as each layer gets testable behavior rather than scaffolded up front. `Domain.Tests` covers entity `DataAnnotations` validation; `Infrastructure.Tests` covers `BaseRepository<T>` behavior (not-found/no-op semantics noted above). No `Application.Tests`/`Web.Tests` yet since those layers have no logic to test.
 - **Frontend**: a separate SPA (React/Angular/etc., own repo) will consume this API — keep CORS configuration in mind in `Web/Program.cs` once endpoints are built out.
