@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    internal class PetRepository : BaseRepository<Pet>, IPetRepository
+    public class PetRepository : BaseRepository<Pet>, IPetRepository
     {
         public PetRepository(ApplicationDbContext context) : base(context)
         {
