@@ -12,6 +12,8 @@ namespace Infrastructure.Context
             var config = new ConfigurationBuilder()
                 .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..\\Web"))
                 .AddJsonFile("appsettings.json")
+                .AddUserSecrets<ApplicationDbContextFactory>(optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             var connectionString = config.GetConnectionString("DefaultConnection");
