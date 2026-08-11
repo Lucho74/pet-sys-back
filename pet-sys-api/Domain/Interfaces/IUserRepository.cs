@@ -9,7 +9,7 @@ namespace Domain.Interfaces
 {
     public interface IUserRepository : IBaseRepository<User>
     {
-        Task<User> GetByEmailAsync(string email);
+        Task<User?> GetByEmailAsync(string email);
         Task<IEnumerable<T>> GetByRoleAsync<T>() where T : User;
     }
 }
