@@ -1,57 +1,64 @@
 using Domain.Entities;
 using Infrastructure.Repositories;
+using Infrastructure.Tests.TestHelpers;
 
 namespace Infrastructure.Tests.Repositories
 {
     public class BaseRepositoryTests
     {
-        private static Pet CreatePet(int id, string name = "Firulais") => new()
-        {
-            Id = id,
-            Name = name,
-            Specie = "Dog",
-            Breed = "Labrador",
-            BirthDate = new DateOnly(2020, 1, 1),
-            ClientId = 1,
-        };
-
         [Fact]
-        public async Task AddAsync_ReturnsTheSameEntity()
+        public async Task AddAsync_ReturnsTheSameEntityWithGeneratedId()
         {
-            var repository = new BaseRepository<Pet>();
-            var pet = CreatePet(1);
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            var pet = EntityFactory.CreatePet(client.Id);
 
             var added = await repository.AddAsync(pet);
 
             Assert.Same(pet, added);
+            Assert.NotEqual(0, added.Id);
         }
 
         [Fact]
         public async Task GetByIdAsync_ExistingId_ReturnsEntity()
         {
-            var repository = new BaseRepository<Pet>();
-            var pet = CreatePet(1);
-            await repository.AddAsync(pet);
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            var pet = await repository.AddAsync(EntityFactory.CreatePet(client.Id));
 
-            var found = await repository.GetByIdAsync(1);
+            var found = await repository.GetByIdAsync(pet.Id);
 
-            Assert.Same(pet, found);
+            Assert.NotNull(found);
+            Assert.Equal(pet.Id, found!.Id);
         }
 
         [Fact]
-        public async Task GetByIdAsync_MissingId_ThrowsKeyNotFoundException()
+        public async Task GetByIdAsync_MissingId_ReturnsNull()
         {
-            var repository = new BaseRepository<Pet>();
+            using var context = InMemoryDbContextFactory.Create();
+            var repository = new BaseRepository<Pet>(context);
 
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => repository.GetByIdAsync(999));
+            var found = await repository.GetByIdAsync(999);
+
+            Assert.Null(found);
         }
 
         [Fact]
         public async Task GetAllAsync_ReturnsEveryAddedEntity()
         {
-            var repository = new BaseRepository<Pet>();
-            await repository.AddAsync(CreatePet(1));
-            await repository.AddAsync(CreatePet(2));
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            await repository.AddAsync(EntityFactory.CreatePet(client.Id, "Firulais"));
+            await repository.AddAsync(EntityFactory.CreatePet(client.Id, "Michi"));
 
             var all = await repository.GetAllAsync();
 
@@ -61,54 +68,74 @@ namespace Infrastructure.Tests.Repositories
         [Fact]
         public async Task FindAsync_ReturnsOnlyEntitiesMatchingPredicate()
         {
-            var repository = new BaseRepository<Pet>();
-            await repository.AddAsync(CreatePet(1, "Firulais"));
-            await repository.AddAsync(CreatePet(2, "Michi"));
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            await repository.AddAsync(EntityFactory.CreatePet(client.Id, "Firulais"));
+            var michi = await repository.AddAsync(EntityFactory.CreatePet(client.Id, "Michi"));
 
             var found = await repository.FindAsync(p => p.Name == "Michi");
 
             var match = Assert.Single(found);
-            Assert.Equal(2, match.Id);
+            Assert.Equal(michi.Id, match.Id);
         }
 
         [Fact]
-        public async Task UpdateAsync_ExistingId_ReplacesStoredEntity()
+        public async Task UpdateAsync_ExistingId_ReplacesStoredEntityAndReturnsIt()
         {
-            var repository = new BaseRepository<Pet>();
-            await repository.AddAsync(CreatePet(1, "Firulais"));
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            var pet = await repository.AddAsync(EntityFactory.CreatePet(client.Id, "Firulais"));
+            var replacement = EntityFactory.CreatePet(client.Id, "Renamed");
+            replacement.Id = pet.Id;
 
-            await repository.UpdateAsync(CreatePet(1, "Renamed"));
+            var updated = await repository.UpdateAsync(pet.Id, replacement);
 
-            var found = await repository.GetByIdAsync(1);
-            Assert.Equal("Renamed", found.Name);
+            Assert.NotNull(updated);
+            Assert.Equal("Renamed", updated!.Name);
+            var found = await repository.GetByIdAsync(pet.Id);
+            Assert.Equal("Renamed", found!.Name);
         }
 
         [Fact]
-        public async Task UpdateAsync_MissingId_DoesNotAddOrThrow()
+        public async Task UpdateAsync_MissingId_ReturnsNull()
         {
-            var repository = new BaseRepository<Pet>();
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
 
-            await repository.UpdateAsync(CreatePet(999));
+            var updated = await repository.UpdateAsync(999, EntityFactory.CreatePet(client.Id));
 
-            var all = await repository.GetAllAsync();
-            Assert.Empty(all);
+            Assert.Null(updated);
         }
 
         [Fact]
         public async Task DeleteAsync_ExistingId_RemovesEntity()
         {
-            var repository = new BaseRepository<Pet>();
-            await repository.AddAsync(CreatePet(1));
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            var pet = await repository.AddAsync(EntityFactory.CreatePet(client.Id));
 
-            await repository.DeleteAsync(1);
+            await repository.DeleteAsync(pet.Id);
 
-            Assert.False(await repository.ExistsAsync(1));
+            Assert.False(await repository.ExistsAsync(pet.Id));
         }
 
         [Fact]
         public async Task DeleteAsync_MissingId_DoesNotThrow()
         {
-            var repository = new BaseRepository<Pet>();
+            using var context = InMemoryDbContextFactory.Create();
+            var repository = new BaseRepository<Pet>(context);
 
             var exception = await Record.ExceptionAsync(() => repository.DeleteAsync(999));
 
@@ -118,16 +145,21 @@ namespace Infrastructure.Tests.Repositories
         [Fact]
         public async Task ExistsAsync_ExistingId_ReturnsTrue()
         {
-            var repository = new BaseRepository<Pet>();
-            await repository.AddAsync(CreatePet(1));
+            using var context = InMemoryDbContextFactory.Create();
+            var client = EntityFactory.CreateClient();
+            context.Clients.Add(client);
+            await context.SaveChangesAsync();
+            var repository = new BaseRepository<Pet>(context);
+            var pet = await repository.AddAsync(EntityFactory.CreatePet(client.Id));
 
-            Assert.True(await repository.ExistsAsync(1));
+            Assert.True(await repository.ExistsAsync(pet.Id));
         }
 
         [Fact]
         public async Task ExistsAsync_MissingId_ReturnsFalse()
         {
-            var repository = new BaseRepository<Pet>();
+            using var context = InMemoryDbContextFactory.Create();
+            var repository = new BaseRepository<Pet>(context);
 
             Assert.False(await repository.ExistsAsync(999));
         }
