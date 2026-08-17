@@ -1,7 +1,5 @@
-﻿using Application.Services;
-using Microsoft.AspNetCore.Http;
+using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Application.Services;
 using Application.Models;
 
 namespace Web.Controllers
@@ -10,8 +8,8 @@ namespace Web.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserServices _userServices;
-        public UserController(UserServices userServices)
+        private readonly IUserServices _userServices;
+        public UserController(IUserServices userServices)
         {
             _userServices = userServices;
         }
@@ -20,10 +18,6 @@ namespace Web.Controllers
         public async Task<IActionResult> GetAllUser()
         {
             var users = await _userServices.GetAllUserAsync();
-            if (users == null || !users.Any())
-            {
-                return NotFound("No users found.");
-            }
             return Ok(users);
         }
 
@@ -31,14 +25,11 @@ namespace Web.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userServices.GetUserByIdAsync(id);
-            if (user == null) return NotFound();
             return Ok(user);
         }
 
-
-
         [HttpPost("")]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserDTO dto)
+        public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
             var created = await _userServices.AddUserAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -48,15 +39,13 @@ namespace Web.Controllers
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDTO dto)
         {
             var updated = await _userServices.UpdateUserAsync(id, dto);
-            if (updated == null) return NotFound();
             return Ok(updated);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var deleted = await _userServices.DeleteUserAsync(id);
-            if (!deleted) return NotFound();
+            await _userServices.DeleteUserAsync(id);
             return NoContent();
         }
     }

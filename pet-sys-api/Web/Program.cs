@@ -1,9 +1,12 @@
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
+using Application.Interfaces;
 using Application.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Web.ExceptionHandling;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Add services to the container.
 
+builder.Services.AddExceptionHandler<AppExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 #region Repositories
 
@@ -23,7 +28,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 #region Services
 
-builder.Services.AddScoped<UserServices>();
+builder.Services.AddScoped<IUserServices, UserServices>();
 
 
 #endregion
@@ -35,6 +40,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
