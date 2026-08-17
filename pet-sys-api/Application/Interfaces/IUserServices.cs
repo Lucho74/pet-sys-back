@@ -1,13 +1,15 @@
-﻿using Domain.Interfaces;
-using System;
+using Application.Models;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.Interfaces
 {
-    public interface IUserServices 
+    public interface IUserServices
     {
+        Task<IEnumerable<UserDTO>> GetAllUserAsync();
+        Task<UserDTO> GetUserByIdAsync(int id);
+        Task<UserDTO> AddUserAsync(CreateUserDTO dto);
+        Task<UserDTO> UpdateUserAsync(int id, UserDTO dto);
+        Task DeleteUserAsync(int id);
     }
 }

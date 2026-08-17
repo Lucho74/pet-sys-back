@@ -1,16 +1,15 @@
-﻿using Application.Interfaces;
+using Application.Exceptions;
+using Application.Interfaces;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.Services
 {
-    public class UserServices
+    public class UserServices : IUserServices
     {
         public readonly IUserRepository _userRepository;
 
@@ -19,44 +18,54 @@ namespace Application.Services
             _userRepository = userRepository;
         }
 
-        public async Task<IEnumerable<UserDTO>?> GetAllUserAsync()
+        public async Task<IEnumerable<UserDTO>> GetAllUserAsync()
         {
-            IEnumerable<User> user = await _userRepository.GetAllAsync();
-            return user.Select(u => new UserDTO
+            var users = await _userRepository.GetAllAsync();
+            var userList = users.ToList();
+            if (userList.Count == 0)
             {
-                Id = u.Id,
-                FullName = u.FullName,
-                Email = u.Email,
-                Phone = u.Phone,
-                IsDeleted = u.IsDeleted
+                throw new NotFoundException("No users found.");
+            }
+
+            return userList.Select(user => new UserDTO
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                IsDeleted = user.IsDeleted
             });
         }
 
-        public async Task<UserDTO?> GetUserByIdAsync(int id)
+        public async Task<UserDTO> GetUserByIdAsync(int id)
         {
-            var u = await _userRepository.GetByIdAsync(id);
-            if (u == null) return null;
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
+
             return new UserDTO
             {
-                Id = u.Id,
-                FullName = u.FullName,
-                Email = u.Email,
-                Phone = u.Phone,
-                IsDeleted = u.IsDeleted
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                IsDeleted = user.IsDeleted
             };
         }
 
-        public async Task<UserDTO?> AddUserAsync(CreateUserDTO dto)
+        public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
-            var user = new Domain.Entities.Client
+            var newClient = new Client
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 Phone = dto.Phone,
-                Password = dto.Password ?? string.Empty 
+                Password = dto.Password ?? string.Empty
             };
 
-            var created = await _userRepository.AddAsync(user);
+            var created = await _userRepository.AddAsync(newClient);
             return new UserDTO
             {
                 Id = created.Id,
@@ -67,10 +76,13 @@ namespace Application.Services
             };
         }
 
-        public async Task<UserDTO?> UpdateUserAsync(int id, UserDTO dto)
+        public async Task<UserDTO> UpdateUserAsync(int id, UserDTO dto)
         {
             var existing = await _userRepository.GetByIdAsync(id);
-            if (existing == null) return null;
+            if (existing == null)
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
 
             existing.FullName = dto.FullName;
             existing.Email = dto.Email;
@@ -81,7 +93,11 @@ namespace Application.Services
             }
 
             var updated = await _userRepository.UpdateAsync(id, existing);
-            if (updated == null) return null;
+            if (updated == null)
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
+
             return new UserDTO
             {
                 Id = updated.Id,
@@ -92,12 +108,15 @@ namespace Application.Services
             };
         }
 
-        public async Task<bool> DeleteUserAsync(int id)
+        public async Task DeleteUserAsync(int id)
         {
             var exists = await _userRepository.ExistsAsync(id);
-            if (!exists) return false;
+            if (!exists)
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
+
             await _userRepository.DeleteAsync(id);
-            return true;
         }
     }
 }
