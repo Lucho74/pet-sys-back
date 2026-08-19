@@ -31,7 +31,15 @@ namespace Application.Services
                 throw new NotFoundException("No consultations found.");
             }
 
-            return consultationList.Select(MapToDTO);
+            return consultationList.Select(consultation => new ConsultationDTO
+            {
+                Id = consultation.Id,
+                Description = consultation.Description,
+                Date = consultation.Date,
+                Status = consultation.Status,
+                PetId = consultation.PetId,
+                VeterinarianId = consultation.VeterinarianId
+            });
         }
 
         public async Task<ConsultationDTO> GetConsultationByIdAsync(int id)
@@ -42,7 +50,15 @@ namespace Application.Services
                 throw new NotFoundException($"Consultation with id {id} was not found.");
             }
 
-            return MapToDTO(consultation);
+            return new ConsultationDTO
+            {
+                Id = consultation.Id,
+                Description = consultation.Description,
+                Date = consultation.Date,
+                Status = consultation.Status,
+                PetId = consultation.PetId,
+                VeterinarianId = consultation.VeterinarianId
+            };
         }
 
         public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto)
@@ -67,7 +83,15 @@ namespace Application.Services
             };
 
             var created = await _consultationRepository.AddAsync(consultation);
-            return MapToDTO(created);
+            return new ConsultationDTO
+            {
+                Id = created.Id,
+                Description = created.Description,
+                Date = created.Date,
+                Status = created.Status,
+                PetId = created.PetId,
+                VeterinarianId = created.VeterinarianId
+            };
         }
 
         public async Task<ConsultationDTO> UpdateConsultationAsync(int id, ConsultationDTO dto)
@@ -100,7 +124,15 @@ namespace Application.Services
                 throw new NotFoundException($"Consultation with id {id} was not found.");
             }
 
-            return MapToDTO(updated);
+            return new ConsultationDTO
+            {
+                Id = updated.Id,
+                Description = updated.Description,
+                Date = updated.Date,
+                Status = updated.Status,
+                PetId = updated.PetId,
+                VeterinarianId = updated.VeterinarianId
+            };
         }
 
         public async Task DeleteConsultationAsync(int id)
@@ -123,7 +155,15 @@ namespace Application.Services
                 throw new NotFoundException($"No consultations found for pet with id {petId}.");
             }
 
-            return consultationList.Select(MapToDTO);
+            return consultationList.Select(consultation => new ConsultationDTO
+            {
+                Id = consultation.Id,
+                Description = consultation.Description,
+                Date = consultation.Date,
+                Status = consultation.Status,
+                PetId = consultation.PetId,
+                VeterinarianId = consultation.VeterinarianId
+            });
         }
 
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId)
@@ -135,7 +175,15 @@ namespace Application.Services
                 throw new NotFoundException($"No consultations found for veterinarian with id {veterinarianId}.");
             }
 
-            return consultationList.Select(MapToDTO);
+            return consultationList.Select(consultation => new ConsultationDTO
+            {
+                Id = consultation.Id,
+                Description = consultation.Description,
+                Date = consultation.Date,
+                Status = consultation.Status,
+                PetId = consultation.PetId,
+                VeterinarianId = consultation.VeterinarianId
+            });
         }
 
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByStatusAsync(StatusConsultation status)
@@ -147,12 +195,7 @@ namespace Application.Services
                 throw new NotFoundException($"No consultations found with status {status}.");
             }
 
-            return consultationList.Select(MapToDTO);
-        }
-
-        private static ConsultationDTO MapToDTO(Consultation consultation)
-        {
-            return new ConsultationDTO
+            return consultationList.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
                 Description = consultation.Description,
@@ -160,7 +203,7 @@ namespace Application.Services
                 Status = consultation.Status,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId
-            };
+            });
         }
     }
 }
