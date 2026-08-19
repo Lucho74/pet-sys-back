@@ -3,7 +3,7 @@ using Domain.Interfaces;
 using Infrastructure.Context;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +27,13 @@ namespace Infrastructure.Repositories
         {
             return await _context.Set<Consultation>()
                 .Where(c => c.VeterinarianId == veterinarianId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Consultation>> GetByPetIdAsync(int petId)
+        {
+            return await _context.Set<Consultation>()
+                .Where(c => c.PetId == petId)
                 .ToListAsync();
         }
     }
