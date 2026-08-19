@@ -23,12 +23,14 @@ builder.Services.AddProblemDetails();
 #region Repositories
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPetRepository, PetRepository>();
 
 #endregion
 
 #region Services
 
 builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddScoped<IPetServices, PetServices>();
 
 
 #endregion
