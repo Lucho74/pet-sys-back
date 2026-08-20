@@ -24,6 +24,7 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPetRepository, PetRepository>();
+builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 
 #endregion
 
@@ -31,6 +32,7 @@ builder.Services.AddScoped<IPetRepository, PetRepository>();
 
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPetServices, PetServices>();
+builder.Services.AddScoped<IConsultationServices, ConsultationServices>();
 
 
 #endregion
