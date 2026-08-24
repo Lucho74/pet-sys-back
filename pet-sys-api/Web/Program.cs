@@ -39,6 +39,18 @@ builder.Services.AddScoped<IConsultationServices, ConsultationServices>();
 
 
 builder.Services.AddControllers();
+
+// Configurar CORS para permitir cualquier origen, cabecera y método
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -55,6 +67,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Habilitar la política CORS globalmente
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
