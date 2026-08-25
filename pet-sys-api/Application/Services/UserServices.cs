@@ -5,6 +5,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -35,6 +36,7 @@ namespace Application.Services
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
                 RoleName = user.GetType().Name,
+                Dni = user is Client client ? client.Dni : null
             });
         }
 

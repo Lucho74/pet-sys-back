@@ -18,5 +18,8 @@ namespace Application.Models
         public string? Password { get; set; }
         public bool IsDeleted { get; set; } = false;
         public string RoleName { get; set; }
+        [StringLength(20)]
+        public string? Dni { get; set; }
+
     }
 }
