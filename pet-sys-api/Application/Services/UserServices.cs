@@ -33,7 +33,8 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted
+                IsDeleted = user.IsDeleted,
+                RoleName = user.GetType().Name,
             });
         }
 
@@ -51,28 +52,57 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted
+                IsDeleted = user.IsDeleted,
+                RoleName = user.GetType().Name,
             };
         }
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
-            var newClient = new Client
+            User newUser;
+            switch (dto.UserType)
             {
-                FullName = dto.FullName,
-                Email = dto.Email,
-                Phone = dto.Phone,
-                Password = dto.Password ?? string.Empty
-            };
+                case UserType.Veterinarian:
+                    newUser = new Veterinarian
+                    {
+                        FullName = dto.FullName,
+                        Email = dto.Email,
+                        Phone = dto.Phone,
+                        Password = dto.Password ?? string.Empty
+                    };
+                    break;
+                case UserType.Admin:
+                    newUser = new Admin
+                    {
+                        FullName = dto.FullName,
+                        Email = dto.Email,
+                        Phone = dto.Phone,
+                        Password = dto.Password ?? string.Empty
+                    };
+                    break;
+                case UserType.Client:
+                default:
+                    newUser = new Client
+                    {
+                        FullName = dto.FullName,
+                        Email = dto.Email,
+                        Phone = dto.Phone,
+                        Password = dto.Password ?? string.Empty,
+                        Dni = dto.Dni ?? string.Empty
+                    };
+                    break;
+            }
 
-            var created = await _userRepository.AddAsync(newClient);
+            var created = await _userRepository.AddAsync(newUser);
             return new UserDTO
             {
                 Id = created.Id,
                 FullName = created.FullName,
                 Email = created.Email,
                 Phone = created.Phone,
-                IsDeleted = created.IsDeleted
+                IsDeleted = created.IsDeleted,
+                RoleName = created.GetType().Name,
+
             };
         }
 
@@ -104,7 +134,8 @@ namespace Application.Services
                 FullName = updated.FullName,
                 Email = updated.Email,
                 Phone = updated.Phone,
-                IsDeleted = updated.IsDeleted
+                IsDeleted = updated.IsDeleted,
+                RoleName = updated.GetType().Name,
             };
         }
 
