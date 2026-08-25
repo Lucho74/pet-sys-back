@@ -17,5 +17,6 @@ namespace Application.Models
         [StringLength(100, MinimumLength = 6)]
         public string? Password { get; set; }
         public bool IsDeleted { get; set; } = false;
+        public string RoleName { get; set; }
     }
 }
