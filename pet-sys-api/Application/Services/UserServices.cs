@@ -13,10 +13,12 @@ namespace Application.Services
     public class UserServices : IUserServices
     {
         public readonly IUserRepository _userRepository;
+        public readonly IPasswordHasher _passwordHasher;
 
-        public UserServices(IUserRepository userRepository)
+        public UserServices(IUserRepository userRepository, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<IEnumerable<UserDTO>> GetAllUserAsync()
@@ -70,7 +72,7 @@ namespace Application.Services
                         FullName = dto.FullName,
                         Email = dto.Email,
                         Phone = dto.Phone,
-                        Password = dto.Password ?? string.Empty
+                        Password = _passwordHasher.HashPassword(dto.Password)
                     };
                     break;
                 case UserType.Admin:
@@ -79,7 +81,7 @@ namespace Application.Services
                         FullName = dto.FullName,
                         Email = dto.Email,
                         Phone = dto.Phone,
-                        Password = dto.Password ?? string.Empty
+                        Password = _passwordHasher.HashPassword(dto.Password)
                     };
                     break;
                 case UserType.Client:
@@ -89,7 +91,7 @@ namespace Application.Services
                         FullName = dto.FullName,
                         Email = dto.Email,
                         Phone = dto.Phone,
-                        Password = dto.Password ?? string.Empty,
+                        Password = _passwordHasher.HashPassword(dto.Password),
                         Dni = dto.Dni ?? string.Empty
                     };
                     break;
@@ -121,7 +123,7 @@ namespace Application.Services
             existing.Phone = dto.Phone;
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
-                existing.Password = dto.Password;
+                existing.Password = _passwordHasher.HashPassword(dto.Password);
             }
 
             var updated = await _userRepository.UpdateAsync(id, existing);

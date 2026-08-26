@@ -33,6 +33,7 @@ builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPetServices, PetServices>();
 builder.Services.AddScoped<IConsultationServices, ConsultationServices>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 
 #endregion
