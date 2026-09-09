@@ -15,7 +15,7 @@ namespace Application.Models
         public string Breed { get; set; }
         [Required]
         public DateOnly BirthDate { get; set; }
-        [Range(1, int.MaxValue, ErrorMessage = "ClientId must reference an existing client.")]
+        [Range(1, int.MaxValue, ErrorMessage = "ClientId must be a positive number.")]
         public int ClientId { get; set; }
     }
 }
