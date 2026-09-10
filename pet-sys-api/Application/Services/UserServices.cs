@@ -95,6 +95,8 @@ namespace Application.Services
                     break;
             }
 
+            newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
+
             var created = await _userRepository.AddAsync(newUser);
             return new UserDTO
             {
@@ -121,7 +123,7 @@ namespace Application.Services
             existing.Phone = dto.Phone;
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
-                existing.Password = dto.Password;
+                existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
             var updated = await _userRepository.UpdateAsync(id, existing);
@@ -150,6 +152,26 @@ namespace Application.Services
             }
 
             await _userRepository.DeleteAsync(id);
+        }
+
+        public async Task<UserDTO> AuthenticateAsync(LoginDTO dto)
+        {
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+            if (user == null || user.IsDeleted)
+            {
+                throw new UnauthorizedException("Invalid email or password.");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+            {
+                throw new UnauthorizedException("Invalid email or password.");
+            }
+
+            return new UserDTO
+            {
+                Id = user.Id,
+                RoleName = user.GetType().Name
+            };
         }
     }
 }
