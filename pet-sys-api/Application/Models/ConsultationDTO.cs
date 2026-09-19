@@ -13,9 +13,9 @@ namespace Application.Models
         public DateTime Date { get; set; }
         [Required]
         public StatusConsultation Status { get; set; }
-        [Range(1, int.MaxValue, ErrorMessage = "PetId must reference an existing pet.")]
+        [Range(1, int.MaxValue, ErrorMessage = "PetId must be a positive number.")]
         public int PetId { get; set; }
-        [Range(1, int.MaxValue, ErrorMessage = "VeterinarianId must reference an existing veterinarian.")]
+        [Range(1, int.MaxValue, ErrorMessage = "VeterinarianId must be a positive number.")]
         public int VeterinarianId { get; set; }
     }
 }
