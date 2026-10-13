@@ -2,7 +2,7 @@
 -- 105 usuarios (5 Admin, 15 Veterinarian, 85 Client), 20 mascotas y 40 consultas.
 -- Todos los usuarios tienen la contraseña: Password123!  (guardada como hash BCrypt)
 --
--- Requisitos: la base tiene que tener el esquema creado (migraciones aplicadas; la API lo hace sola al arrancar).
+-- Requisitos: la base tiene que tener el esquema creado (migraciones aplicadas; lo hace el workflow de deploy).
 -- Si la tabla Users ya tiene filas, el script no inserta nada.
 -- Las fechas de las consultas son relativas al día en que se corre: las futuras quedan Pending.
 -- Si cambian las entidades/migraciones, este script se tiene que actualizar a mano.

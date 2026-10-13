@@ -17,7 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, x =>
-        x.MigrationsAssembly("Infrastructure")));
+    {
+        x.MigrationsAssembly("Infrastructure");
+    }));
 
 // Add services to the container.
 
@@ -101,11 +103,6 @@ builder.Services.AddSwaggerGen(setupAction =>
 });
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
-}
 
 app.UseExceptionHandler();
 

@@ -8,6 +8,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - prod
 
 jobs:
   build:
@@ -23,11 +32,9 @@ jobs:
         with:
           dotnet-version: '8.x'
 
-      # Builds the whole solution.
       - name: Build with dotnet
         run: dotnet build pet-sys-api/pet-sys-api.sln --configuration Release
 
-      # Only the API is deployed.
       - name: dotnet publish
         run: dotnet publish pet-sys-api/Web/Web.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
@@ -40,28 +47,96 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
 
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-      
+          path: ./publish
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2C33AE4885BC447FA6A98B1C61267000 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0FFF51727A8F4FE3B09DF61856648FB1 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2B59D3620B3546F5849E5EF9DF641329 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Restore dotnet-ef tool
+        working-directory: pet-sys-api
+        run: dotnet tool restore
+
+      - name: Restore NuGet packages
+        run: dotnet restore pet-sys-api/Web/Web.csproj
+
+      - name: Allow runner IP on SQL server firewall
+        shell: bash
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "RUNNER_IP=$RUNNER_IP" >> "$GITHUB_ENV"
+          az sql server firewall-rule create \
+            --resource-group "${{ vars.AZURE_SQL_RESOURCE_GROUP }}" \
+            --server "${{ vars.AZURE_SQL_SERVER_NAME }}" \
+            --name "github-runner-${{ github.run_id }}" \
+            --start-ip-address "$RUNNER_IP" \
+            --end-ip-address "$RUNNER_IP"
+
+      - name: Wake up database
+        shell: pwsh
+        env:
+          SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        run: |
+          $builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder($env:SQL_CONNECTION_STRING)
+          $builder["Connect Timeout"] = 60
+          $maxAttempts = 3
+          for ($i = 1; $i -le $maxAttempts; $i++) {
+            try {
+              $conn = New-Object System.Data.SqlClient.SqlConnection($builder.ConnectionString)
+              $conn.Open()
+              $cmd = $conn.CreateCommand()
+              $cmd.CommandText = "SELECT 1"
+              $cmd.ExecuteScalar() | Out-Null
+              $conn.Close()
+              Write-Host "Database is online (attempt $i)"
+              exit 0
+            } catch {
+              Write-Host "Attempt $i/$maxAttempts failed: $($_.Exception.Message)"
+              Start-Sleep -Seconds 15
+            }
+          }
+          Write-Error "Database did not wake up after $maxAttempts attempts"
+          exit 1
+
+      - name: Update database with EF Core migrations
+        working-directory: pet-sys-api
+        run: dotnet ef database update --project Infrastructure/Infrastructure.csproj --startup-project Web/Web.csproj
+        env:
+          ConnectionStrings__DefaultConnection: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+
+      - name: Remove runner IP from SQL server firewall
+        if: always()
+        shell: bash
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group "${{ vars.AZURE_SQL_RESOURCE_GROUP }}" \
+            --server "${{ vars.AZURE_SQL_SERVER_NAME }}" \
+            --name "github-runner-${{ github.run_id }}" || true
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'pet-sys-app'
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
           slot-name: 'Production'
-          package: .
-          
+          package: ./publish
