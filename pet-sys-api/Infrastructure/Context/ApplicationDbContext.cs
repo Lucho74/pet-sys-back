@@ -24,7 +24,8 @@ namespace Infrastructure.Context
                 .HasDiscriminator<string>("UserType")
                 .HasValue<Admin>("Admin")
                 .HasValue<Client>("Client")
-                .HasValue<Veterinarian>("Veterinarian");
+                .HasValue<Veterinarian>("Veterinarian")
+                .HasValue<SysAdmin>("SysAdmin");
 
             modelBuilder.Entity<Pet>()
                 .HasOne(p => p.Client)
