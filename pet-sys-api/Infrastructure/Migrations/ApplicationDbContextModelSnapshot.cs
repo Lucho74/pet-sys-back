@@ -31,7 +31,7 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -40,11 +40,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("PetId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("VeterinarianId")
                         .HasColumnType("int");
@@ -156,6 +151,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.HasDiscriminator().HasValue("Client");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SysAdmin", b =>
+                {
+                    b.HasBaseType("Domain.Entities.User");
+
+                    b.HasDiscriminator().HasValue("SysAdmin");
                 });
 
             modelBuilder.Entity("Domain.Entities.Veterinarian", b =>

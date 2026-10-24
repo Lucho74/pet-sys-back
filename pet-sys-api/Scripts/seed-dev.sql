@@ -4,7 +4,7 @@
 --
 -- Requisitos: la base tiene que tener el esquema creado (migraciones aplicadas; lo hace el workflow de deploy).
 -- Si la tabla Users ya tiene filas, el script no inserta nada.
--- Las fechas de las consultas son relativas al día en que se corre: las futuras quedan Pending.
+-- Las fechas de las consultas son relativas al día en que se corre (con hora entre las 9 y las 18).
 -- Si cambian las entidades/migraciones, este script se tiene que actualizar a mano.
 
 SET NOCOUNT ON;
@@ -155,47 +155,47 @@ INSERT INTO [dbo].[Pets] ([Id], [Name], [Specie], [Breed], [BirthDate], [ClientI
 SET IDENTITY_INSERT [dbo].[Pets] OFF;
 
 SET IDENTITY_INSERT [dbo].[Consultations] ON;
-INSERT INTO [dbo].[Consultations] ([Id], [Description], [Date], [Status], [PetId], [VeterinarianId]) VALUES
-    (1, N'Análisis de sangre de rutina.', DATEADD(DAY, 44, @Today), N'Pending', 3, 14),
-    (2, N'Análisis de sangre de rutina.', DATEADD(DAY, -87, @Today), N'Cancelled', 18, 8),
-    (3, N'Desparasitación interna y externa.', DATEADD(DAY, -52, @Today), N'Completed', 7, 19),
-    (4, N'Consulta por tos persistente.', DATEADD(DAY, -104, @Today), N'Completed', 3, 12),
-    (5, N'Revisión de herida en pata trasera.', DATEADD(DAY, -137, @Today), N'Completed', 17, 12),
-    (6, N'Limpieza dental y control de encías.', DATEADD(DAY, -43, @Today), N'Completed', 11, 8),
-    (7, N'Limpieza dental y control de encías.', DATEADD(DAY, -81, @Today), N'Cancelled', 1, 10),
-    (8, N'Evaluación por cojera en pata delantera.', DATEADD(DAY, 44, @Today), N'Pending', 1, 10),
-    (9, N'Desparasitación interna y externa.', DATEADD(DAY, 22, @Today), N'Pending', 3, 8),
-    (10, N'Control anual y vacunación antirrábica.', DATEADD(DAY, -151, @Today), N'Completed', 8, 9),
-    (11, N'Control de peso y plan de alimentación.', DATEADD(DAY, -39, @Today), N'Cancelled', 18, 8),
-    (12, N'Control de peso y plan de alimentación.', DATEADD(DAY, 46, @Today), N'Pending', 13, 11),
-    (13, N'Desparasitación interna y externa.', DATEADD(DAY, 36, @Today), N'Pending', 17, 15),
-    (14, N'Control de peso y plan de alimentación.', DATEADD(DAY, -132, @Today), N'Cancelled', 20, 20),
-    (15, N'Consulta por picazón y caída de pelo.', DATEADD(DAY, 53, @Today), N'Pending', 10, 20),
-    (16, N'Aplicación de vacuna séxtuple.', DATEADD(DAY, -15, @Today), N'Completed', 2, 19),
-    (17, N'Revisión de herida en pata trasera.', DATEADD(DAY, -19, @Today), N'Completed', 19, 19),
-    (18, N'Evaluación por cojera en pata delantera.', DATEADD(DAY, 25, @Today), N'Pending', 19, 10),
-    (19, N'Control de peso y plan de alimentación.', DATEADD(DAY, 20, @Today), N'Pending', 11, 18),
-    (20, N'Consulta por vómitos y falta de apetito.', DATEADD(DAY, 33, @Today), N'Pending', 8, 20),
-    (21, N'Evaluación por cojera en pata delantera.', DATEADD(DAY, -100, @Today), N'Cancelled', 2, 15),
-    (22, N'Control de peso y plan de alimentación.', DATEADD(DAY, -98, @Today), N'Completed', 12, 20),
-    (23, N'Análisis de sangre de rutina.', DATEADD(DAY, -160, @Today), N'Completed', 2, 13),
-    (24, N'Aplicación de vacuna séxtuple.', DATEADD(DAY, -48, @Today), N'Completed', 8, 6),
-    (25, N'Consulta por picazón y caída de pelo.', DATEADD(DAY, -129, @Today), N'Cancelled', 20, 20),
-    (26, N'Consulta por vómitos y falta de apetito.', DATEADD(DAY, -145, @Today), N'Completed', 17, 20),
-    (27, N'Consulta por tos persistente.', DATEADD(DAY, 31, @Today), N'Pending', 1, 7),
-    (28, N'Control post operatorio de castración.', DATEADD(DAY, 36, @Today), N'Pending', 20, 10),
-    (29, N'Análisis de sangre de rutina.', DATEADD(DAY, -21, @Today), N'Cancelled', 2, 6),
-    (30, N'Control post operatorio de castración.', DATEADD(DAY, -58, @Today), N'Completed', 12, 9),
-    (31, N'Análisis de sangre de rutina.', DATEADD(DAY, 47, @Today), N'Pending', 12, 19),
-    (32, N'Evaluación por cojera en pata delantera.', DATEADD(DAY, -104, @Today), N'Completed', 20, 12),
-    (33, N'Limpieza dental y control de encías.', DATEADD(DAY, -172, @Today), N'Completed', 16, 7),
-    (34, N'Consulta por tos persistente.', DATEADD(DAY, 13, @Today), N'Pending', 17, 10),
-    (35, N'Control post operatorio de castración.', DATEADD(DAY, -37, @Today), N'Completed', 14, 11),
-    (36, N'Control anual y vacunación antirrábica.', DATEADD(DAY, -136, @Today), N'Completed', 16, 20),
-    (37, N'Consulta por picazón y caída de pelo.', DATEADD(DAY, -69, @Today), N'Completed', 14, 16),
-    (38, N'Limpieza dental y control de encías.', DATEADD(DAY, 57, @Today), N'Pending', 11, 18),
-    (39, N'Revisión de herida en pata trasera.', DATEADD(DAY, -22, @Today), N'Completed', 9, 14),
-    (40, N'Limpieza dental y control de encías.', DATEADD(DAY, -158, @Today), N'Cancelled', 9, 15);
+INSERT INTO [dbo].[Consultations] ([Id], [Description], [Date], [PetId], [VeterinarianId]) VALUES
+    (1, N'Análisis de sangre de rutina.', DATEADD(HOUR, 10, CAST(DATEADD(DAY, 44, @Today) AS datetime2)), 3, 14),
+    (2, N'Análisis de sangre de rutina.', DATEADD(HOUR, 11, CAST(DATEADD(DAY, -87, @Today) AS datetime2)), 18, 8),
+    (3, N'Desparasitación interna y externa.', DATEADD(HOUR, 12, CAST(DATEADD(DAY, -52, @Today) AS datetime2)), 7, 19),
+    (4, N'Consulta por tos persistente.', DATEADD(HOUR, 13, CAST(DATEADD(DAY, -104, @Today) AS datetime2)), 3, 12),
+    (5, N'Revisión de herida en pata trasera.', DATEADD(HOUR, 14, CAST(DATEADD(DAY, -137, @Today) AS datetime2)), 17, 12),
+    (6, N'Limpieza dental y control de encías.', DATEADD(HOUR, 15, CAST(DATEADD(DAY, -43, @Today) AS datetime2)), 11, 8),
+    (7, N'Limpieza dental y control de encías.', DATEADD(HOUR, 16, CAST(DATEADD(DAY, -81, @Today) AS datetime2)), 1, 10),
+    (8, N'Evaluación por cojera en pata delantera.', DATEADD(HOUR, 17, CAST(DATEADD(DAY, 44, @Today) AS datetime2)), 1, 10),
+    (9, N'Desparasitación interna y externa.', DATEADD(HOUR, 18, CAST(DATEADD(DAY, 22, @Today) AS datetime2)), 3, 8),
+    (10, N'Control anual y vacunación antirrábica.', DATEADD(HOUR, 9, CAST(DATEADD(DAY, -151, @Today) AS datetime2)), 8, 9),
+    (11, N'Control de peso y plan de alimentación.', DATEADD(HOUR, 10, CAST(DATEADD(DAY, -39, @Today) AS datetime2)), 18, 8),
+    (12, N'Control de peso y plan de alimentación.', DATEADD(HOUR, 11, CAST(DATEADD(DAY, 46, @Today) AS datetime2)), 13, 11),
+    (13, N'Desparasitación interna y externa.', DATEADD(HOUR, 12, CAST(DATEADD(DAY, 36, @Today) AS datetime2)), 17, 15),
+    (14, N'Control de peso y plan de alimentación.', DATEADD(HOUR, 13, CAST(DATEADD(DAY, -132, @Today) AS datetime2)), 20, 20),
+    (15, N'Consulta por picazón y caída de pelo.', DATEADD(HOUR, 14, CAST(DATEADD(DAY, 53, @Today) AS datetime2)), 10, 20),
+    (16, N'Aplicación de vacuna séxtuple.', DATEADD(HOUR, 15, CAST(DATEADD(DAY, -15, @Today) AS datetime2)), 2, 19),
+    (17, N'Revisión de herida en pata trasera.', DATEADD(HOUR, 16, CAST(DATEADD(DAY, -19, @Today) AS datetime2)), 19, 19),
+    (18, N'Evaluación por cojera en pata delantera.', DATEADD(HOUR, 17, CAST(DATEADD(DAY, 25, @Today) AS datetime2)), 19, 10),
+    (19, N'Control de peso y plan de alimentación.', DATEADD(HOUR, 18, CAST(DATEADD(DAY, 20, @Today) AS datetime2)), 11, 18),
+    (20, N'Consulta por vómitos y falta de apetito.', DATEADD(HOUR, 9, CAST(DATEADD(DAY, 33, @Today) AS datetime2)), 8, 20),
+    (21, N'Evaluación por cojera en pata delantera.', DATEADD(HOUR, 10, CAST(DATEADD(DAY, -100, @Today) AS datetime2)), 2, 15),
+    (22, N'Control de peso y plan de alimentación.', DATEADD(HOUR, 11, CAST(DATEADD(DAY, -98, @Today) AS datetime2)), 12, 20),
+    (23, N'Análisis de sangre de rutina.', DATEADD(HOUR, 12, CAST(DATEADD(DAY, -160, @Today) AS datetime2)), 2, 13),
+    (24, N'Aplicación de vacuna séxtuple.', DATEADD(HOUR, 13, CAST(DATEADD(DAY, -48, @Today) AS datetime2)), 8, 6),
+    (25, N'Consulta por picazón y caída de pelo.', DATEADD(HOUR, 14, CAST(DATEADD(DAY, -129, @Today) AS datetime2)), 20, 20),
+    (26, N'Consulta por vómitos y falta de apetito.', DATEADD(HOUR, 15, CAST(DATEADD(DAY, -145, @Today) AS datetime2)), 17, 20),
+    (27, N'Consulta por tos persistente.', DATEADD(HOUR, 16, CAST(DATEADD(DAY, 31, @Today) AS datetime2)), 1, 7),
+    (28, N'Control post operatorio de castración.', DATEADD(HOUR, 17, CAST(DATEADD(DAY, 36, @Today) AS datetime2)), 20, 10),
+    (29, N'Análisis de sangre de rutina.', DATEADD(HOUR, 18, CAST(DATEADD(DAY, -21, @Today) AS datetime2)), 2, 6),
+    (30, N'Control post operatorio de castración.', DATEADD(HOUR, 9, CAST(DATEADD(DAY, -58, @Today) AS datetime2)), 12, 9),
+    (31, N'Análisis de sangre de rutina.', DATEADD(HOUR, 10, CAST(DATEADD(DAY, 47, @Today) AS datetime2)), 12, 19),
+    (32, N'Evaluación por cojera en pata delantera.', DATEADD(HOUR, 11, CAST(DATEADD(DAY, -104, @Today) AS datetime2)), 20, 12),
+    (33, N'Limpieza dental y control de encías.', DATEADD(HOUR, 12, CAST(DATEADD(DAY, -172, @Today) AS datetime2)), 16, 7),
+    (34, N'Consulta por tos persistente.', DATEADD(HOUR, 13, CAST(DATEADD(DAY, 13, @Today) AS datetime2)), 17, 10),
+    (35, N'Control post operatorio de castración.', DATEADD(HOUR, 14, CAST(DATEADD(DAY, -37, @Today) AS datetime2)), 14, 11),
+    (36, N'Control anual y vacunación antirrábica.', DATEADD(HOUR, 15, CAST(DATEADD(DAY, -136, @Today) AS datetime2)), 16, 20),
+    (37, N'Consulta por picazón y caída de pelo.', DATEADD(HOUR, 16, CAST(DATEADD(DAY, -69, @Today) AS datetime2)), 14, 16),
+    (38, N'Limpieza dental y control de encías.', DATEADD(HOUR, 17, CAST(DATEADD(DAY, 57, @Today) AS datetime2)), 11, 18),
+    (39, N'Revisión de herida en pata trasera.', DATEADD(HOUR, 18, CAST(DATEADD(DAY, -22, @Today) AS datetime2)), 9, 14),
+    (40, N'Limpieza dental y control de encías.', DATEADD(HOUR, 9, CAST(DATEADD(DAY, -158, @Today) AS datetime2)), 9, 15);
 SET IDENTITY_INSERT [dbo].[Consultations] OFF;
 
 COMMIT TRANSACTION;

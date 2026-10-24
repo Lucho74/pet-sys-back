@@ -71,13 +71,5 @@ namespace Web.Controllers
             var consultations = await _consultationServices.GetConsultationsByVeterinarianIdAsync(veterinarianId);
             return Ok(consultations);
         }
-
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
-        [HttpGet("status/{status}")]
-        public async Task<IActionResult> GetByStatus(StatusConsultation status)
-        {
-            var consultations = await _consultationServices.GetConsultationsByStatusAsync(status);
-            return Ok(consultations);
-        }
     }
 }

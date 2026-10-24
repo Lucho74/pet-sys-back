@@ -45,18 +45,13 @@ namespace Infrastructure.Context
                 .HasForeignKey(c => c.VeterinarianId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Consultation>()
-                .Property(c => c.Status)
-                .HasConversion<string>()
-                .HasMaxLength(50);
-
             modelBuilder.Entity<Pet>()
                 .Property(p => p.BirthDate)
                 .HasColumnType("date");
 
             modelBuilder.Entity<Consultation>()
                 .Property(c => c.Date)
-                .HasColumnType("date");
+                .HasColumnType("datetime2");
 
             modelBuilder.Entity<User>().Property(u => u.FullName).HasMaxLength(100).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Password).HasMaxLength(100).IsRequired();
