@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using Application.Interfaces;
 using Application.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers
 {
@@ -14,6 +15,7 @@ namespace Web.Controllers
             _petServices = petServices;
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("")]
         public async Task<IActionResult> GetAllPet()
         {
@@ -21,6 +23,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -28,6 +31,7 @@ namespace Web.Controllers
             return Ok(pet);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPost("")]
         public async Task<IActionResult> AddPet([FromBody] CreatePetDTO dto)
         {
@@ -35,6 +39,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdatePet(int id, [FromBody] PetDTO dto)
         {
@@ -42,6 +47,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeletePet(int id)
         {
@@ -49,6 +55,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian,Client")]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {
