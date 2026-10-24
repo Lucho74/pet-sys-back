@@ -133,5 +133,25 @@ namespace Application.Services
 
             await _petRepository.DeleteAsync(id);
         }
+
+        public async Task<IEnumerable<PetDTO>> GetPetsByClientAsync(int clientId)
+        {
+            var pets = await _petRepository.GetByClientIdAsync(clientId);
+            var petList = pets.ToList();
+            if (petList.Count == 0)
+            {
+                throw new NotFoundException($"No pets found for client with id {clientId}.");
+            }
+
+            return petList.Select(pet => new PetDTO
+            {
+                Id = pet.Id,
+                Name = pet.Name,
+                Specie = pet.Specie,
+                Breed = pet.Breed,
+                BirthDate = pet.BirthDate,
+                ClientId = pet.ClientId
+            });
+        }
     }
 }

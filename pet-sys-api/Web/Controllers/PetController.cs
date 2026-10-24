@@ -48,5 +48,12 @@ namespace Web.Controllers
             await _petServices.DeletePetAsync(id);
             return NoContent();
         }
+
+        [HttpGet("client/{clientId:int}")]
+        public async Task<IActionResult> GetByClientId(int clientId)
+        {
+            var pets = await _petServices.GetPetsByClientAsync(clientId);
+            return Ok(pets);
+        }
     }
 }
