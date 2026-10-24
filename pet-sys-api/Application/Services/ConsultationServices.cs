@@ -5,7 +5,6 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -217,10 +216,9 @@ namespace Application.Services
         {
             var end = start.AddMinutes(SlotMinutes);
 
-            if (!string.IsNullOrWhiteSpace(veterinarian.WorkShifts))
+            if (veterinarian.WorkShifts is { Count: > 0 })
             {
-                var shifts = JsonSerializer.Deserialize<List<WorkShiftDTO>>(veterinarian.WorkShifts)!;
-                var fitsInAShift = shifts.Any(shift =>
+                var fitsInAShift = veterinarian.WorkShifts.Any(shift =>
                     shift.Day == start.DayOfWeek &&
                     start >= start.Date + shift.StartTime.ToTimeSpan() &&
                     end <= start.Date + shift.EndTime.ToTimeSpan());

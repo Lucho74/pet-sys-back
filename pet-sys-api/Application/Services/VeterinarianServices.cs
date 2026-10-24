@@ -5,7 +5,6 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -26,12 +25,17 @@ namespace Application.Services
                 throw new NotFoundException($"Veterinarian with id {veterinarianId} was not found.");
             }
 
-            if (string.IsNullOrWhiteSpace(veterinarian.WorkShifts))
+            if (veterinarian.WorkShifts == null)
             {
                 return new List<WorkShiftDTO>();
             }
 
-            return JsonSerializer.Deserialize<List<WorkShiftDTO>>(veterinarian.WorkShifts)!;
+            return veterinarian.WorkShifts.Select(shift => new WorkShiftDTO
+            {
+                Day = shift.Day,
+                StartTime = shift.StartTime,
+                EndTime = shift.EndTime
+            });
         }
 
         public async Task<IEnumerable<WorkShiftDTO>> UpdateWorkShiftsAsync(int veterinarianId, IEnumerable<WorkShiftDTO> shifts)
@@ -50,7 +54,12 @@ namespace Application.Services
                 }
             }
 
-            veterinarian.WorkShifts = JsonSerializer.Serialize(shiftList);
+            veterinarian.WorkShifts = shiftList.Select(shift => new WorkShift
+            {
+                Day = shift.Day,
+                StartTime = shift.StartTime,
+                EndTime = shift.EndTime
+            }).ToList();
 
             var updated = await _userRepository.UpdateAsync(veterinarianId, veterinarian);
             if (updated == null)

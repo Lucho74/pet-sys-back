@@ -8,8 +8,9 @@ namespace Domain.Entities
 {
     public class Veterinarian : User
     {
-        // JSON array of work shifts; the Application layer owns the format.
-        public string? WorkShifts { get; set; }
+        // Serialized to a single JSON column; nullable to match the TPH table, where
+        // non-veterinarian rows have no value.
+        public List<WorkShift>? WorkShifts { get; set; }
 
         public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
     }

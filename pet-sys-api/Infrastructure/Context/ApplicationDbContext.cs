@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 using Domain.Entities;
 
 namespace Infrastructure.Context
@@ -54,8 +56,18 @@ namespace Infrastructure.Context
                 .Property(p => p.BirthDate)
                 .HasColumnType("date");
 
+            // Stored as JSON in one nvarchar column. The ValueComparer is what makes EF notice
+            // changes to the list itself — without it the list is compared by reference and an
+            // in-place edit is silently never saved.
             modelBuilder.Entity<Veterinarian>()
                 .Property(v => v.WorkShifts)
+                .HasConversion(
+                    shifts => JsonSerializer.Serialize(shifts, (JsonSerializerOptions?)null),
+                    json => JsonSerializer.Deserialize<List<WorkShift>>(json, (JsonSerializerOptions?)null),
+                    new ValueComparer<List<WorkShift>>(
+                        (left, right) => left!.SequenceEqual(right!),
+                        shifts => shifts.Aggregate(0, (hash, shift) => HashCode.Combine(hash, shift.GetHashCode())),
+                        shifts => shifts.ToList()))
                 .HasMaxLength(1000);
 
             modelBuilder.Entity<User>().Property(u => u.FullName).HasMaxLength(100).IsRequired();
