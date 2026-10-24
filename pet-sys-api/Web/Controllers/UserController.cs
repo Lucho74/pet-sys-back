@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace Web.Controllers
 {
-    [Authorize(Roles = "SysAdmin,Admin")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -17,7 +17,6 @@ namespace Web.Controllers
             _userServices = userServices;
         }
 
-        [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
@@ -26,6 +25,7 @@ namespace Web.Controllers
             return Ok(user);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin")]
         [HttpGet("")]
         public async Task<IActionResult> GetAllUser()
         {
@@ -33,6 +33,7 @@ namespace Web.Controllers
             return Ok(users);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -40,6 +41,7 @@ namespace Web.Controllers
             return Ok(user);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin")]
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
@@ -47,6 +49,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDTO dto)
         {
@@ -54,6 +57,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
