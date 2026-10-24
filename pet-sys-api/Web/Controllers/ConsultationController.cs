@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers
 {
@@ -15,6 +16,7 @@ namespace Web.Controllers
             _consultationServices = consultationServices;
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("")]
         public async Task<IActionResult> GetAllConsultation()
         {
@@ -22,6 +24,7 @@ namespace Web.Controllers
             return Ok(consultations);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -29,6 +32,7 @@ namespace Web.Controllers
             return Ok(consultation);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPost("")]
         public async Task<IActionResult> AddConsultation([FromBody] CreateConsultationDTO dto)
         {
@@ -36,6 +40,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateConsultation(int id, [FromBody] ConsultationDTO dto)
         {
@@ -43,6 +48,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteConsultation(int id)
         {
@@ -50,6 +56,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian,Client")]
         [HttpGet("pet/{petId:int}")]
         public async Task<IActionResult> GetByPetId(int petId)
         {
@@ -57,6 +64,7 @@ namespace Web.Controllers
             return Ok(consultations);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("veterinarian/{veterinarianId:int}")]
         public async Task<IActionResult> GetByVeterinarianId(int veterinarianId)
         {
@@ -64,6 +72,7 @@ namespace Web.Controllers
             return Ok(consultations);
         }
 
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("status/{status}")]
         public async Task<IActionResult> GetByStatus(StatusConsultation status)
         {

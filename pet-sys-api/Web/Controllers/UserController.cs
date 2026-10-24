@@ -1,9 +1,11 @@
 using Application.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using Application.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers
 {
+    [Authorize(Roles = "SysAdmin,Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
