@@ -16,13 +16,6 @@ namespace Infrastructure.Repositories
         {
         }
 
-        public async Task<IEnumerable<Consultation>> GetByStatusAsync(StatusConsultation status)
-        {
-            return await _context.Set<Consultation>()
-                .Where(c => c.Status == status)
-                .ToListAsync();
-        }
-
         public async Task<IEnumerable<Consultation>> GetByVeterinarianIdAsync(int veterinarianId)
         {
             return await _context.Set<Consultation>()

@@ -14,6 +14,5 @@ namespace Application.Interfaces
         Task DeleteConsultationAsync(int id);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
-        Task<IEnumerable<ConsultationDTO>> GetConsultationsByStatusAsync(StatusConsultation status);
     }
 }

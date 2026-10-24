@@ -36,7 +36,6 @@ namespace Application.Services
                 Id = consultation.Id,
                 Description = consultation.Description,
                 Date = consultation.Date,
-                Status = consultation.Status,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId
             });
@@ -55,7 +54,6 @@ namespace Application.Services
                 Id = consultation.Id,
                 Description = consultation.Description,
                 Date = consultation.Date,
-                Status = consultation.Status,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId
             };
@@ -77,7 +75,6 @@ namespace Application.Services
             {
                 Description = dto.Description,
                 Date = dto.Date,
-                Status = StatusConsultation.Pending,
                 PetId = dto.PetId,
                 VeterinarianId = dto.VeterinarianId
             };
@@ -88,7 +85,6 @@ namespace Application.Services
                 Id = created.Id,
                 Description = created.Description,
                 Date = created.Date,
-                Status = created.Status,
                 PetId = created.PetId,
                 VeterinarianId = created.VeterinarianId
             };
@@ -114,7 +110,6 @@ namespace Application.Services
 
             existing.Description = dto.Description;
             existing.Date = dto.Date;
-            existing.Status = dto.Status;
             existing.PetId = dto.PetId;
             existing.VeterinarianId = dto.VeterinarianId;
 
@@ -129,7 +124,6 @@ namespace Application.Services
                 Id = updated.Id,
                 Description = updated.Description,
                 Date = updated.Date,
-                Status = updated.Status,
                 PetId = updated.PetId,
                 VeterinarianId = updated.VeterinarianId
             };
@@ -160,7 +154,6 @@ namespace Application.Services
                 Id = consultation.Id,
                 Description = consultation.Description,
                 Date = consultation.Date,
-                Status = consultation.Status,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId
             });
@@ -180,27 +173,6 @@ namespace Application.Services
                 Id = consultation.Id,
                 Description = consultation.Description,
                 Date = consultation.Date,
-                Status = consultation.Status,
-                PetId = consultation.PetId,
-                VeterinarianId = consultation.VeterinarianId
-            });
-        }
-
-        public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByStatusAsync(StatusConsultation status)
-        {
-            var consultations = await _consultationRepository.GetByStatusAsync(status);
-            var consultationList = consultations.ToList();
-            if (consultationList.Count == 0)
-            {
-                throw new NotFoundException($"No consultations found with status {status}.");
-            }
-
-            return consultationList.Select(consultation => new ConsultationDTO
-            {
-                Id = consultation.Id,
-                Description = consultation.Description,
-                Date = consultation.Date,
-                Status = consultation.Status,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId
             });
