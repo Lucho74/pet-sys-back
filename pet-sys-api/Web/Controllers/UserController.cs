@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Web.Controllers
 {
@@ -14,6 +15,15 @@ namespace Web.Controllers
         public UserController(IUserServices userServices)
         {
             _userServices = userServices;
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
+        {
+            var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _userServices.GetUserByIdAsync(id);
+            return Ok(user);
         }
 
         [HttpGet("")]
