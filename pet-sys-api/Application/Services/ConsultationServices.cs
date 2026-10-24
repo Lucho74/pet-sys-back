@@ -5,12 +5,15 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Application.Services
 {
     public class ConsultationServices : IConsultationServices
     {
+        public const int SlotMinutes = 30;
+
         public readonly IConsultationRepository _consultationRepository;
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
@@ -68,10 +71,12 @@ namespace Application.Services
                 throw new BadRequestException("PetId does not reference an existing pet.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
+            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian veterinarian)
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
             }
+
+            await ValidateSlotAsync(veterinarian, dto.Date, null);
 
             var consultation = new Consultation
             {
@@ -107,10 +112,12 @@ namespace Application.Services
                 throw new BadRequestException("PetId does not reference an existing pet.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
+            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian veterinarian)
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
             }
+
+            await ValidateSlotAsync(veterinarian, dto.Date, id);
 
             existing.Description = dto.Description;
             existing.Date = dto.Date;
@@ -204,6 +211,38 @@ namespace Application.Services
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId
             });
+        }
+
+        private async Task ValidateSlotAsync(Veterinarian veterinarian, DateTime start, int? consultationIdToIgnore)
+        {
+            var end = start.AddMinutes(SlotMinutes);
+
+            if (!string.IsNullOrWhiteSpace(veterinarian.WorkShifts))
+            {
+                var shifts = JsonSerializer.Deserialize<List<WorkShiftDTO>>(veterinarian.WorkShifts)!;
+                var fitsInAShift = shifts.Any(shift =>
+                    shift.Day == start.DayOfWeek &&
+                    start >= start.Date + shift.StartTime.ToTimeSpan() &&
+                    end <= start.Date + shift.EndTime.ToTimeSpan());
+
+                if (!fitsInAShift)
+                {
+                    throw new BadRequestException($"The veterinarian does not work a {SlotMinutes}-minute slot starting at {start:yyyy-MM-dd HH:mm}.");
+                }
+            }
+
+            var windowStart = start.AddMinutes(-SlotMinutes);
+            var windowEnd = start.AddMinutes(SlotMinutes);
+            var clashing = await _consultationRepository.FindAsync(c =>
+                c.VeterinarianId == veterinarian.Id &&
+                c.Status != StatusConsultation.Cancelled &&
+                c.Date > windowStart &&
+                c.Date < windowEnd);
+
+            if (clashing.Any(c => c.Id != consultationIdToIgnore))
+            {
+                throw new BadRequestException($"The veterinarian already has a consultation overlapping the {SlotMinutes}-minute slot starting at {start:yyyy-MM-dd HH:mm}.");
+            }
         }
     }
 }

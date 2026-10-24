@@ -54,9 +54,9 @@ namespace Infrastructure.Context
                 .Property(p => p.BirthDate)
                 .HasColumnType("date");
 
-            modelBuilder.Entity<Consultation>()
-                .Property(c => c.Date)
-                .HasColumnType("date");
+            modelBuilder.Entity<Veterinarian>()
+                .Property(v => v.WorkShifts)
+                .HasMaxLength(1000);
 
             modelBuilder.Entity<User>().Property(u => u.FullName).HasMaxLength(100).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Password).HasMaxLength(100).IsRequired();

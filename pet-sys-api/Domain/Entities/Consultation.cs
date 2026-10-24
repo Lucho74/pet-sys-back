@@ -18,7 +18,6 @@ namespace Domain.Entities
         [StringLength(500)]
         public string Description { get; set; }
         [Required]
-        [DataType(DataType.Date)]
         public DateTime Date { get; set; }
         [Required]
         public StatusConsultation Status { get; set; }

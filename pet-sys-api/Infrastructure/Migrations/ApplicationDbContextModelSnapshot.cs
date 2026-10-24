@@ -31,7 +31,7 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -158,9 +158,20 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Client");
                 });
 
+            modelBuilder.Entity("Domain.Entities.SysAdmin", b =>
+                {
+                    b.HasBaseType("Domain.Entities.User");
+
+                    b.HasDiscriminator().HasValue("SysAdmin");
+                });
+
             modelBuilder.Entity("Domain.Entities.Veterinarian", b =>
                 {
                     b.HasBaseType("Domain.Entities.User");
+
+                    b.Property<string>("WorkShifts")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.HasDiscriminator().HasValue("Veterinarian");
                 });
