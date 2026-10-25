@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Tests
 {
-    // Real repositories over EF Core InMemory: checks the LINQ queries, not SQL Server specifics
-    // (InMemory enforces neither the unique email index nor foreign keys).
+    // InMemory enforces neither foreign keys nor the unique email index; those still need SQL Server.
     [Trait("Category", "Integration")]
     public class RepositoryTests : IDisposable
     {

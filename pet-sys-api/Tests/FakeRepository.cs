@@ -3,7 +3,6 @@ using Domain.Interfaces;
 
 namespace Tests
 {
-    // In-memory stand-in for BaseRepository<T>; tests assert on Items (state), not on calls.
     public class FakeRepository<T> : IBaseRepository<T> where T : class, IEntity
     {
         public List<T> Items { get; } = new();

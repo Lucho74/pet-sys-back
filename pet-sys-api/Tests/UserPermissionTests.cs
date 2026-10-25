@@ -31,7 +31,6 @@ namespace Tests
             FullName = "New", Email = "new@test.com", Phone = "1", Password = "secret123", UserType = type, Dni = "999"
         };
 
-        // One row per line of the permissions matrix: who may create each kind of user.
         [Theory]
         [InlineData("Veterinarian", UserType.Client)]
         [InlineData("SysAdmin", UserType.Client)]

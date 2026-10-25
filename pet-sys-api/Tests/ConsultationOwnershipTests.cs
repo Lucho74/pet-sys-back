@@ -10,7 +10,7 @@ namespace Tests
     [Trait("Category", "Unit")]
     public class ConsultationOwnershipTests
     {
-        // Hand-written mock: the test asserts the interaction (which clientId reached the service), not state.
+        // Hand-written mock: records which clientId reached the service.
         private class RecordingConsultationServices : IConsultationServices
         {
             public int? ReceivedClientId { get; private set; }
