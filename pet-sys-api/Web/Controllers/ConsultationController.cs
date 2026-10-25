@@ -64,7 +64,7 @@ namespace Web.Controllers
             int? clientId = User.IsInRole("Client")
                 ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
                 : null;
-            var consultations = await _consultationServices.GetConsultationsByPetIdAsync(petId);
+            var consultations = await _consultationServices.GetConsultationsByPetIdAsync(petId, clientId);
             return Ok(consultations);
         }
 
