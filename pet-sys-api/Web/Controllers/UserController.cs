@@ -66,5 +66,13 @@ namespace Web.Controllers
             await _userServices.DeleteUserAsync(id, CallerId, CallerRole);
             return NoContent();
         }
+
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [HttpPost("{id:int}/reactivate")]
+        public async Task<IActionResult> ReactivateUser(int id)
+        {
+            await _userServices.ReactivateUserAsync(id, CallerId, CallerRole);
+            return NoContent();
+        }
     }
 }

@@ -180,10 +180,22 @@ namespace Application.Services
 
         public async Task DeleteUserAsync(int id, int callerId, string callerRole)
         {
+            await SetDeletedAsync(id, true, callerId, callerRole);
+        }
+
+        public async Task ReactivateUserAsync(int id, int callerId, string callerRole)
+        {
+            await SetDeletedAsync(id, false, callerId, callerRole);
+        }
+
+        // Users are suspended, never removed: removing a Client would cascade-delete its pets and consultations.
+        private async Task SetDeletedAsync(int id, bool isDeleted, int callerId, string callerRole)
+        {
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
             EnsureCanManage(existing.GetType().Name, callerRole);
 
-            await _userRepository.DeleteAsync(id);
+            existing.IsDeleted = isDeleted;
+            await _userRepository.UpdateAsync(id, existing);
         }
 
         public async Task<UserDTO> AuthenticateAsync(LoginDTO dto)
