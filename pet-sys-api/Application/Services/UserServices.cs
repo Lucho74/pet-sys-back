@@ -19,10 +19,50 @@ namespace Application.Services
             _userRepository = userRepository;
         }
 
-        public async Task<IEnumerable<UserDTO>> GetAllUserAsync()
+        // Each role sees itself plus the levels below it; the SysAdmin stays hidden from everyone else.
+        private static bool CanSee(User target, int callerId, string callerRole)
+        {
+            return target.Id == callerId || callerRole switch
+            {
+                "SysAdmin" => true,
+                "Admin" => target is not SysAdmin,
+                "Veterinarian" => target is Client,
+                _ => false
+            };
+        }
+
+        // Each role manages (create/edit/suspend) only the level right below it.
+        private static void EnsureCanManage(string targetRole, string callerRole)
+        {
+            var allowed = targetRole switch
+            {
+                "Client" => callerRole is "Veterinarian" or "SysAdmin",
+                "Veterinarian" => callerRole is "Admin" or "SysAdmin",
+                "Admin" => callerRole is "SysAdmin",
+                _ => false
+            };
+
+            if (!allowed)
+            {
+                throw new ForbiddenException($"Role {callerRole} cannot manage users of role {targetRole}.");
+            }
+        }
+
+        private async Task<User> GetVisibleUserAsync(int id, int callerId, string callerRole)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null || !CanSee(user, callerId, callerRole))
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
+
+            return user;
+        }
+
+        public async Task<IEnumerable<UserDTO>> GetAllUserAsync(int callerId, string callerRole)
         {
             var users = await _userRepository.GetAllAsync();
-            var userList = users.ToList();
+            var userList = users.Where(user => CanSee(user, callerId, callerRole)).ToList();
             if (userList.Count == 0)
             {
                 throw new NotFoundException("No users found.");
@@ -40,13 +80,9 @@ namespace Application.Services
             });
         }
 
-        public async Task<UserDTO> GetUserByIdAsync(int id)
+        public async Task<UserDTO> GetUserByIdAsync(int id, int callerId, string callerRole)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null)
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
+            var user = await GetVisibleUserAsync(id, callerId, callerRole);
 
             return new UserDTO
             {
@@ -59,8 +95,10 @@ namespace Application.Services
             };
         }
 
-        public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
+        public async Task<UserDTO> AddUserAsync(CreateUserDTO dto, string callerRole)
         {
+            EnsureCanManage(dto.UserType.ToString(), callerRole);
+
             User newUser;
             switch (dto.UserType)
             {
@@ -110,13 +148,10 @@ namespace Application.Services
             };
         }
 
-        public async Task<UserDTO> UpdateUserAsync(int id, UserDTO dto)
+        public async Task<UserDTO> UpdateUserAsync(int id, UserDTO dto, int callerId, string callerRole)
         {
-            var existing = await _userRepository.GetByIdAsync(id);
-            if (existing == null)
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
+            var existing = await GetVisibleUserAsync(id, callerId, callerRole);
+            EnsureCanManage(existing.GetType().Name, callerRole);
 
             existing.FullName = dto.FullName;
             existing.Email = dto.Email;
@@ -143,13 +178,10 @@ namespace Application.Services
             };
         }
 
-        public async Task DeleteUserAsync(int id)
+        public async Task DeleteUserAsync(int id, int callerId, string callerRole)
         {
-            var exists = await _userRepository.ExistsAsync(id);
-            if (!exists)
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
+            var existing = await GetVisibleUserAsync(id, callerId, callerRole);
+            EnsureCanManage(existing.GetType().Name, callerRole);
 
             await _userRepository.DeleteAsync(id);
         }
