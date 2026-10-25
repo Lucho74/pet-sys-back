@@ -23,13 +23,7 @@ namespace Application.Services
         public async Task<IEnumerable<PetDTO>> GetAllPetAsync()
         {
             var pets = await _petRepository.GetAllAsync();
-            var petList = pets.ToList();
-            if (petList.Count == 0)
-            {
-                throw new NotFoundException("No pets found.");
-            }
-
-            return petList.Select(pet => new PetDTO
+            return pets.Select(pet => new PetDTO
             {
                 Id = pet.Id,
                 Name = pet.Name,
@@ -71,7 +65,7 @@ namespace Application.Services
                 Name = dto.Name,
                 Specie = dto.Specie,
                 Breed = dto.Breed,
-                BirthDate = dto.BirthDate,
+                BirthDate = dto.BirthDate.Value,
                 ClientId = dto.ClientId
             };
 
@@ -103,7 +97,7 @@ namespace Application.Services
             existing.Name = dto.Name;
             existing.Specie = dto.Specie;
             existing.Breed = dto.Breed;
-            existing.BirthDate = dto.BirthDate;
+            existing.BirthDate = dto.BirthDate.Value;
             existing.ClientId = dto.ClientId;
 
             var updated = await _petRepository.UpdateAsync(id, existing);
@@ -137,13 +131,7 @@ namespace Application.Services
         public async Task<IEnumerable<PetDTO>> GetPetsByClientAsync(int clientId)
         {
             var pets = await _petRepository.GetByClientIdAsync(clientId);
-            var petList = pets.ToList();
-            if (petList.Count == 0)
-            {
-                throw new NotFoundException($"No pets found for client with id {clientId}.");
-            }
-
-            return petList.Select(pet => new PetDTO
+            return pets.Select(pet => new PetDTO
             {
                 Id = pet.Id,
                 Name = pet.Name,

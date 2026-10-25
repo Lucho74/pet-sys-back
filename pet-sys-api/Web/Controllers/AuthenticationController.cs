@@ -40,7 +40,12 @@ namespace Web.Controllers
                 _config["Authentication:Audience"],
                 claimsForToken,
                 DateTime.UtcNow,
-                DateTime.UtcNow.AddHours(1), // TODO: variar según user.RoleName (ej: menor duración para Admin) — no implementado todavía, ver sección Auth del CLAUDE.md
+                DateTime.UtcNow.Add(user.RoleName switch
+                {
+                    "Veterinarian" => TimeSpan.FromHours(8),
+                    "Admin" or "SysAdmin" => TimeSpan.FromHours(24),
+                    _ => TimeSpan.FromHours(1)
+                }),
                 signature
             );
 

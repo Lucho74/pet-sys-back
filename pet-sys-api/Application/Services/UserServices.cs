@@ -19,7 +19,6 @@ namespace Application.Services
             _userRepository = userRepository;
         }
 
-        // Each role sees itself plus the levels below it; the SysAdmin stays hidden from everyone else.
         private static bool CanSee(User target, int callerId, string callerRole)
         {
             return target.Id == callerId || callerRole switch
@@ -31,7 +30,6 @@ namespace Application.Services
             };
         }
 
-        // Each role manages (create/edit/suspend) only the level right below it.
         private static void EnsureCanManage(string targetRole, string callerRole)
         {
             var allowed = targetRole switch
@@ -48,6 +46,7 @@ namespace Application.Services
             }
         }
 
+        // 404 en vez de 403, para que un Admin no sepa que existe un SysAdmin.
         private async Task<User> GetVisibleUserAsync(int id, int callerId, string callerRole)
         {
             var user = await _userRepository.GetByIdAsync(id);
@@ -62,13 +61,8 @@ namespace Application.Services
         public async Task<IEnumerable<UserDTO>> GetAllUserAsync(int callerId, string callerRole)
         {
             var users = await _userRepository.GetAllAsync();
-            var userList = users.Where(user => CanSee(user, callerId, callerRole)).ToList();
-            if (userList.Count == 0)
-            {
-                throw new NotFoundException("No users found.");
-            }
 
-            return userList.Select(user => new UserDTO
+            return users.Where(user => CanSee(user, callerId, callerRole)).Select(user => new UserDTO
             {
                 Id = user.Id,
                 FullName = user.FullName,
@@ -92,12 +86,18 @@ namespace Application.Services
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
                 RoleName = user.GetType().Name,
+                Dni = user is Client client ? client.Dni : null
             };
         }
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto, string callerRole)
         {
             EnsureCanManage(dto.UserType.ToString(), callerRole);
+
+            if (await _userRepository.GetByEmailAsync(dto.Email) != null)
+            {
+                throw new BadRequestException($"A user with email {dto.Email} already exists.");
+            }
 
             User newUser;
             switch (dto.UserType)
@@ -144,7 +144,7 @@ namespace Application.Services
                 Phone = created.Phone,
                 IsDeleted = created.IsDeleted,
                 RoleName = created.GetType().Name,
-
+                Dni = created is Client client ? client.Dni : null
             };
         }
 
@@ -153,12 +153,22 @@ namespace Application.Services
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
             EnsureCanManage(existing.GetType().Name, callerRole);
 
+            var sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
+            if (sameEmail != null && sameEmail.Id != id)
+            {
+                throw new BadRequestException($"A user with email {dto.Email} already exists.");
+            }
+
             existing.FullName = dto.FullName;
             existing.Email = dto.Email;
             existing.Phone = dto.Phone;
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
+            if (existing is Client existingClient && dto.Dni != null)
+            {
+                existingClient.Dni = dto.Dni;
             }
 
             var updated = await _userRepository.UpdateAsync(id, existing);
@@ -175,6 +185,7 @@ namespace Application.Services
                 Phone = updated.Phone,
                 IsDeleted = updated.IsDeleted,
                 RoleName = updated.GetType().Name,
+                Dni = updated is Client client ? client.Dni : null
             };
         }
 
@@ -188,7 +199,7 @@ namespace Application.Services
             await SetDeletedAsync(id, false, callerId, callerRole);
         }
 
-        // Users are suspended, never removed: removing a Client would cascade-delete its pets and consultations.
+        // Los usuarios se suspenden, nunca se borran: borrar un Client elimina en cascada sus mascotas y consultas.
         private async Task SetDeletedAsync(int id, bool isDeleted, int callerId, string callerRole)
         {
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);

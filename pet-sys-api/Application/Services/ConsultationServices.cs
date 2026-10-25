@@ -25,13 +25,7 @@ namespace Application.Services
         public async Task<IEnumerable<ConsultationDTO>> GetAllConsultationAsync()
         {
             var consultations = await _consultationRepository.GetAllAsync();
-            var consultationList = consultations.ToList();
-            if (consultationList.Count == 0)
-            {
-                throw new NotFoundException("No consultations found.");
-            }
-
-            return consultationList.Select(consultation => new ConsultationDTO
+            return consultations.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
                 Description = consultation.Description,
@@ -74,7 +68,7 @@ namespace Application.Services
             var consultation = new Consultation
             {
                 Description = dto.Description,
-                Date = dto.Date,
+                Date = dto.Date.Value,
                 PetId = dto.PetId,
                 VeterinarianId = dto.VeterinarianId
             };
@@ -109,7 +103,7 @@ namespace Application.Services
             }
 
             existing.Description = dto.Description;
-            existing.Date = dto.Date;
+            existing.Date = dto.Date.Value;
             existing.PetId = dto.PetId;
             existing.VeterinarianId = dto.VeterinarianId;
 
@@ -151,13 +145,7 @@ namespace Application.Services
                 }
             }
             var consultations = await _consultationRepository.GetByPetIdAsync(petId);
-            var consultationList = consultations.ToList();
-            if (consultationList.Count == 0)
-            {
-                throw new NotFoundException($"No consultations found for pet with id {petId}.");
-            }
-
-            return consultationList.Select(consultation => new ConsultationDTO
+            return consultations.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
                 Description = consultation.Description,
@@ -170,13 +158,7 @@ namespace Application.Services
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId)
         {
             var consultations = await _consultationRepository.GetByVeterinarianIdAsync(veterinarianId);
-            var consultationList = consultations.ToList();
-            if (consultationList.Count == 0)
-            {
-                throw new NotFoundException($"No consultations found for veterinarian with id {veterinarianId}.");
-            }
-
-            return consultationList.Select(consultation => new ConsultationDTO
+            return consultations.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
                 Description = consultation.Description,

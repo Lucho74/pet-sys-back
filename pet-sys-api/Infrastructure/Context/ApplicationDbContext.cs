@@ -57,6 +57,7 @@ namespace Infrastructure.Context
             modelBuilder.Entity<User>().Property(u => u.Password).HasMaxLength(100).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Email).HasMaxLength(200).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Phone).HasMaxLength(50).IsRequired();
+            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
             modelBuilder.Entity<Client>().Property(c => c.Dni).HasMaxLength(20).IsRequired();
 
