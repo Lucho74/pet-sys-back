@@ -99,6 +99,11 @@ namespace Application.Services
         {
             EnsureCanManage(dto.UserType.ToString(), callerRole);
 
+            if (await _userRepository.GetByEmailAsync(dto.Email) != null)
+            {
+                throw new BadRequestException($"A user with email {dto.Email} already exists.");
+            }
+
             User newUser;
             switch (dto.UserType)
             {
@@ -152,6 +157,12 @@ namespace Application.Services
         {
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
             EnsureCanManage(existing.GetType().Name, callerRole);
+
+            var sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
+            if (sameEmail != null && sameEmail.Id != id)
+            {
+                throw new BadRequestException($"A user with email {dto.Email} already exists.");
+            }
 
             existing.FullName = dto.FullName;
             existing.Email = dto.Email;
