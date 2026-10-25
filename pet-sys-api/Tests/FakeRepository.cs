@@ -19,7 +19,7 @@ namespace Tests
             return Task.FromResult(entity);
         }
 
-        // The services always pass back the same instance they read, so there is nothing to copy.
+        // Los servicios devuelven la misma instancia que leyeron, así que no hay nada que copiar.
         public Task<T?> UpdateAsync(int id, T entity) => Task.FromResult(Items.FirstOrDefault(e => e.Id == id));
 
         public Task DeleteAsync(int id)

@@ -10,7 +10,7 @@ namespace Tests
     [Trait("Category", "Unit")]
     public class ConsultationOwnershipTests
     {
-        // Hand-written mock: records which clientId reached the service.
+        // Mock escrito a mano: registra qué clientId le llegó al servicio.
         private class RecordingConsultationServices : IConsultationServices
         {
             public int? ReceivedClientId { get; private set; }

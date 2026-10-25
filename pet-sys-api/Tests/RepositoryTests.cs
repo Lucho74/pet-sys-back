@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Tests
 {
-    // InMemory enforces neither foreign keys nor the unique email index; those still need SQL Server.
+    // InMemory no aplica claves foráneas ni el índice único de email; eso sigue dependiendo de SQL Server.
     [Trait("Category", "Integration")]
     public class RepositoryTests : IDisposable
     {
