@@ -12,6 +12,7 @@ namespace Web.ExceptionHandling
                 NotFoundException => StatusCodes.Status404NotFound,
                 BadRequestException => StatusCodes.Status400BadRequest,
                 UnauthorizedException => StatusCodes.Status401Unauthorized,
+                ForbiddenException => StatusCodes.Status403Forbidden,
                 _ => (int?)null
             };
 
