@@ -46,7 +46,7 @@ namespace Application.Services
             }
         }
 
-        // 404 instead of 403, so an Admin can't tell a SysAdmin exists.
+        // 404 en vez de 403, para que un Admin no sepa que existe un SysAdmin.
         private async Task<User> GetVisibleUserAsync(int id, int callerId, string callerRole)
         {
             var user = await _userRepository.GetByIdAsync(id);
@@ -199,7 +199,7 @@ namespace Application.Services
             await SetDeletedAsync(id, false, callerId, callerRole);
         }
 
-        // Users are suspended, never removed: removing a Client would cascade-delete its pets and consultations.
+        // Los usuarios se suspenden, nunca se borran: borrar un Client elimina en cascada sus mascotas y consultas.
         private async Task SetDeletedAsync(int id, bool isDeleted, int callerId, string callerRole)
         {
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
