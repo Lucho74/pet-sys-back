@@ -62,13 +62,8 @@ namespace Application.Services
         public async Task<IEnumerable<UserDTO>> GetAllUserAsync(int callerId, string callerRole)
         {
             var users = await _userRepository.GetAllAsync();
-            var userList = users.Where(user => CanSee(user, callerId, callerRole)).ToList();
-            if (userList.Count == 0)
-            {
-                throw new NotFoundException("No users found.");
-            }
 
-            return userList.Select(user => new UserDTO
+            return users.Where(user => CanSee(user, callerId, callerRole)).Select(user => new UserDTO
             {
                 Id = user.Id,
                 FullName = user.FullName,
@@ -92,6 +87,7 @@ namespace Application.Services
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
                 RoleName = user.GetType().Name,
+                Dni = user is Client client ? client.Dni : null
             };
         }
 
@@ -149,7 +145,7 @@ namespace Application.Services
                 Phone = created.Phone,
                 IsDeleted = created.IsDeleted,
                 RoleName = created.GetType().Name,
-
+                Dni = created is Client client ? client.Dni : null
             };
         }
 
@@ -171,6 +167,10 @@ namespace Application.Services
             {
                 existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
+            if (existing is Client existingClient && dto.Dni != null)
+            {
+                existingClient.Dni = dto.Dni;
+            }
 
             var updated = await _userRepository.UpdateAsync(id, existing);
             if (updated == null)
@@ -186,6 +186,7 @@ namespace Application.Services
                 Phone = updated.Phone,
                 IsDeleted = updated.IsDeleted,
                 RoleName = updated.GetType().Name,
+                Dni = updated is Client client ? client.Dni : null
             };
         }
 
