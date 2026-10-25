@@ -19,7 +19,6 @@ namespace Application.Services
             _userRepository = userRepository;
         }
 
-        // Each role sees itself plus the levels below it; the SysAdmin stays hidden from everyone else.
         private static bool CanSee(User target, int callerId, string callerRole)
         {
             return target.Id == callerId || callerRole switch
@@ -31,7 +30,6 @@ namespace Application.Services
             };
         }
 
-        // Each role manages (create/edit/suspend) only the level right below it.
         private static void EnsureCanManage(string targetRole, string callerRole)
         {
             var allowed = targetRole switch
@@ -48,6 +46,7 @@ namespace Application.Services
             }
         }
 
+        // 404 instead of 403, so an Admin can't tell a SysAdmin exists.
         private async Task<User> GetVisibleUserAsync(int id, int callerId, string callerRole)
         {
             var user = await _userRepository.GetByIdAsync(id);
