@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Web.Controllers
 {
@@ -55,10 +56,19 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian,Client")]
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {
+            var pets = await _petServices.GetPetsByClientAsync(clientId);
+            return Ok(pets);
+        }
+
+        [Authorize(Roles = "Client")]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyPets()
+        {
+            var clientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var pets = await _petServices.GetPetsByClientAsync(clientId);
             return Ok(pets);
         }

@@ -140,8 +140,16 @@ namespace Application.Services
             await _consultationRepository.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId)
+        public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId, int? clientId = null)
         {
+            if (clientId != null)
+            {
+                var pet = await _petRepository.GetByIdAsync(petId);
+                if (pet == null || pet.ClientId != clientId)
+                {
+                    throw new NotFoundException($"Pet with id {petId} was not found.");
+                }
+            }
             var consultations = await _consultationRepository.GetByPetIdAsync(petId);
             var consultationList = consultations.ToList();
             if (consultationList.Count == 0)

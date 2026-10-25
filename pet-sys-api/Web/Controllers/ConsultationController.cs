@@ -3,6 +3,7 @@ using Application.Models;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Web.Controllers
 {
@@ -60,6 +61,9 @@ namespace Web.Controllers
         [HttpGet("pet/{petId:int}")]
         public async Task<IActionResult> GetByPetId(int petId)
         {
+            int? clientId = User.IsInRole("Client")
+                ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
+                : null;
             var consultations = await _consultationServices.GetConsultationsByPetIdAsync(petId);
             return Ok(consultations);
         }
