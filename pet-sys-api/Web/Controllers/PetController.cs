@@ -49,14 +49,6 @@ namespace Web.Controllers
         }
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeletePet(int id)
-        {
-            await _petServices.DeletePetAsync(id);
-            return NoContent();
-        }
-
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {

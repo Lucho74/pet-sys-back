@@ -49,14 +49,6 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteConsultation(int id)
-        {
-            await _consultationServices.DeleteConsultationAsync(id);
-            return NoContent();
-        }
-
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian,Client")]
         [HttpGet("pet/{petId:int}")]
         public async Task<IActionResult> GetByPetId(int petId)
