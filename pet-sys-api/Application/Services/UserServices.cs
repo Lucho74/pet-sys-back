@@ -222,15 +222,14 @@ namespace Application.Services
                     foreach (var consultation in await _consultationRepository.GetByPetIdAsync(pet.Id))
                     {
                         consultation.IsDeleted = isDeleted;
-                        await _consultationRepository.UpdateAsync(consultation.Id, consultation);
                     }
 
                     pet.IsDeleted = isDeleted;
-                    await _petRepository.UpdateAsync(pet.Id, pet);
                 }
             }
 
-            // El usuario se guarda al final: si algo falla a mitad, repetir la operación completa la cascada.
+            // Los repositorios comparten el DbContext del request: este UpdateAsync guarda también las mascotas
+            // y consultas modificadas arriba, todo en un solo SaveChanges (una transacción, todo o nada).
             existing.IsDeleted = isDeleted;
             await _userRepository.UpdateAsync(id, existing);
         }
