@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 using Web.ExceptionHandling;
 
@@ -43,6 +44,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Authentication:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Authentication:SecretForKey"]!))
+        };
+        // Un usuario suspendido no puede seguir usando un token emitido antes de la suspensión
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                var userId = int.Parse(context.Principal!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var user = await userRepository.GetByIdAsync(userId);
+                if (user == null || user.IsDeleted)
+                {
+                    context.Fail("User is suspended.");
+                }
+            }
         };
     });
 
