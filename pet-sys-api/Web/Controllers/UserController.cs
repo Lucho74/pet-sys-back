@@ -53,7 +53,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDTO dto)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
             var updated = await _userServices.UpdateUserAsync(id, dto, CallerId, CallerRole);
             return Ok(updated);

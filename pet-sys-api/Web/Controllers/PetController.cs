@@ -34,7 +34,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPost("")]
-        public async Task<IActionResult> AddPet([FromBody] CreatePetDTO dto)
+        public async Task<IActionResult> AddPet([FromBody] CreateEditPetDTO dto)
         {
             var created = await _petServices.AddPetAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -42,7 +42,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdatePet(int id, [FromBody] PetDTO dto)
+        public async Task<IActionResult> UpdatePet(int id, [FromBody] CreateEditPetDTO dto)
         {
             var updated = await _petServices.UpdatePetAsync(id, dto);
             return Ok(updated);

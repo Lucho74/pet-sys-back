@@ -31,7 +31,8 @@ namespace Application.Services
                 Description = consultation.Description,
                 Date = consultation.Date,
                 PetId = consultation.PetId,
-                VeterinarianId = consultation.VeterinarianId
+                VeterinarianId = consultation.VeterinarianId,
+                IsDeleted = consultation.IsDeleted
             });
         }
 
@@ -49,15 +50,22 @@ namespace Application.Services
                 Description = consultation.Description,
                 Date = consultation.Date,
                 PetId = consultation.PetId,
-                VeterinarianId = consultation.VeterinarianId
+                VeterinarianId = consultation.VeterinarianId,
+                IsDeleted = consultation.IsDeleted
             };
         }
 
-        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto)
+        public async Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto)
         {
-            if (await _petRepository.GetByIdAsync(dto.PetId) == null)
+            var pet = await _petRepository.GetByIdAsync(dto.PetId);
+            if (pet == null)
             {
                 throw new BadRequestException("PetId does not reference an existing pet.");
+            }
+
+            if (pet.IsDeleted)
+            {
+                throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
             if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
@@ -80,11 +88,12 @@ namespace Application.Services
                 Description = created.Description,
                 Date = created.Date,
                 PetId = created.PetId,
-                VeterinarianId = created.VeterinarianId
+                VeterinarianId = created.VeterinarianId,
+                IsDeleted = created.IsDeleted
             };
         }
 
-        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, ConsultationDTO dto)
+        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto)
         {
             var existing = await _consultationRepository.GetByIdAsync(id);
             if (existing == null)
@@ -92,9 +101,20 @@ namespace Application.Services
                 throw new NotFoundException($"Consultation with id {id} was not found.");
             }
 
-            if (await _petRepository.GetByIdAsync(dto.PetId) == null)
+            if (existing.IsDeleted)
+            {
+                throw new BadRequestException($"Consultation with id {id} belongs to a suspended client.");
+            }
+
+            var pet = await _petRepository.GetByIdAsync(dto.PetId);
+            if (pet == null)
             {
                 throw new BadRequestException("PetId does not reference an existing pet.");
+            }
+
+            if (pet.IsDeleted)
+            {
+                throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
             if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
@@ -119,7 +139,8 @@ namespace Application.Services
                 Description = updated.Description,
                 Date = updated.Date,
                 PetId = updated.PetId,
-                VeterinarianId = updated.VeterinarianId
+                VeterinarianId = updated.VeterinarianId,
+                IsDeleted = updated.IsDeleted
             };
         }
 
@@ -151,7 +172,8 @@ namespace Application.Services
                 Description = consultation.Description,
                 Date = consultation.Date,
                 PetId = consultation.PetId,
-                VeterinarianId = consultation.VeterinarianId
+                VeterinarianId = consultation.VeterinarianId,
+                IsDeleted = consultation.IsDeleted
             });
         }
 
@@ -164,7 +186,8 @@ namespace Application.Services
                 Description = consultation.Description,
                 Date = consultation.Date,
                 PetId = consultation.PetId,
-                VeterinarianId = consultation.VeterinarianId
+                VeterinarianId = consultation.VeterinarianId,
+                IsDeleted = consultation.IsDeleted
             });
         }
     }

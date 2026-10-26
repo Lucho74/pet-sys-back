@@ -13,10 +13,14 @@ namespace Application.Services
     public class UserServices : IUserServices
     {
         public readonly IUserRepository _userRepository;
+        public readonly IPetRepository _petRepository;
+        public readonly IConsultationRepository _consultationRepository;
 
-        public UserServices(IUserRepository userRepository)
+        public UserServices(IUserRepository userRepository, IPetRepository petRepository, IConsultationRepository consultationRepository)
         {
             _userRepository = userRepository;
+            _petRepository = petRepository;
+            _consultationRepository = consultationRepository;
         }
 
         private static bool CanSee(User target, int callerId, string callerRole)
@@ -30,17 +34,18 @@ namespace Application.Services
             };
         }
 
+        private static int Rank(string role) => role switch
+        {
+            "SysAdmin" => 3,
+            "Admin" => 2,
+            "Veterinarian" => 1,
+            _ => 0
+        };
+
+        // Cada rol gestiona todos los roles que están por debajo; a SysAdmin no lo gestiona nadie.
         private static void EnsureCanManage(string targetRole, string callerRole)
         {
-            var allowed = targetRole switch
-            {
-                "Client" => callerRole is "Veterinarian" or "SysAdmin",
-                "Veterinarian" => callerRole is "Admin" or "SysAdmin",
-                "Admin" => callerRole is "SysAdmin",
-                _ => false
-            };
-
-            if (!allowed)
+            if (Rank(callerRole) <= Rank(targetRole))
             {
                 throw new ForbiddenException($"Role {callerRole} cannot manage users of role {targetRole}.");
             }
@@ -148,7 +153,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<UserDTO> UpdateUserAsync(int id, UserDTO dto, int callerId, string callerRole)
+        public async Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto, int callerId, string callerRole)
         {
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
             EnsureCanManage(existing.GetType().Name, callerRole);
@@ -205,6 +210,22 @@ namespace Application.Services
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
             EnsureCanManage(existing.GetType().Name, callerRole);
 
+            if (existing is Client)
+            {
+                foreach (var pet in await _petRepository.GetByClientIdAsync(id))
+                {
+                    foreach (var consultation in await _consultationRepository.GetByPetIdAsync(pet.Id))
+                    {
+                        consultation.IsDeleted = isDeleted;
+                        await _consultationRepository.UpdateAsync(consultation.Id, consultation);
+                    }
+
+                    pet.IsDeleted = isDeleted;
+                    await _petRepository.UpdateAsync(pet.Id, pet);
+                }
+            }
+
+            // El usuario se guarda al final: si algo falla a mitad, repetir la operación completa la cascada.
             existing.IsDeleted = isDeleted;
             await _userRepository.UpdateAsync(id, existing);
         }

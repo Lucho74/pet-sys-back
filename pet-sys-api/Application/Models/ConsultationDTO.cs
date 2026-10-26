@@ -15,5 +15,6 @@ namespace Application.Models
         public int PetId { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "VeterinarianId must be a positive number.")]
         public int VeterinarianId { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }
