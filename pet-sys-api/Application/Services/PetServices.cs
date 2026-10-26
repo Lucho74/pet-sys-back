@@ -3,9 +3,6 @@ using Application.Interfaces;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -118,21 +115,17 @@ namespace Application.Services
             existing.BirthDate = dto.BirthDate.Value;
             existing.ClientId = dto.ClientId;
 
-            var updated = await _petRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"Pet with id {id} was not found.");
-            }
+            await _petRepository.UpdateAsync(id, existing);
 
             return new PetDTO
             {
-                Id = updated.Id,
-                Name = updated.Name,
-                Specie = updated.Specie,
-                Breed = updated.Breed,
-                BirthDate = updated.BirthDate,
-                ClientId = updated.ClientId,
-                IsDeleted = updated.IsDeleted
+                Id = existing.Id,
+                Name = existing.Name,
+                Specie = existing.Specie,
+                Breed = existing.Breed,
+                BirthDate = existing.BirthDate,
+                ClientId = existing.ClientId,
+                IsDeleted = existing.IsDeleted
             };
         }
 

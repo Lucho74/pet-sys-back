@@ -3,10 +3,6 @@ using Application.Interfaces;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -181,21 +177,17 @@ namespace Application.Services
                 existingClient.Dni = dto.Dni;
             }
 
-            var updated = await _userRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
+            await _userRepository.UpdateAsync(id, existing);
 
             return new UserDTO
             {
-                Id = updated.Id,
-                FullName = updated.FullName,
-                Email = updated.Email,
-                Phone = updated.Phone,
-                IsDeleted = updated.IsDeleted,
-                RoleName = updated.GetType().Name,
-                Dni = updated is Client client ? client.Dni : null
+                Id = existing.Id,
+                FullName = existing.FullName,
+                Email = existing.Email,
+                Phone = existing.Phone,
+                IsDeleted = existing.IsDeleted,
+                RoleName = existing.GetType().Name,
+                Dni = existing is Client client ? client.Dni : null
             };
         }
 

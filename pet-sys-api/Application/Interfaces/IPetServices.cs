@@ -1,6 +1,4 @@
 using Application.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Application.Interfaces
 {
@@ -11,7 +9,5 @@ namespace Application.Interfaces
         Task<PetDTO> GetPetByIdAsync(int id);
         Task<PetDTO> AddPetAsync(CreateEditPetDTO dto);
         Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto);
-
-
     }
 }
