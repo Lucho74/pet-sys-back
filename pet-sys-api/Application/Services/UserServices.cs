@@ -127,13 +127,18 @@ namespace Application.Services
                     break;
                 case UserType.Client:
                 default:
+                    if (string.IsNullOrWhiteSpace(dto.Dni))
+                    {
+                        throw new BadRequestException("Dni is required for clients.");
+                    }
+
                     newUser = new Client
                     {
                         FullName = dto.FullName,
                         Email = dto.Email,
                         Phone = dto.Phone,
                         Password = dto.Password ?? string.Empty,
-                        Dni = dto.Dni ?? string.Empty
+                        Dni = dto.Dni
                     };
                     break;
             }
@@ -171,7 +176,7 @@ namespace Application.Services
             {
                 existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
-            if (existing is Client existingClient && dto.Dni != null)
+            if (existing is Client existingClient && !string.IsNullOrWhiteSpace(dto.Dni))
             {
                 existingClient.Dni = dto.Dni;
             }
