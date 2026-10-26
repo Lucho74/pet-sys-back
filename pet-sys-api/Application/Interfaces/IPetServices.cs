@@ -11,7 +11,6 @@ namespace Application.Interfaces
         Task<PetDTO> GetPetByIdAsync(int id);
         Task<PetDTO> AddPetAsync(CreateEditPetDTO dto);
         Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto);
-        Task DeletePetAsync(int id);
 
 
     }

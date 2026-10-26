@@ -11,7 +11,6 @@ namespace Application.Interfaces
         Task<ConsultationDTO> GetConsultationByIdAsync(int id);
         Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto);
         Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto);
-        Task DeleteConsultationAsync(int id);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId, int? clientId = null);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
     }

@@ -144,17 +144,6 @@ namespace Application.Services
             };
         }
 
-        public async Task DeleteConsultationAsync(int id)
-        {
-            var exists = await _consultationRepository.ExistsAsync(id);
-            if (!exists)
-            {
-                throw new NotFoundException($"Consultation with id {id} was not found.");
-            }
-
-            await _consultationRepository.DeleteAsync(id);
-        }
-
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId, int? clientId = null)
         {
             if (clientId != null)

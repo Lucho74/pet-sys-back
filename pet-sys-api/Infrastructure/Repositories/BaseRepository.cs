@@ -55,21 +55,5 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return existingEntity;
         }
-
-        public async Task DeleteAsync(int id)
-        {
-            var entity = await _context.Set<T>().FindAsync(id);
-
-            if (entity is not null)
-            {
-                _context.Set<T>().Remove(entity);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task<bool> ExistsAsync(int id)
-        {
-            return await _context.Set<T>().AnyAsync(e => e.Id == id);
-        }
     }
 }

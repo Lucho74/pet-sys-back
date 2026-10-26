@@ -136,17 +136,6 @@ namespace Application.Services
             };
         }
 
-        public async Task DeletePetAsync(int id)
-        {
-            var exists = await _petRepository.ExistsAsync(id);
-            if (!exists)
-            {
-                throw new NotFoundException($"Pet with id {id} was not found.");
-            }
-
-            await _petRepository.DeleteAsync(id);
-        }
-
         public async Task<IEnumerable<PetDTO>> GetPetsByClientAsync(int clientId)
         {
             var pets = await _petRepository.GetByClientIdAsync(clientId);
