@@ -159,6 +159,11 @@ namespace Application.Services
             var existing = await GetVisibleUserAsync(id, callerId, callerRole);
             EnsureCanManage(existing.GetType().Name, callerRole);
 
+            if (existing.IsDeleted)
+            {
+                throw new BadRequestException($"User with id {id} is suspended.");
+            }
+
             var sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
             if (sameEmail != null && sameEmail.Id != id)
             {

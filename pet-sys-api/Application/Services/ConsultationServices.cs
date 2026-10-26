@@ -65,9 +65,14 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
+            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian veterinarian)
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
+            }
+
+            if (veterinarian.IsDeleted)
+            {
+                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
             }
 
             var consultation = new Consultation
@@ -114,9 +119,15 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
+            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian veterinarian)
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
+            }
+
+            // Solo al reasignar: una consulta vieja de un veterinario suspendido se puede seguir corrigiendo.
+            if (veterinarian.IsDeleted && dto.VeterinarianId != existing.VeterinarianId)
+            {
+                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
             }
 
             existing.Description = dto.Description;
