@@ -31,6 +31,8 @@ namespace Domain.Entities
         public int ClientId { get; set; }
         public Client Client { get; set; }
 
+        public bool IsDeleted { get; set; } = false;
+
         public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
     }
 }

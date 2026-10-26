@@ -35,7 +35,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPost("")]
-        public async Task<IActionResult> AddConsultation([FromBody] CreateConsultationDTO dto)
+        public async Task<IActionResult> AddConsultation([FromBody] CreateEditConsultationDTO dto)
         {
             var created = await _consultationServices.AddConsultationAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -43,7 +43,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateConsultation(int id, [FromBody] ConsultationDTO dto)
+        public async Task<IActionResult> UpdateConsultation(int id, [FromBody] CreateEditConsultationDTO dto)
         {
             var updated = await _consultationServices.UpdateConsultationAsync(id, dto);
             return Ok(updated);

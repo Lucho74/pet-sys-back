@@ -29,5 +29,6 @@ namespace Domain.Entities
         [ForeignKey(nameof(Veterinarian))]
         public int VeterinarianId { get; set; }
         public Veterinarian Veterinarian { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

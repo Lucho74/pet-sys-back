@@ -30,7 +30,8 @@ namespace Application.Services
                 Specie = pet.Specie,
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
-                ClientId = pet.ClientId
+                ClientId = pet.ClientId,
+                IsDeleted = pet.IsDeleted
             });
         }
 
@@ -49,15 +50,21 @@ namespace Application.Services
                 Specie = pet.Specie,
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
-                ClientId = pet.ClientId
+                ClientId = pet.ClientId,
+                IsDeleted = pet.IsDeleted
             };
         }
 
-        public async Task<PetDTO> AddPetAsync(CreatePetDTO dto)
+        public async Task<PetDTO> AddPetAsync(CreateEditPetDTO dto)
         {
-            if (await _userRepository.GetByIdAsync(dto.ClientId) is not Client)
+            if (await _userRepository.GetByIdAsync(dto.ClientId) is not Client client)
             {
                 throw new BadRequestException("ClientId does not reference an existing client.");
+            }
+
+            if (client.IsDeleted)
+            {
+                throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
             }
 
             var pet = new Pet
@@ -77,11 +84,12 @@ namespace Application.Services
                 Specie = created.Specie,
                 Breed = created.Breed,
                 BirthDate = created.BirthDate,
-                ClientId = created.ClientId
+                ClientId = created.ClientId,
+                IsDeleted = created.IsDeleted
             };
         }
 
-        public async Task<PetDTO> UpdatePetAsync(int id, PetDTO dto)
+        public async Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto)
         {
             var existing = await _petRepository.GetByIdAsync(id);
             if (existing == null)
@@ -89,9 +97,19 @@ namespace Application.Services
                 throw new NotFoundException($"Pet with id {id} was not found.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.ClientId) is not Client)
+            if (existing.IsDeleted)
+            {
+                throw new BadRequestException($"Pet with id {id} belongs to a suspended client.");
+            }
+
+            if (await _userRepository.GetByIdAsync(dto.ClientId) is not Client client)
             {
                 throw new BadRequestException("ClientId does not reference an existing client.");
+            }
+
+            if (client.IsDeleted)
+            {
+                throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
             }
 
             existing.Name = dto.Name;
@@ -113,7 +131,8 @@ namespace Application.Services
                 Specie = updated.Specie,
                 Breed = updated.Breed,
                 BirthDate = updated.BirthDate,
-                ClientId = updated.ClientId
+                ClientId = updated.ClientId,
+                IsDeleted = updated.IsDeleted
             };
         }
 
@@ -138,7 +157,8 @@ namespace Application.Services
                 Specie = pet.Specie,
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
-                ClientId = pet.ClientId
+                ClientId = pet.ClientId,
+                IsDeleted = pet.IsDeleted
             });
         }
     }

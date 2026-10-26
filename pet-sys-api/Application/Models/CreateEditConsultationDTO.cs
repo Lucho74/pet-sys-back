@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Application.Models
 {
-    public class CreateConsultationDTO
+    public class CreateEditConsultationDTO
     {
         [Required]
         [StringLength(500)]
