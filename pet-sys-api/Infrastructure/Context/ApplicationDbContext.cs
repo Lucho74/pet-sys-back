@@ -9,12 +9,9 @@ namespace Infrastructure.Context
         {
         }
 
-        public DbSet<Admin> Admins { get; set; }
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Pet> Pets { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Veterinarian> Veterinarians { get; set; }
-        public DbSet<Client> Clients { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

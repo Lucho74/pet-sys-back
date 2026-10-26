@@ -1,4 +1,3 @@
-using Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.Models
