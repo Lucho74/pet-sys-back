@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -23,65 +24,33 @@ namespace Application.Services
             _consultationRepository = consultationRepository;
         }
 
-        private static bool CanSee(User target, int callerId, string callerRole)
+        public async Task<IEnumerable<UserDTO>> GetAllUserAsync()
         {
-            return target.Id == callerId || callerRole switch
-            {
-                "SysAdmin" => true,
-                "Admin" => target is not SysAdmin,
-                "Veterinarian" => target is Client,
-                _ => false
-            };
-        }
+            IEnumerable<User> users = await _userRepository.GetAllAsync();
 
-        private static int Rank(string role) => role switch
-        {
-            "SysAdmin" => 3,
-            "Admin" => 2,
-            "Veterinarian" => 1,
-            _ => 0
-        };
-
-        // Cada rol gestiona todos los roles que están por debajo; a SysAdmin no lo gestiona nadie.
-        private static void EnsureCanManage(string targetRole, string callerRole)
-        {
-            if (Rank(callerRole) <= Rank(targetRole))
-            {
-                throw new ForbiddenException($"Role {callerRole} cannot manage users of role {targetRole}.");
-            }
-        }
-
-        // 404 en vez de 403, para que un Admin no sepa que existe un SysAdmin.
-        private async Task<User> GetVisibleUserAsync(int id, int callerId, string callerRole)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null || !CanSee(user, callerId, callerRole))
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
-
-            return user;
-        }
-
-        public async Task<IEnumerable<UserDTO>> GetAllUserAsync(int callerId, string callerRole)
-        {
-            var users = await _userRepository.GetAllAsync();
-
-            return users.Where(user => CanSee(user, callerId, callerRole)).Select(user => new UserDTO
+            return users.Select(user => new UserDTO
             {
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
-                RoleName = user.GetType().Name,
-                Dni = user is Client client ? client.Dni : null
-            });
+                Roles = user.UserRoles
+                .Select(ur => ur.Role.Name)
+                .OrderBy(name => name)
+                .ToArray(),
+                Dni = user.ClientProfile?.Dni
+            }).ToArray();
         }
 
-        public async Task<UserDTO> GetUserByIdAsync(int id, int callerId, string callerRole)
+        public async Task<UserDTO> GetUserByIdAsync(int id)
         {
-            var user = await GetVisibleUserAsync(id, callerId, callerRole);
+            User? user = await _userRepository.GetByIdAsync(id);
+
+            if (user == null)
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
 
             return new UserDTO
             {
@@ -90,57 +59,57 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
-                RoleName = user.GetType().Name,
-                Dni = user is Client client ? client.Dni : null
+                Roles = user.UserRoles
+                .Select(ur => ur.Role.Name)
+                .OrderBy(name => name)
+                .ToArray(),
+                Dni = user.ClientProfile?.Dni
             };
         }
 
-        public async Task<UserDTO> AddUserAsync(CreateUserDTO dto, string callerRole)
+        public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
-            EnsureCanManage(dto.UserType.ToString(), callerRole);
+            User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
-            if (await _userRepository.GetByEmailAsync(dto.Email) != null)
+            if (sameEmail != null)
             {
                 throw new BadRequestException($"A user with email {dto.Email} already exists.");
             }
 
-            User newUser;
-            switch (dto.UserType)
+            if (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Trim().Length > 8)
             {
-                case UserType.Veterinarian:
-                    newUser = new Veterinarian
-                    {
-                        FullName = dto.FullName,
-                        Email = dto.Email,
-                        Phone = dto.Phone,
-                        Password = dto.Password ?? string.Empty
-                    };
-                    break;
-                case UserType.Admin:
-                    newUser = new Admin
-                    {
-                        FullName = dto.FullName,
-                        Email = dto.Email,
-                        Phone = dto.Phone,
-                        Password = dto.Password ?? string.Empty
-                    };
-                    break;
-                case UserType.Client:
-                default:
-                    newUser = new Client
-                    {
-                        FullName = dto.FullName,
-                        Email = dto.Email,
-                        Phone = dto.Phone,
-                        Password = dto.Password ?? string.Empty,
-                        Dni = dto.Dni ?? string.Empty
-                    };
-                    break;
+                throw new BadRequestException(
+                    "Dni is required and must contain at most 8 characters.");
             }
 
-            newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
+            Role? clientRole = await _userRepository.GetRoleByNameAsync(RoleNames.Client);
 
-            var created = await _userRepository.AddAsync(newUser);
+            if (clientRole == null)
+            {
+                throw new InvalidOperationException(
+                    "The Client role has not been seeded.");
+            }
+
+            User newUser = new User
+            {
+                FullName = dto.FullName,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                ClientProfile = new ClientProfile
+                {
+                    Dni = dto.Dni.Trim()
+                }
+            };
+
+            newUser.UserRoles.Add(new UserRole
+            {
+                RoleId = clientRole.Id,
+                Role = clientRole
+            });
+
+            User created = await _userRepository.AddAsync(newUser);
+
             return new UserDTO
             {
                 Id = created.Id,
@@ -148,35 +117,58 @@ namespace Application.Services
                 Email = created.Email,
                 Phone = created.Phone,
                 IsDeleted = created.IsDeleted,
-                RoleName = created.GetType().Name,
-                Dni = created is Client client ? client.Dni : null
+                Roles = created.UserRoles
+                .Select(ur => ur.Role.Name)
+                .OrderBy(name => name)
+                .ToArray(),
+                Dni = created.ClientProfile?.Dni
             };
         }
 
-        public async Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto, int callerId, string callerRole)
+        public async Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto)
         {
-            var existing = await GetVisibleUserAsync(id, callerId, callerRole);
-            EnsureCanManage(existing.GetType().Name, callerRole);
+            User? existing = await _userRepository.GetByIdAsync(id);
 
-            var sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
+            if (existing == null)
+            {
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
+
+            User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
+
             if (sameEmail != null && sameEmail.Id != id)
             {
                 throw new BadRequestException($"A user with email {dto.Email} already exists.");
             }
 
+            if (dto.Dni != null)
+            {
+                if (existing.ClientProfile == null)
+                {
+                    throw new BadRequestException(
+                        "The user does not have a client profile.");
+                }
+
+                if (string.IsNullOrWhiteSpace(dto.Dni) ||
+                    dto.Dni.Trim().Length > 8)
+                {
+                    throw new BadRequestException(
+                        "Dni must contain between 1 and 8 characters.");
+                }
+
+                existing.ClientProfile.Dni = dto.Dni.Trim();
+            }
+
             existing.FullName = dto.FullName;
             existing.Email = dto.Email;
             existing.Phone = dto.Phone;
+
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
-            if (existing is Client existingClient && dto.Dni != null)
-            {
-                existingClient.Dni = dto.Dni;
-            }
 
-            var updated = await _userRepository.UpdateAsync(id, existing);
+            User? updated = await _userRepository.UpdateAsync(id, existing);
             if (updated == null)
             {
                 throw new NotFoundException($"User with id {id} was not found.");
@@ -189,50 +181,59 @@ namespace Application.Services
                 Email = updated.Email,
                 Phone = updated.Phone,
                 IsDeleted = updated.IsDeleted,
-                RoleName = updated.GetType().Name,
-                Dni = updated is Client client ? client.Dni : null
+                Roles = updated.UserRoles
+                .Select(ur => ur.Role.Name)
+                .OrderBy(name => name)
+                .ToArray(),
+                Dni = updated.ClientProfile?.Dni
             };
         }
 
-        public async Task DeleteUserAsync(int id, int callerId, string callerRole)
+        public async Task DeleteUserAsync(int id)
         {
-            await SetDeletedAsync(id, true, callerId, callerRole);
+            await SetDeletedAsync(id, true);
         }
 
-        public async Task ReactivateUserAsync(int id, int callerId, string callerRole)
+        public async Task ReactivateUserAsync(int id)
         {
-            await SetDeletedAsync(id, false, callerId, callerRole);
+            await SetDeletedAsync(id, false);
         }
 
-        // Los usuarios se suspenden, nunca se borran: borrar un Client elimina en cascada sus mascotas y consultas.
-        private async Task SetDeletedAsync(int id, bool isDeleted, int callerId, string callerRole)
+        private async Task SetDeletedAsync(int id, bool isDeleted)
         {
-            var existing = await GetVisibleUserAsync(id, callerId, callerRole);
-            EnsureCanManage(existing.GetType().Name, callerRole);
+            User? existing = await _userRepository.GetByIdAsync(id);
 
-            if (existing is Client)
+            if (existing == null)
             {
-                foreach (var pet in await _petRepository.GetByClientIdAsync(id))
-                {
-                    foreach (var consultation in await _consultationRepository.GetByPetIdAsync(pet.Id))
-                    {
-                        consultation.IsDeleted = isDeleted;
-                        await _consultationRepository.UpdateAsync(consultation.Id, consultation);
-                    }
-
-                    pet.IsDeleted = isDeleted;
-                    await _petRepository.UpdateAsync(pet.Id, pet);
-                }
+                throw new NotFoundException(
+                    $"User with id {id} was not found.");
             }
 
-            // El usuario se guarda al final: si algo falla a mitad, repetir la operación completa la cascada.
+            foreach (var pet in await _petRepository.GetByClientIdAsync(id))
+            {
+                foreach (var consultation in
+                    await _consultationRepository.GetByPetIdAsync(pet.Id))
+                {
+                    consultation.IsDeleted = isDeleted;
+
+                    await _consultationRepository.UpdateAsync(
+                        consultation.Id, consultation);
+                }
+
+                pet.IsDeleted = isDeleted;
+
+                await _petRepository.UpdateAsync(pet.Id, pet);
+            }
+
             existing.IsDeleted = isDeleted;
+
             await _userRepository.UpdateAsync(id, existing);
         }
 
         public async Task<UserDTO> AuthenticateAsync(LoginDTO dto)
         {
-            var user = await _userRepository.GetByEmailAsync(dto.Email);
+            User? user = await _userRepository.GetByEmailAsync(dto.Email);
+
             if (user == null || user.IsDeleted)
             {
                 throw new UnauthorizedException("Invalid email or password.");
@@ -246,7 +247,15 @@ namespace Application.Services
             return new UserDTO
             {
                 Id = user.Id,
-                RoleName = user.GetType().Name
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                IsDeleted = user.IsDeleted,
+                Roles = user.UserRoles
+                    .Select(ur => ur.Role.Name)
+                    .OrderBy(name => name)
+                    .ToArray(),
+                Dni = user.ClientProfile?.Dni
             };
         }
     }

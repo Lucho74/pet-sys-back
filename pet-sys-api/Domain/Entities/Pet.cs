@@ -29,7 +29,7 @@ namespace Domain.Entities
         [Required]
         [ForeignKey(nameof(Client))]
         public int ClientId { get; set; }
-        public Client Client { get; set; }
+        public User Client { get; set; } = null!;
 
         public bool IsDeleted { get; set; } = false;
 

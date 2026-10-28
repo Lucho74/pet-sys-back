@@ -18,12 +18,11 @@ namespace Web.Controllers
         }
 
         private int CallerId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        private string CallerRole => User.FindFirstValue(ClaimTypes.Role)!;
 
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
-            var user = await _userServices.GetUserByIdAsync(CallerId, CallerId, CallerRole);
+            var user = await _userServices.GetUserByIdAsync(CallerId);
             return Ok(user);
         }
 
@@ -31,7 +30,7 @@ namespace Web.Controllers
         [HttpGet("")]
         public async Task<IActionResult> GetAllUser()
         {
-            var users = await _userServices.GetAllUserAsync(CallerId, CallerRole);
+            var users = await _userServices.GetAllUserAsync();
             return Ok(users);
         }
 
@@ -39,7 +38,7 @@ namespace Web.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var user = await _userServices.GetUserByIdAsync(id, CallerId, CallerRole);
+            var user = await _userServices.GetUserByIdAsync(id);
             return Ok(user);
         }
 
@@ -47,7 +46,7 @@ namespace Web.Controllers
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
-            var created = await _userServices.AddUserAsync(dto, CallerRole);
+            var created = await _userServices.AddUserAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -55,7 +54,7 @@ namespace Web.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
-            var updated = await _userServices.UpdateUserAsync(id, dto, CallerId, CallerRole);
+            var updated = await _userServices.UpdateUserAsync(id, dto);
             return Ok(updated);
         }
 
@@ -63,7 +62,7 @@ namespace Web.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            await _userServices.DeleteUserAsync(id, CallerId, CallerRole);
+            await _userServices.DeleteUserAsync(id);
             return NoContent();
         }
 
@@ -71,7 +70,7 @@ namespace Web.Controllers
         [HttpPost("{id:int}/reactivate")]
         public async Task<IActionResult> ReactivateUser(int id)
         {
-            await _userServices.ReactivateUserAsync(id, CallerId, CallerRole);
+            await _userServices.ReactivateUserAsync(id);
             return NoContent();
         }
     }

@@ -15,8 +15,8 @@ namespace Application.Models
         [Phone]
         public string Phone { get; set; }
         public bool IsDeleted { get; set; } = false;
-        public string RoleName { get; set; }
-        [StringLength(20)]
+        public IReadOnlyCollection<string> Roles { get; set; } = Array.Empty<string>();
+        [StringLength(8)]
         public string? Dni { get; set; }
 
     }

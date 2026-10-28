@@ -9,13 +9,9 @@ namespace Infrastructure.Context
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-
-        public DbSet<Admin> Admins { get; set; }
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Pet> Pets { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Veterinarian> Veterinarians { get; set; }
-        public DbSet<Client> Clients { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<ClientProfile> ClientProfiles { get; set; }
@@ -23,13 +19,6 @@ namespace Infrastructure.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<User>()
-                .HasDiscriminator<string>("UserType")
-                .HasValue<Admin>("Admin")
-                .HasValue<Client>("Client")
-                .HasValue<Veterinarian>("Veterinarian")
-                .HasValue<SysAdmin>("SysAdmin");
 
             modelBuilder.Entity<Pet>()
                 .HasOne(p => p.Client)
@@ -62,8 +51,6 @@ namespace Infrastructure.Context
             modelBuilder.Entity<User>().Property(u => u.Email).HasMaxLength(200).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Phone).HasMaxLength(50).IsRequired();
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
-
-            modelBuilder.Entity<Client>().Property(c => c.Dni).HasMaxLength(20).IsRequired();
 
             modelBuilder.Entity<Pet>().Property(p => p.Name).HasMaxLength(50).IsRequired();
             modelBuilder.Entity<Pet>().Property(p => p.Specie).HasMaxLength(50).IsRequired();

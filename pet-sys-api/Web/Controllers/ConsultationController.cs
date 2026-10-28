@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Constants;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,9 +54,15 @@ namespace Web.Controllers
         [HttpGet("pet/{petId:int}")]
         public async Task<IActionResult> GetByPetId(int petId)
         {
-            int? clientId = User.IsInRole("Client")
-                ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)
-                : null;
+            var isStaff =
+                User.IsInRole(RoleNames.SysAdmin) ||
+                User.IsInRole(RoleNames.Admin) ||
+                User.IsInRole(RoleNames.Veterinarian);
+
+            int? clientId = isStaff
+                ? null
+                : int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
             var consultations = await _consultationServices.GetConsultationsByPetIdAsync(petId, clientId);
             return Ok(consultations);
         }

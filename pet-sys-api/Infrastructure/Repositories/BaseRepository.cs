@@ -20,32 +20,36 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
+        protected virtual IQueryable<T> Query => _context.Set<T>();
+
         public async Task<T?> GetByIdAsync(int id)
         {
-            var entity = await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
-            return entity;
+            return await Query.FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _context.Set<T>().ToListAsync();
+            return await Query.ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> FindAsync(
+            Expression<Func<T, bool>> predicate)
         {
-            return await _context.Set<T>().Where(predicate).ToListAsync();
+            return await Query.Where(predicate).ToListAsync();
         }
 
         public async Task<T> AddAsync(T entity)
         {
             _context.Set<T>().Add(entity);
             await _context.SaveChangesAsync();
+
             return entity;
         }
 
         public async Task<T?> UpdateAsync(int id, T entity)
         {
             var existingEntity = await _context.Set<T>().FindAsync(id);
+
             if (existingEntity == null)
             {
                 return null;
@@ -53,6 +57,7 @@ namespace Infrastructure.Repositories
 
             _context.Entry(existingEntity).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
+
             return existingEntity;
         }
     }

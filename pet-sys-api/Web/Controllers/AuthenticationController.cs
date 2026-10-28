@@ -31,22 +31,29 @@ namespace Web.Controllers
 
             var claimsForToken = new List<Claim>
             {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.RoleName)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString())
             };
+
+            claimsForToken.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+            var expirationMinutes =
+                _config.GetValue<int?>("Authentication:AccessTokenExpirationMinutes")
+                ?? throw new InvalidOperationException("Access token expiration has not been configured.");
+
+            if (expirationMinutes <= 0)
+            {
+                throw new InvalidOperationException("Access token expiration must be greater than zero.");
+            }
+
+            var now = DateTime.UtcNow;
 
             var jwtSecurityToken = new JwtSecurityToken(
                 _config["Authentication:Issuer"],
                 _config["Authentication:Audience"],
-                claimsForToken,
-                DateTime.UtcNow,
-                DateTime.UtcNow.Add(user.RoleName switch
-                {
-                    "Veterinarian" => TimeSpan.FromHours(8),
-                    "Admin" or "SysAdmin" => TimeSpan.FromHours(24),
-                    _ => TimeSpan.FromHours(1)
-                }),
-                signature
+                 claimsForToken,
+                 now,
+                now.AddMinutes(expirationMinutes),
+                 signature
             );
 
             var tokenToReturn = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);

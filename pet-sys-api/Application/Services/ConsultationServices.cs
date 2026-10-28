@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -57,7 +58,8 @@ namespace Application.Services
 
         public async Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto)
         {
-            var pet = await _petRepository.GetByIdAsync(dto.PetId);
+            Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
+
             if (pet == null)
             {
                 throw new BadRequestException("PetId does not reference an existing pet.");
@@ -68,9 +70,17 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
+            User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
+
+            if (veterinarian == null || !veterinarian.UserRoles.Any(
+                ur => ur.Role.Name == RoleNames.Veterinarian))
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
+            }
+
+            if (veterinarian.IsDeleted)
+            {
+                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
             }
 
             var consultation = new Consultation
@@ -95,7 +105,8 @@ namespace Application.Services
 
         public async Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto)
         {
-            var existing = await _consultationRepository.GetByIdAsync(id);
+            Consultation? existing = await _consultationRepository.GetByIdAsync(id);
+
             if (existing == null)
             {
                 throw new NotFoundException($"Consultation with id {id} was not found.");
@@ -106,7 +117,8 @@ namespace Application.Services
                 throw new BadRequestException($"Consultation with id {id} belongs to a suspended client.");
             }
 
-            var pet = await _petRepository.GetByIdAsync(dto.PetId);
+            Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
+
             if (pet == null)
             {
                 throw new BadRequestException("PetId does not reference an existing pet.");
@@ -117,9 +129,17 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.VeterinarianId) is not Veterinarian)
+            User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
+
+            if (veterinarian == null || !veterinarian.UserRoles.Any(
+                    ur => ur.Role.Name == RoleNames.Veterinarian))
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
+            }
+
+            if (veterinarian.IsDeleted)
+            {
+                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
             }
 
             existing.Description = dto.Description;

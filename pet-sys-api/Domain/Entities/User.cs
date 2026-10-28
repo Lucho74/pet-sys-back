@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public abstract class User : IEntity
+    public class User : IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -31,6 +31,8 @@ namespace Domain.Entities
         public bool IsDeleted { get; set; } = false;
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ClientProfile? ClientProfile { get; set; }
+        public ICollection<Pet> Pets { get; set; } = new List<Pet>();
+        public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
 
 
     }

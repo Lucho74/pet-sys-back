@@ -15,7 +15,7 @@ namespace Application.Models
         public string Phone { get; set; }
         [StringLength(100, MinimumLength = 6)]
         public string? Password { get; set; }
-        [StringLength(20)]
+        [StringLength(8)]
         public string? Dni { get; set; }
     }
 }

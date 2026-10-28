@@ -16,14 +16,28 @@ namespace Infrastructure.Repositories
         {
         }
 
+        protected override IQueryable<User> Query =>
+            _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.ClientProfile);
+
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Set<User>().FirstOrDefaultAsync(x => x.Email == email);
+            return await Query.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<IEnumerable<T>> GetByRoleAsync<T>() where T : User
+        public async Task<IEnumerable<User>> GetByRoleAsync(string roleName)
         {
-            return await _context.Set<User>().OfType<T>().ToListAsync();
+            return await Query
+                .Where(u => u.UserRoles.Any(ur => ur.Role.Name == roleName))
+                .ToListAsync();
+        }
+
+        public async Task<Role?> GetRoleByNameAsync(string roleName)
+        {
+            return await _context.Roles
+                .SingleOrDefaultAsync(r => r.Name == roleName);
         }
     }
 }

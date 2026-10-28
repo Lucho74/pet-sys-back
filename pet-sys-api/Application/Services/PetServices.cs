@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -57,9 +58,13 @@ namespace Application.Services
 
         public async Task<PetDTO> AddPetAsync(CreateEditPetDTO dto)
         {
-            if (await _userRepository.GetByIdAsync(dto.ClientId) is not Client client)
+            User? client = await _userRepository.GetByIdAsync(dto.ClientId);
+
+            if (client == null ||
+                !client.UserRoles.Any(ur => ur.Role.Name == RoleNames.Client))
             {
-                throw new BadRequestException("ClientId does not reference an existing client.");
+                throw new BadRequestException(
+                    "ClientId does not reference an existing client.");
             }
 
             if (client.IsDeleted)
@@ -91,7 +96,7 @@ namespace Application.Services
 
         public async Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto)
         {
-            var existing = await _petRepository.GetByIdAsync(id);
+            Pet? existing = await _petRepository.GetByIdAsync(id);
             if (existing == null)
             {
                 throw new NotFoundException($"Pet with id {id} was not found.");
@@ -102,7 +107,9 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {id} belongs to a suspended client.");
             }
 
-            if (await _userRepository.GetByIdAsync(dto.ClientId) is not Client client)
+            User? client = await _userRepository.GetByIdAsync(dto.ClientId);
+
+            if (client == null || !client.UserRoles.Any(ur => ur.Role.Name == RoleNames.Client))
             {
                 throw new BadRequestException("ClientId does not reference an existing client.");
             }

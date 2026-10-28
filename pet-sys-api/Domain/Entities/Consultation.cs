@@ -28,7 +28,7 @@ namespace Domain.Entities
         [Required]
         [ForeignKey(nameof(Veterinarian))]
         public int VeterinarianId { get; set; }
-        public Veterinarian Veterinarian { get; set; }
+        public User Veterinarian { get; set; } = null!;
         public bool IsDeleted { get; set; } = false;
     }
 }
