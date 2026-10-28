@@ -29,6 +29,8 @@ namespace Domain.Entities
         [Phone]
         public string Phone { get; set; }
         public bool IsDeleted { get; set; } = false;
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ClientProfile? ClientProfile { get; set; }
 
 
     }

@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Constants;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Context
 {
@@ -15,6 +16,9 @@ namespace Infrastructure.Context
         public DbSet<User> Users { get; set; }
         public DbSet<Veterinarian> Veterinarians { get; set; }
         public DbSet<Client> Clients { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<ClientProfile> ClientProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +70,13 @@ namespace Infrastructure.Context
             modelBuilder.Entity<Pet>().Property(p => p.Breed).HasMaxLength(50).IsRequired();
 
             modelBuilder.Entity<Consultation>().Property(c => c.Description).HasMaxLength(500).IsRequired();
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = RoleNames.SysAdmin },
+                new Role { Id = 2, Name = RoleNames.Admin },
+                new Role { Id = 3, Name = RoleNames.Veterinarian },
+                new Role { Id = 4, Name = RoleNames.Client }
+            );
         }
     }
 }

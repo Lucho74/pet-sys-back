@@ -22,6 +22,21 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Entities.ClientProfile", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("ClientProfiles");
+                });
+
             modelBuilder.Entity("Domain.Entities.Consultation", b =>
                 {
                     b.Property<int>("Id")
@@ -95,6 +110,49 @@ namespace Infrastructure.Migrations
                     b.ToTable("Pets");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "SysAdmin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Veterinarian"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Client"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -143,6 +201,21 @@ namespace Infrastructure.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("Domain.Entities.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles");
+                });
+
             modelBuilder.Entity("Domain.Entities.Admin", b =>
                 {
                     b.HasBaseType("Domain.Entities.User");
@@ -176,6 +249,17 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Veterinarian");
                 });
 
+            modelBuilder.Entity("Domain.Entities.ClientProfile", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithOne("ClientProfile")
+                        .HasForeignKey("Domain.Entities.ClientProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Consultation", b =>
                 {
                     b.HasOne("Domain.Entities.Pet", "Pet")
@@ -206,9 +290,40 @@ namespace Infrastructure.Migrations
                     b.Navigation("Client");
                 });
 
+            modelBuilder.Entity("Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("Domain.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Pet", b =>
                 {
                     b.Navigation("Consultations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Role", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.Navigation("ClientProfile");
+
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("Domain.Entities.Client", b =>
