@@ -25,11 +25,10 @@ namespace Domain.Entities
         [ForeignKey(nameof(Pet))]
         public int PetId { get; set; }
         public Pet Pet { get; set; }
-
         public int VeterinarianId { get; set; }
-
         [ForeignKey(nameof(VeterinarianId))]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public VeterinarianProfile Veterinarian { get; set; } = null!;
+        public bool IsDeleted { get; set; } = false;
     }
 }

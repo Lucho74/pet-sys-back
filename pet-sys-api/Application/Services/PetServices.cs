@@ -123,6 +123,11 @@ namespace Application.Services
                 throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
             }
 
+            if (client.ClientProfile == null)
+            {
+                throw new BadRequestException($"Client with id {dto.ClientId} does not have a client profile.");
+            }
+
             existing.Name = dto.Name;
             existing.Specie = dto.Specie;
             existing.Breed = dto.Breed;
