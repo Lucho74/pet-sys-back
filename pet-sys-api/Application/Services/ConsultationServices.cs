@@ -72,8 +72,7 @@ namespace Application.Services
 
             User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
 
-            if (veterinarian == null || !veterinarian.UserRoles.Any(
-                ur => ur.Role.Name == RoleNames.Veterinarian))
+            if (veterinarian == null || !veterinarian.UserRoles.Any(ur => ur.Role.Name == RoleNames.Veterinarian))
             {
                 throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
             }
@@ -81,6 +80,11 @@ namespace Application.Services
             if (veterinarian.IsDeleted)
             {
                 throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
+            }
+
+            if (veterinarian.VeterinarianProfile == null)
+            {
+                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} does not have a veterinarian profile.");
             }
 
             var consultation = new Consultation

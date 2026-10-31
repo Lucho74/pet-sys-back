@@ -15,6 +15,7 @@ namespace Infrastructure.Context
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<ClientProfile> ClientProfiles { get; set; }
+        public DbSet<VeterinarianProfile> VeterinarianProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,12 +26,6 @@ namespace Infrastructure.Context
                 .WithMany(p => p.Consultations)
                 .HasForeignKey(c => c.PetId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Consultation>()
-                .HasOne(c => c.Veterinarian)
-                .WithMany(v => v.Consultations)
-                .HasForeignKey(c => c.VeterinarianId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Pet>()
                 .Property(p => p.BirthDate)

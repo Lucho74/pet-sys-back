@@ -20,7 +20,8 @@ namespace Infrastructure.Repositories
             _context.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
-                .Include(u => u.ClientProfile);
+                .Include(u => u.ClientProfile)
+                .Include(u => u.VeterinarianProfile);
 
         public async Task<User?> GetByEmailAsync(string email)
         {

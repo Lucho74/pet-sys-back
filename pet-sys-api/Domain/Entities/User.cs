@@ -31,8 +31,7 @@ namespace Domain.Entities
         public bool IsDeleted { get; set; } = false;
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ClientProfile? ClientProfile { get; set; }
-        public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
-
+        public VeterinarianProfile? VeterinarianProfile { get; set; }
 
     }
 }

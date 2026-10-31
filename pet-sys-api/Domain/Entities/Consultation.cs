@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -25,10 +26,10 @@ namespace Domain.Entities
         public int PetId { get; set; }
         public Pet Pet { get; set; }
 
-        [Required]
-        [ForeignKey(nameof(Veterinarian))]
         public int VeterinarianId { get; set; }
-        public User Veterinarian { get; set; } = null!;
-        public bool IsDeleted { get; set; } = false;
+
+        [ForeignKey(nameof(VeterinarianId))]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public VeterinarianProfile Veterinarian { get; set; } = null!;
     }
 }
