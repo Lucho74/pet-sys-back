@@ -50,12 +50,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnTokenValidated = async context =>
             {
+                if (context.Principal?.Identity is not ClaimsIdentity identity || !identity.IsAuthenticated)
+                {
+                    context.Fail("Invalid identity.");
+                    return;
+                }
+
+                var userIdClaim = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId) || userId <= 0)
+                {
+                    context.Fail("Invalid user identifier.");
+                    return;
+                }
+
                 var userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                var userId = int.Parse(context.Principal!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
                 var user = await userRepository.GetByIdAsync(userId);
+
                 if (user == null || user.IsDeleted)
                 {
-                    context.Fail("User is suspended.");
+                    context.Fail("User does not exist or is suspended.");
+                    return;
+                }
+
+                var previousRoleClaims = identity.FindAll(identity.RoleClaimType).ToList();
+
+                foreach (var claim in previousRoleClaims)
+                {
+                    identity.RemoveClaim(claim);
+                }
+
+                var currentRoles = user.UserRoles
+                    .Select(ur => ur.Role.Name)
+                    .Distinct()
+                    .ToArray();
+
+                foreach (var role in currentRoles)
+                {
+                    identity.AddClaim(new Claim(identity.RoleClaimType, role));
                 }
             }
         };
