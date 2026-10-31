@@ -239,7 +239,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Pet", b =>
                 {
-                    b.HasOne("Domain.Entities.User", "Client")
+                    b.HasOne("Domain.Entities.ClientProfile", "Client")
                         .WithMany("Pets")
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -267,6 +267,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.ClientProfile", b =>
+                {
+                    b.Navigation("Pets");
+                });
+
             modelBuilder.Entity("Domain.Entities.Pet", b =>
                 {
                     b.Navigation("Consultations");
@@ -282,8 +287,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("ClientProfile");
 
                     b.Navigation("Consultations");
-
-                    b.Navigation("Pets");
 
                     b.Navigation("UserRoles");
                 });

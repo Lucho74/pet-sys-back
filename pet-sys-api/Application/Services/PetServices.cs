@@ -63,13 +63,17 @@ namespace Application.Services
             if (client == null ||
                 !client.UserRoles.Any(ur => ur.Role.Name == RoleNames.Client))
             {
-                throw new BadRequestException(
-                    "ClientId does not reference an existing client.");
+                throw new BadRequestException("ClientId does not reference an existing client.");
             }
 
             if (client.IsDeleted)
             {
                 throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
+            }
+
+            if (client.ClientProfile == null)
+            {
+                throw new BadRequestException($"Client with id {dto.ClientId} does not have a client profile.");
             }
 
             var pet = new Pet

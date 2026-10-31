@@ -20,12 +20,6 @@ namespace Infrastructure.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Pet>()
-                .HasOne(p => p.Client)
-                .WithMany(c => c.Pets)
-                .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Consultation>()
                 .HasOne(c => c.Pet)
                 .WithMany(p => p.Consultations)

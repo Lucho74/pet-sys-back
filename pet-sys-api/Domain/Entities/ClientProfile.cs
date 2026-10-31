@@ -23,5 +23,7 @@ namespace Domain.Entities
         [Required]
         [StringLength(8)]
         public string Dni { get; set; } = string.Empty;
+
+        public ICollection<Pet> Pets { get; set; } = new List<Pet>();
     }
 }
