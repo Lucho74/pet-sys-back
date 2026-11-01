@@ -87,5 +87,13 @@ namespace Web.Controllers
             await _userServices.ReactivateUserAsync(id);
             return NoContent();
         }
+
+        [Authorize(Policy = Policies.UsersAssignRoles)]
+        [HttpPut("{id:int}/roles")]
+        public async Task<IActionResult> UpdateRoles(int id, [FromBody] UpdateUserRolesDTO dto)
+        {
+            await _userServices.UpdateUserRolesAsync(id, dto);
+            return NoContent();
+        }
     }
 }

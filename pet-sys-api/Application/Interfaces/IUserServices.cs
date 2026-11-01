@@ -10,6 +10,7 @@ namespace Application.Interfaces
         Task<UserDTO> GetUserByIdAsync(int id);
         Task<UserDTO> AddUserAsync(CreateUserDTO dto);
         Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto);
+        Task UpdateUserRolesAsync(int id, UpdateUserRolesDTO dto);
         Task DeleteUserAsync(int id);
         Task ReactivateUserAsync(int id);
         Task<UserDTO> AuthenticateAsync(LoginDTO dto);

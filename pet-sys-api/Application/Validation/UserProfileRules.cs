@@ -1,0 +1,67 @@
+﻿using Application.Exceptions;
+using Domain.Constants;
+using Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.Validation
+{
+    public static class UserProfileRules
+    {
+        public static void Validate(User? existingUser, IReadOnlyCollection<string> roles, string? dni, string? registrationNumber)
+        {
+            bool isClient = roles.Contains(RoleNames.Client);
+            bool isVeterinarian = roles.Contains(RoleNames.Veterinarian);
+
+            var clientProfile = existingUser?.ClientProfile;
+            var veterinarianProfile = existingUser?.VeterinarianProfile;
+
+            if (isClient && clientProfile == null)
+            {
+                if (string.IsNullOrWhiteSpace(dni) ||dni.Trim().Length > 8)
+                {
+                    throw new BadRequestException("A new client profile requires a Dni with at most 8 characters.");
+                }
+            }
+
+            if (dni != null)
+            {
+                if (!isClient)
+                {
+                    throw new BadRequestException("Dni can only be provided when assigning Client.");
+                }
+
+                if (clientProfile != null &&
+                    dni.Trim() != clientProfile.Dni)
+                {
+                    throw new BadRequestException("Use the client profile operation to change Dni.");
+                }
+            }
+
+            if (isVeterinarian && veterinarianProfile == null)
+            {
+                if (string.IsNullOrWhiteSpace(registrationNumber) ||
+                    registrationNumber.Trim().Length > 50)
+                {
+                    throw new BadRequestException("A new veterinarian profile requires a registration number with at most 50 characters.");
+                }
+            }
+
+            if (registrationNumber != null)
+            {
+                if (!isVeterinarian)
+                {
+                    throw new BadRequestException("RegistrationNumber can only be provided when assigning Veterinarian.");
+                }
+
+                if (veterinarianProfile != null && registrationNumber.Trim() != veterinarianProfile.RegistrationNumber)
+                {
+                    throw new BadRequestException("Use the veterinarian profile operation to change the registration number.");
+                }
+            }
+        }
+    }
+}

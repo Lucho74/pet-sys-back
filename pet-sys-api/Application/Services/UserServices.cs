@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Application.Validation;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -71,7 +72,13 @@ namespace Application.Services
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
-            ValidateUserCreation(dto);
+            UserRoleInputValidation.Validate(dto.Roles);
+
+            UserProfileRules.Validate(
+                existingUser: null,
+                roles: dto.Roles,
+                dni: dto.Dni,
+                registrationNumber: dto.RegistrationNumber);
 
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
@@ -210,6 +217,89 @@ namespace Application.Services
             };
         }
 
+        public async Task UpdateUserRolesAsync(int id, UpdateUserRolesDTO dto)
+        {
+            User? existing = await _userRepository.GetByIdAsync(id);
+
+            if (existing == null)
+            {
+                throw new NotFoundException( $"User with id {id} was not found.");
+            }
+
+            if (existing.UserRoles.Any(ur => ur.Role.Name == RoleNames.SysAdmin))
+            {
+                throw new ForbiddenException("The SysAdmin account roles cannot be modified.");
+            }
+
+            UserRoleInputValidation.Validate(dto.Roles);
+
+            UserProfileRules.Validate(
+                existingUser: existing,
+                roles: dto.Roles,
+                dni: dto.Dni,
+                registrationNumber: dto.RegistrationNumber);
+
+            var roles = new List<Role>();
+
+            foreach (var roleName in dto.Roles)
+            {
+                Role? role =
+                    await _userRepository.GetRoleByNameAsync(roleName);
+
+                if (role == null)
+                {
+                    throw new InvalidOperationException(
+                        $"The role {roleName} has not been seeded.");
+                }
+
+                roles.Add(role);
+            }
+
+            if (dto.Roles.Contains(RoleNames.Client) &&
+                existing.ClientProfile == null)
+            {
+                existing.ClientProfile = new ClientProfile
+                {
+                    UserId = existing.Id,
+                    Dni = dto.Dni!.Trim()
+                };
+            }
+
+            if (dto.Roles.Contains(RoleNames.Veterinarian) &&
+                existing.VeterinarianProfile == null)
+            {
+                existing.VeterinarianProfile = new VeterinarianProfile
+                {
+                    UserId = existing.Id,
+                    RegistrationNumber = dto.RegistrationNumber!.Trim()
+                };
+            }
+
+            var assignmentsToRemove = existing.UserRoles
+                .Where(ur => !dto.Roles.Contains(ur.Role.Name))
+                .ToList();
+
+            foreach (var assignment in assignmentsToRemove)
+            {
+                existing.UserRoles.Remove(assignment);
+            }
+
+            foreach (var role in roles)
+            {
+                if (!existing.UserRoles.Any(ur => ur.RoleId == role.Id))
+                {
+                    existing.UserRoles.Add(new UserRole
+                    {
+                        UserId = existing.Id,
+                        RoleId = role.Id,
+                        Role = role
+                    });
+                }
+            }
+
+            await _userRepository.UpdateAsync(id, existing);
+        }
+
         public async Task DeleteUserAsync(int id)
         {
             await SetDeletedAsync(id, true);
@@ -280,54 +370,5 @@ namespace Application.Services
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };
         }
-
-        private static void ValidateUserCreation(CreateUserDTO dto)
-        {
-            if (dto.Roles == null || dto.Roles.Count == 0)
-            {
-                throw new BadRequestException("At least one role is required.");
-            }
-
-            var availableRoleNames = new[]
-            {
-                RoleNames.Client,
-                RoleNames.Veterinarian,
-                RoleNames.Admin
-            };
-
-            if (dto.Roles.Any(role => !availableRoleNames.Contains(role)))
-            {
-                throw new BadRequestException("One or more roles are invalid for user creation.");
-            }
-
-            if (dto.Roles.Distinct().Count() != dto.Roles.Count)
-            {
-                throw new BadRequestException("Roles cannot be repeated.");
-            }
-
-            bool isClient = dto.Roles.Contains(RoleNames.Client);
-            bool isVeterinarian = dto.Roles.Contains(RoleNames.Veterinarian);
-
-            if (isClient && (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Trim().Length > 8))
-            {
-                throw new BadRequestException("A client requires a Dni with at most 8 characters.");
-            }
-
-            if (!isClient && dto.Dni != null)
-            {
-                throw new BadRequestException("Dni can only be provided for a client.");
-            }
-
-            if (isVeterinarian && (string.IsNullOrWhiteSpace(dto.RegistrationNumber) || dto.RegistrationNumber.Trim().Length > 50))
-            {
-                throw new BadRequestException("A veterinarian requires a registration number with at most 50 characters.");
-            }
-
-            if (!isVeterinarian && dto.RegistrationNumber != null)
-            {
-                throw new BadRequestException("RegistrationNumber can only be provided for a veterinarian.");
-            }
-        }
-
     }
 }

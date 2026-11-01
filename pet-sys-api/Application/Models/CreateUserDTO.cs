@@ -21,7 +21,7 @@ namespace Application.Models
         [MinLength(1)]
         public List<string> Roles { get; set; } = new();
         [StringLength(8)]
-        public string Dni { get; set; } = string.Empty;
+        public string? Dni { get; set; }
         [StringLength(50)]
         public string? RegistrationNumber { get; set; }
     }
