@@ -22,6 +22,10 @@ namespace Web.Authorization
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
 
+                .AddPolicy(Policies.UsersReadAccount, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(new ReadUserAccountRequirement()))
+
                 .AddPolicy(Policies.UsersCreate, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(
@@ -102,6 +106,7 @@ namespace Web.Authorization
                         .RequireRole(RoleNames.Veterinarian));
 
             services.AddSingleton<IAuthorizationHandler, CreateUserRolesHandler>();
+            services.AddSingleton<IAuthorizationHandler, ReadUserAccountHandler>();
 
             return services;
         }

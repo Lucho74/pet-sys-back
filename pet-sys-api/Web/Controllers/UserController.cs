@@ -33,7 +33,8 @@ namespace Web.Controllers
         [HttpGet("")]
         public async Task<IActionResult> GetAllUser()
         {
-            var users = await _userServices.GetAllUserAsync();
+            var readableRoles = UserAccountAccess.GetReadableRoles(User);
+            var users = await _userServices.GetAllUserAsync(readableRoles);
             return Ok(users);
         }
 
@@ -42,6 +43,15 @@ namespace Web.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userServices.GetUserByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: user,
+                    policyName: Policies.UsersReadAccount);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
             return Ok(user);
         }
 

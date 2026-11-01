@@ -3,6 +3,7 @@
     public static class Policies
     {
         public const string UsersRead = "Users.Read";
+        public const string UsersReadAccount = "Users.ReadAccount";
         public const string UsersCreate = "Users.Create";
         public const string UsersCreateWithRoles = "Users.CreateWithRoles";
         public const string UsersUpdate = "Users.Update";

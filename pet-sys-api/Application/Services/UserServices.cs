@@ -25,9 +25,13 @@ namespace Application.Services
             _consultationRepository = consultationRepository;
         }
 
-        public async Task<IEnumerable<UserDTO>> GetAllUserAsync()
+        public async Task<IEnumerable<UserDTO>> GetAllUserAsync(IReadOnlyCollection<string> readableRoles)
         {
-            IEnumerable<User> users = await _userRepository.GetAllAsync();
+            var allowedRoles = readableRoles.ToArray();
+
+            IEnumerable<User> users = await _userRepository.FindAsync(
+                user => user.UserRoles.Any() && user.UserRoles.All( ur => allowedRoles.Contains(ur.Role.Name))
+            );
 
             return users.Select(user => new UserDTO
             {
