@@ -22,6 +22,345 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Entities.Breed", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .UseCollation("Latin1_General_CI_AI");
+
+                    b.Property<int>("SpeciesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpeciesId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Breeds");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "No especificada",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Mestizo",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Labrador Retriever",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Golden Retriever",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Caniche",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Bulldog Francés",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Pastor Alemán",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "Beagle",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "Dachshund",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "Yorkshire Terrier",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Name = "Border Collie",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Name = "Pitbull",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Name = "Chihuahua",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Name = "Boxer",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Name = "Rottweiler",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Name = "Shih Tzu",
+                            SpeciesId = 1
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Name = "No especificada",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Name = "Mestizo",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Name = "Europeo",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Name = "Siamés",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Name = "Persa",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Name = "Maine Coon",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Name = "Bengalí",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 24,
+                            Name = "Angora",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 25,
+                            Name = "Sphynx",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 26,
+                            Name = "British Shorthair",
+                            SpeciesId = 2
+                        },
+                        new
+                        {
+                            Id = 27,
+                            Name = "No especificada",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 28,
+                            Name = "Canario",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 29,
+                            Name = "Cacatúa",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 30,
+                            Name = "Periquito",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 31,
+                            Name = "Loro",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 32,
+                            Name = "Agapornis",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 33,
+                            Name = "Ninfa",
+                            SpeciesId = 3
+                        },
+                        new
+                        {
+                            Id = 34,
+                            Name = "No especificada",
+                            SpeciesId = 4
+                        },
+                        new
+                        {
+                            Id = 35,
+                            Name = "Mestizo",
+                            SpeciesId = 4
+                        },
+                        new
+                        {
+                            Id = 36,
+                            Name = "Belier",
+                            SpeciesId = 4
+                        },
+                        new
+                        {
+                            Id = 37,
+                            Name = "Rex",
+                            SpeciesId = 4
+                        },
+                        new
+                        {
+                            Id = 38,
+                            Name = "Cabeza de León",
+                            SpeciesId = 4
+                        },
+                        new
+                        {
+                            Id = 39,
+                            Name = "Enano Holandés",
+                            SpeciesId = 4
+                        },
+                        new
+                        {
+                            Id = 40,
+                            Name = "No especificada",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 41,
+                            Name = "Hámster",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 42,
+                            Name = "Cobayo",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 43,
+                            Name = "Chinchilla",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 44,
+                            Name = "Rata",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 45,
+                            Name = "Ratón",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 46,
+                            Name = "Jerbo",
+                            SpeciesId = 5
+                        },
+                        new
+                        {
+                            Id = 47,
+                            Name = "No especificada",
+                            SpeciesId = 6
+                        },
+                        new
+                        {
+                            Id = 48,
+                            Name = "Tortuga",
+                            SpeciesId = 6
+                        },
+                        new
+                        {
+                            Id = 49,
+                            Name = "Iguana",
+                            SpeciesId = 6
+                        },
+                        new
+                        {
+                            Id = 50,
+                            Name = "Gecko",
+                            SpeciesId = 6
+                        },
+                        new
+                        {
+                            Id = 51,
+                            Name = "Serpiente",
+                            SpeciesId = 6
+                        },
+                        new
+                        {
+                            Id = 52,
+                            Name = "No especificada",
+                            SpeciesId = 7
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Consultation", b =>
                 {
                     b.Property<int>("Id")
@@ -67,10 +406,8 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("Breed")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("BreedId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
@@ -83,16 +420,77 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Specie")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("SpeciesId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BreedId");
+
                     b.HasIndex("ClientId");
 
+                    b.HasIndex("SpeciesId");
+
                     b.ToTable("Pets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Species", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .UseCollation("Latin1_General_CI_AI");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Species");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Perro"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Gato"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Ave"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Conejo"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Roedor"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Reptil"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Otra"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -176,6 +574,17 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Veterinarian");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Breed", b =>
+                {
+                    b.HasOne("Domain.Entities.Species", "Species")
+                        .WithMany("Breeds")
+                        .HasForeignKey("SpeciesId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Species");
+                });
+
             modelBuilder.Entity("Domain.Entities.Consultation", b =>
                 {
                     b.HasOne("Domain.Entities.Pet", "Pet")
@@ -197,18 +606,46 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Pet", b =>
                 {
+                    b.HasOne("Domain.Entities.Breed", "Breed")
+                        .WithMany("Pets")
+                        .HasForeignKey("BreedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entities.Client", "Client")
                         .WithMany("Pets")
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Species", "Species")
+                        .WithMany("Pets")
+                        .HasForeignKey("SpeciesId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Breed");
+
                     b.Navigation("Client");
+
+                    b.Navigation("Species");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Breed", b =>
+                {
+                    b.Navigation("Pets");
                 });
 
             modelBuilder.Entity("Domain.Entities.Pet", b =>
                 {
                     b.Navigation("Consultations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Species", b =>
+                {
+                    b.Navigation("Breeds");
+
+                    b.Navigation("Pets");
                 });
 
             modelBuilder.Entity("Domain.Entities.Client", b =>

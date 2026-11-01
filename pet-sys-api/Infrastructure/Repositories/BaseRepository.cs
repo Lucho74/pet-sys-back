@@ -20,13 +20,13 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<T?> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
             var entity = await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
             return entity;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync();
         }

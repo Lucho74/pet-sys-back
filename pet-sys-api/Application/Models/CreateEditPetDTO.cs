@@ -7,12 +7,10 @@ namespace Application.Models
         [Required]
         [StringLength(50)]
         public string Name { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Specie { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Breed { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "SpeciesId must be a positive number.")]
+        public int SpeciesId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "BreedId must be a positive number.")]
+        public int BreedId { get; set; }
         [Required]
         public DateOnly? BirthDate { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "ClientId must be a positive number.")]
