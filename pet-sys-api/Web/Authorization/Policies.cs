@@ -4,6 +4,7 @@
     {
         public const string UsersRead = "Users.Read";
         public const string UsersCreate = "Users.Create";
+        public const string UsersCreateWithRoles = "Users.CreateWithRoles";
         public const string UsersUpdate = "Users.Update";
         public const string UsersSuspend = "Users.Suspend";
         public const string UsersReactivate = "Users.Reactivate";

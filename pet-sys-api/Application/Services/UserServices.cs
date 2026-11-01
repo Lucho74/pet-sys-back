@@ -39,7 +39,8 @@ namespace Application.Services
                 .Select(ur => ur.Role.Name)
                 .OrderBy(name => name)
                 .ToArray(),
-                Dni = user.ClientProfile?.Dni
+                Dni = user.ClientProfile?.Dni,
+                RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             }).ToArray();
         }
 
@@ -63,12 +64,15 @@ namespace Application.Services
                 .Select(ur => ur.Role.Name)
                 .OrderBy(name => name)
                 .ToArray(),
-                Dni = user.ClientProfile?.Dni
+                Dni = user.ClientProfile?.Dni,
+                RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };
         }
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
+            ValidateUserCreation(dto);
+
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
             if (sameEmail != null)
@@ -76,18 +80,18 @@ namespace Application.Services
                 throw new BadRequestException($"A user with email {dto.Email} already exists.");
             }
 
-            if (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Trim().Length > 8)
-            {
-                throw new BadRequestException(
-                    "Dni is required and must contain at most 8 characters.");
-            }
+            List<Role> roles = new List<Role>();
 
-            Role? clientRole = await _userRepository.GetRoleByNameAsync(RoleNames.Client);
-
-            if (clientRole == null)
+            foreach (var roleName in dto.Roles)
             {
-                throw new InvalidOperationException(
-                    "The Client role has not been seeded.");
+                Role? role = await _userRepository.GetRoleByNameAsync(roleName);
+
+                if (role == null)
+                {
+                    throw new InvalidOperationException($"The role {roleName} has not been seeded.");
+                }
+
+                roles.Add(role);
             }
 
             User newUser = new User
@@ -96,17 +100,32 @@ namespace Application.Services
                 Email = dto.Email,
                 Phone = dto.Phone,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                ClientProfile = new ClientProfile
-                {
-                    Dni = dto.Dni.Trim()
-                }
             };
 
-            newUser.UserRoles.Add(new UserRole
+            if (dto.Roles.Contains(RoleNames.Client))
             {
-                RoleId = clientRole.Id,
-                Role = clientRole
-            });
+                newUser.ClientProfile = new ClientProfile
+                {
+                    Dni = dto.Dni!.Trim()
+                };
+            }
+
+            if (dto.Roles.Contains(RoleNames.Veterinarian))
+            {
+                newUser.VeterinarianProfile = new VeterinarianProfile
+                {
+                    RegistrationNumber = dto.RegistrationNumber!.Trim()
+                };
+            }
+
+            foreach (var role in roles)
+            {
+                newUser.UserRoles.Add(new UserRole
+                {
+                    RoleId = role.Id,
+                    Role = role
+                });
+            }
 
             User created = await _userRepository.AddAsync(newUser);
 
@@ -118,10 +137,11 @@ namespace Application.Services
                 Phone = created.Phone,
                 IsDeleted = created.IsDeleted,
                 Roles = created.UserRoles
-                .Select(ur => ur.Role.Name)
-                .OrderBy(name => name)
-                .ToArray(),
-                Dni = created.ClientProfile?.Dni
+                    .Select(ur => ur.Role.Name)
+                    .OrderBy(name => name)
+                    .ToArray(),
+                Dni = created.ClientProfile?.Dni,
+                RegistrationNumber = created.VeterinarianProfile?.RegistrationNumber
             };
         }
 
@@ -185,7 +205,8 @@ namespace Application.Services
                 .Select(ur => ur.Role.Name)
                 .OrderBy(name => name)
                 .ToArray(),
-                Dni = updated.ClientProfile?.Dni
+                Dni = updated.ClientProfile?.Dni,
+                RegistrationNumber = updated.VeterinarianProfile?.RegistrationNumber
             };
         }
 
@@ -255,8 +276,58 @@ namespace Application.Services
                     .Select(ur => ur.Role.Name)
                     .OrderBy(name => name)
                     .ToArray(),
-                Dni = user.ClientProfile?.Dni
+                Dni = user.ClientProfile?.Dni,
+                RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };
         }
+
+        private static void ValidateUserCreation(CreateUserDTO dto)
+        {
+            if (dto.Roles == null || dto.Roles.Count == 0)
+            {
+                throw new BadRequestException("At least one role is required.");
+            }
+
+            var availableRoleNames = new[]
+            {
+                RoleNames.Client,
+                RoleNames.Veterinarian,
+                RoleNames.Admin
+            };
+
+            if (dto.Roles.Any(role => !availableRoleNames.Contains(role)))
+            {
+                throw new BadRequestException("One or more roles are invalid for user creation.");
+            }
+
+            if (dto.Roles.Distinct().Count() != dto.Roles.Count)
+            {
+                throw new BadRequestException("Roles cannot be repeated.");
+            }
+
+            bool isClient = dto.Roles.Contains(RoleNames.Client);
+            bool isVeterinarian = dto.Roles.Contains(RoleNames.Veterinarian);
+
+            if (isClient && (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Trim().Length > 8))
+            {
+                throw new BadRequestException("A client requires a Dni with at most 8 characters.");
+            }
+
+            if (!isClient && dto.Dni != null)
+            {
+                throw new BadRequestException("Dni can only be provided for a client.");
+            }
+
+            if (isVeterinarian && (string.IsNullOrWhiteSpace(dto.RegistrationNumber) || dto.RegistrationNumber.Trim().Length > 50))
+            {
+                throw new BadRequestException("A veterinarian requires a registration number with at most 50 characters.");
+            }
+
+            if (!isVeterinarian && dto.RegistrationNumber != null)
+            {
+                throw new BadRequestException("RegistrationNumber can only be provided for a veterinarian.");
+            }
+        }
+
     }
 }

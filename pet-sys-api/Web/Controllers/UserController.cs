@@ -13,9 +13,11 @@ namespace Web.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserServices _userServices;
-        public UserController(IUserServices userServices)
+        private readonly IAuthorizationService _authorizationService;
+        public UserController(IUserServices userServices, IAuthorizationService authorizationService)
         {
             _userServices = userServices;
+            _authorizationService = authorizationService;
         }
 
         private int CallerId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -47,7 +49,18 @@ namespace Web.Controllers
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
+            var authorizationResult = await _authorizationService.AuthorizeAsync(
+                User,
+                resource: dto.Roles,
+                policyName: Policies.UsersCreateWithRoles);
+
+            if (!authorizationResult.Succeeded)
+            {
+                return Forbid();
+            }
+
             var created = await _userServices.AddUserAsync(dto);
+
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 

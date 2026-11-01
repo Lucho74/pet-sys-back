@@ -18,6 +18,8 @@ namespace Application.Models
         public IReadOnlyCollection<string> Roles { get; set; } = Array.Empty<string>();
         [StringLength(8)]
         public string? Dni { get; set; }
+        [StringLength(50)]
+        public string? RegistrationNumber { get; set; }
 
     }
 }

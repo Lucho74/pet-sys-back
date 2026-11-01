@@ -29,6 +29,10 @@ namespace Web.Authorization
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
 
+                .AddPolicy(Policies.UsersCreateWithRoles, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(new CreateUserRolesRequirement()))
+
                 .AddPolicy(Policies.UsersUpdate, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(
@@ -96,6 +100,8 @@ namespace Web.Authorization
                 .AddPolicy(Policies.ConsultationsUpdate, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(RoleNames.Veterinarian));
+
+            services.AddSingleton<IAuthorizationHandler, CreateUserRolesHandler>();
 
             return services;
         }
