@@ -62,6 +62,13 @@ namespace Web.Authorization
                     policy.RequireAuthenticatedUser()
                         .RequireRole(RoleNames.SysAdmin))
 
+                .AddPolicy(Policies.ClientProfilesRead, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin,
+                            RoleNames.SysAdmin))
+
                 .AddPolicy(Policies.PetsRead, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(

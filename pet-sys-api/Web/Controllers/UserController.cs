@@ -55,6 +55,24 @@ namespace Web.Controllers
             return Ok(user);
         }
 
+        [Authorize(Policy = Policies.ClientProfilesRead)]
+        [HttpGet("client-profiles")]
+        public async Task<IActionResult> GetClientProfiles()
+        {
+            var profiles = await _userServices.GetClientProfilesAsync();
+
+            return Ok(profiles);
+        }
+
+        [Authorize(Policy = Policies.ClientProfilesRead)]
+        [HttpGet("{id:int}/client-profile")]
+        public async Task<IActionResult> GetClientProfile(int id)
+        {
+            var profile = await _userServices.GetClientProfileByUserIdAsync(id);
+
+            return Ok(profile);
+        }
+
         [Authorize(Policy = Policies.UsersCreate)]
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
