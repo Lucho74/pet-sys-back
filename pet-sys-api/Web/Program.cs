@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using Web.Authorization;
 using Web.ExceptionHandling;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -94,7 +95,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAppAuthorization();
 
 #region Repositories
 

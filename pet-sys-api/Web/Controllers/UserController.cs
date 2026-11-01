@@ -3,6 +3,7 @@ using Application.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Web.Authorization;
 
 namespace Web.Controllers
 {
@@ -26,7 +27,7 @@ namespace Web.Controllers
             return Ok(user);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.UsersRead)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllUser()
         {
@@ -34,7 +35,7 @@ namespace Web.Controllers
             return Ok(users);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.UsersRead)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -42,7 +43,7 @@ namespace Web.Controllers
             return Ok(user);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.UsersCreate)]
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
@@ -50,7 +51,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.UsersUpdate)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
@@ -58,7 +59,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.UsersSuspend)]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -66,7 +67,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.UsersReactivate)]
         [HttpPost("{id:int}/reactivate")]
         public async Task<IActionResult> ReactivateUser(int id)
         {

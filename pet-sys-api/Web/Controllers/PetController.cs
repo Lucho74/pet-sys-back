@@ -3,6 +3,7 @@ using Application.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Web.Authorization;
 
 namespace Web.Controllers
 {
@@ -16,7 +17,7 @@ namespace Web.Controllers
             _petServices = petServices;
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.PetsRead)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllPet()
         {
@@ -24,7 +25,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.PetsRead)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -32,7 +33,7 @@ namespace Web.Controllers
             return Ok(pet);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.PetsCreate)]
         [HttpPost("")]
         public async Task<IActionResult> AddPet([FromBody] CreateEditPetDTO dto)
         {
@@ -40,7 +41,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.PetsUpdate)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdatePet(int id, [FromBody] CreateEditPetDTO dto)
         {
@@ -48,7 +49,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.PetsRead)]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {
@@ -56,7 +57,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Roles = "Client")]
+        [Authorize(Policy = Policies.PetsReadOwn)]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyPets()
         {

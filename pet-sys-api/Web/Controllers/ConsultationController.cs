@@ -1,10 +1,9 @@
 using Application.Interfaces;
 using Application.Models;
-using Domain.Constants;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Web.Authorization;
 
 namespace Web.Controllers
 {
@@ -13,12 +12,14 @@ namespace Web.Controllers
     public class ConsultationController : ControllerBase
     {
         private readonly IConsultationServices _consultationServices;
-        public ConsultationController(IConsultationServices consultationServices)
+        private readonly IAuthorizationService _authorizationService;
+        public ConsultationController(IConsultationServices consultationServices, IAuthorizationService authorizationService)
         {
             _consultationServices = consultationServices;
+            _authorizationService = authorizationService;
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.ConsultationsRead)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllConsultation()
         {
@@ -26,7 +27,7 @@ namespace Web.Controllers
             return Ok(consultations);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.ConsultationsRead)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -34,7 +35,7 @@ namespace Web.Controllers
             return Ok(consultation);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.ConsultationsCreate)]
         [HttpPost("")]
         public async Task<IActionResult> AddConsultation([FromBody] CreateEditConsultationDTO dto)
         {
@@ -42,7 +43,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.ConsultationsUpdate)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateConsultation(int id, [FromBody] CreateEditConsultationDTO dto)
         {
@@ -50,16 +51,16 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian,Client")]
+        [Authorize(Policy = Policies.ConsultationsReadByPet)]
         [HttpGet("pet/{petId:int}")]
         public async Task<IActionResult> GetByPetId(int petId)
         {
-            var isStaff =
-                User.IsInRole(RoleNames.SysAdmin) ||
-                User.IsInRole(RoleNames.Admin) ||
-                User.IsInRole(RoleNames.Veterinarian);
+            var authorizationResult = await _authorizationService.AuthorizeAsync(
+                User,
+                resource: null,
+                policyName: Policies.ConsultationsRead);
 
-            int? clientId = isStaff
+            int? clientId = authorizationResult.Succeeded
                 ? null
                 : int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -67,7 +68,7 @@ namespace Web.Controllers
             return Ok(consultations);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.ConsultationsRead)]
         [HttpGet("veterinarian/{veterinarianId:int}")]
         public async Task<IActionResult> GetByVeterinarianId(int veterinarianId)
         {
