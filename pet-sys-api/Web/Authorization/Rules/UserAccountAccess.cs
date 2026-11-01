@@ -1,7 +1,7 @@
 ﻿using Domain.Constants;
 using System.Security.Claims;
 
-namespace Web.Authorization
+namespace Web.Authorization.Rules
 {
     public static class UserAccountAccess
     {

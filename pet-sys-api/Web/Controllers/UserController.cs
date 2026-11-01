@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Web.Authorization;
+using Web.Authorization.Rules;
 
 namespace Web.Controllers
 {

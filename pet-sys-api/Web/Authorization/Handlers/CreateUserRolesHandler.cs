@@ -1,7 +1,8 @@
 ﻿using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
+using Web.Authorization.Requirements;
 
-namespace Web.Authorization
+namespace Web.Authorization.Handlers
 {
     public class CreateUserRolesHandler : AuthorizationHandler<CreateUserRolesRequirement, IReadOnlyCollection<string>>
     {

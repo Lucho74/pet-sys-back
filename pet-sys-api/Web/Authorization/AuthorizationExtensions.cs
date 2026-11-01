@@ -1,5 +1,8 @@
 ﻿using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
+using Web.Authorization.Handlers;
+using Web.Authorization.Operations;
+using Web.Authorization.Requirements;
 
 namespace Web.Authorization
 {
@@ -24,7 +27,7 @@ namespace Web.Authorization
 
                 .AddPolicy(Policies.UsersReadAccount, policy =>
                     policy.RequireAuthenticatedUser()
-                        .AddRequirements(new ReadUserAccountRequirement()))
+                        .AddRequirements(UserAccountOperations.Read))
 
                 .AddPolicy(Policies.UsersCreate, policy =>
                     policy.RequireAuthenticatedUser()
@@ -113,7 +116,7 @@ namespace Web.Authorization
                         .RequireRole(RoleNames.Veterinarian));
 
             services.AddSingleton<IAuthorizationHandler, CreateUserRolesHandler>();
-            services.AddSingleton<IAuthorizationHandler, ReadUserAccountHandler>();
+            services.AddSingleton<IAuthorizationHandler, UserAccountAuthorizationHandler>();
 
             return services;
         }
