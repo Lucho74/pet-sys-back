@@ -16,9 +16,27 @@ namespace Infrastructure.Repositories
         {
         }
 
+        public override async Task<Pet?> GetByIdAsync(int id)
+        {
+            return await _context.Set<Pet>()
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public override async Task<IEnumerable<Pet>> GetAllAsync()
+        {
+            return await _context.Set<Pet>()
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId)
         {
             return await _context.Set<Pet>()
+            .Include(p => p.Species)
+            .Include(p => p.Breed)
             .Where(p => p.ClientId == clientId)
             .ToListAsync();
         }
