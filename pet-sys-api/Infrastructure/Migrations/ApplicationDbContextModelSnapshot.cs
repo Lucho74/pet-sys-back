@@ -184,27 +184,32 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("RoleId");
+
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Domain.Entities.UserRole", b =>
+            modelBuilder.Entity("Domain.Entities.VeterinarianProfile", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("UserId", "RoleId");
+                    b.HasKey("UserId");
 
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("UserRoles");
+                    b.ToTable("VeterinarianProfiles");
                 });
 
             modelBuilder.Entity("Domain.Entities.ClientProfile", b =>
@@ -226,8 +231,8 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.User", "Veterinarian")
-                        .WithMany("Consultations")
+                    b.HasOne("Domain.Entities.VeterinarianProfile", "Veterinarian")
+                        .WithMany("AttendedConsultations")
                         .HasForeignKey("VeterinarianId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -248,21 +253,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("Client");
                 });
 
-            modelBuilder.Entity("Domain.Entities.UserRole", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.HasOne("Domain.Entities.Role", "Role")
-                        .WithMany("UserRoles")
+                        .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("Domain.Entities.VeterinarianProfile", b =>
+                {
                     b.HasOne("Domain.Entities.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
+                        .WithOne("VeterinarianProfile")
+                        .HasForeignKey("Domain.Entities.VeterinarianProfile", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });
@@ -279,16 +287,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Role", b =>
                 {
-                    b.Navigation("UserRoles");
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Navigation("ClientProfile");
 
-                    b.Navigation("Consultations");
+                    b.Navigation("VeterinarianProfile");
+                });
 
-                    b.Navigation("UserRoles");
+            modelBuilder.Entity("Domain.Entities.VeterinarianProfile", b =>
+                {
+                    b.Navigation("AttendedConsultations");
                 });
 #pragma warning restore 612, 618
         }

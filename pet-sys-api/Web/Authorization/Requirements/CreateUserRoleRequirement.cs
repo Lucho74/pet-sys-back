@@ -2,7 +2,7 @@
 
 namespace Web.Authorization.Requirements
 {
-    public class CreateUserRolesRequirement : IAuthorizationRequirement
+    public class CreateUserRoleRequirement : IAuthorizationRequirement
     {
     }
 }

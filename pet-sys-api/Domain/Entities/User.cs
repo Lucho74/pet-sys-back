@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -28,8 +29,11 @@ namespace Domain.Entities
         [Required]
         [Phone]
         public string Phone { get; set; }
+        public int RoleId { get; set; }
+        [ForeignKey(nameof(RoleId))]
+        [DeleteBehavior(DeleteBehavior.Restrict)]
+        public Role Role { get; set; } = null!;
         public bool IsDeleted { get; set; } = false;
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ClientProfile? ClientProfile { get; set; }
         public VeterinarianProfile? VeterinarianProfile { get; set; }
 

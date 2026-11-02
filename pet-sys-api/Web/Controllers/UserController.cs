@@ -81,8 +81,8 @@ namespace Web.Controllers
         {
             var authorizationResult = await _authorizationService.AuthorizeAsync(
                 User,
-                resource: dto.Roles,
-                policyName: Policies.UsersCreateWithRoles);
+                resource: dto.Role,
+                policyName: Policies.UsersCreateWithRole);
 
             if (!authorizationResult.Succeeded)
             {
@@ -128,11 +128,11 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Policy = Policies.UsersAssignRoles)]
-        [HttpPut("{id:int}/roles")]
-        public async Task<IActionResult> UpdateRoles(int id, [FromBody] UpdateUserRolesDTO dto)
+        [Authorize(Policy = Policies.UsersAssignRole)]
+        [HttpPut("{id:int}/role")]
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateUserRoleDTO dto)
         {
-            await _userServices.UpdateUserRolesAsync(id, dto);
+            await _userServices.UpdateUserRoleAsync(id, dto);
             return NoContent();
         }
     }

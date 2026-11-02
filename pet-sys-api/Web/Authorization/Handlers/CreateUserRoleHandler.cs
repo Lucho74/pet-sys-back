@@ -1,18 +1,14 @@
 ﻿using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 using Web.Authorization.Requirements;
 
 namespace Web.Authorization.Handlers
 {
-    public class CreateUserRolesHandler : AuthorizationHandler<CreateUserRolesRequirement, IReadOnlyCollection<string>>
+    public class CreateUserRoleHandler : AuthorizationHandler<CreateUserRoleRequirement, string>
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, CreateUserRolesRequirement requirement, IReadOnlyCollection<string> requestedRoles)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, CreateUserRoleRequirement requirement, string requestedRole)
         {
-            if (requestedRoles.Count == 0)
-            {
-                return Task.CompletedTask;
-            }
-
             var allowedRoles = new HashSet<string>(StringComparer.Ordinal);
 
             if (context.User.IsInRole(RoleNames.Veterinarian))
@@ -33,7 +29,7 @@ namespace Web.Authorization.Handlers
                 allowedRoles.Add(RoleNames.Admin);
             }
 
-            if (requestedRoles.All(role => allowedRoles.Contains(role)))
+            if (allowedRoles.Contains(requestedRole))
             {
                 context.Succeed(requirement);
             }

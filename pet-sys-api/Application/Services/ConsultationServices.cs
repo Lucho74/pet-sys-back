@@ -72,9 +72,9 @@ namespace Application.Services
 
             User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
 
-            if (veterinarian == null || !veterinarian.UserRoles.Any(ur => ur.Role.Name == RoleNames.Veterinarian))
+            if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
             {
-                throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
+                throw new BadRequestException("VeterinarianId does not reference an existing professional.");
             }
 
             if (veterinarian.IsDeleted)
@@ -135,10 +135,9 @@ namespace Application.Services
 
             User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
 
-            if (veterinarian == null || !veterinarian.UserRoles.Any(
-                    ur => ur.Role.Name == RoleNames.Veterinarian))
+            if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
             {
-                throw new BadRequestException("VeterinarianId does not reference an existing veterinarian.");
+                throw new BadRequestException("VeterinarianId does not reference an existing professional.");
             }
 
             if (veterinarian.IsDeleted)

@@ -33,10 +33,9 @@ namespace Web.Controllers
 
             var claimsForToken = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString())
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.RoleName)
             };
-
-            claimsForToken.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var expirationMinutes =
                 _config.GetValue<int?>("Authentication:AccessTokenExpirationMinutes")

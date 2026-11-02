@@ -75,22 +75,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     return;
                 }
 
-                var previousRoleClaims = identity.FindAll(identity.RoleClaimType).ToList();
+                var previousRoleClaims = identity
+                    .FindAll(identity.RoleClaimType)
+                    .ToList();
 
                 foreach (var claim in previousRoleClaims)
                 {
                     identity.RemoveClaim(claim);
                 }
 
-                var currentRoles = user.UserRoles
-                    .Select(ur => ur.Role.Name)
-                    .Distinct()
-                    .ToArray();
-
-                foreach (var role in currentRoles)
-                {
-                    identity.AddClaim(new Claim(identity.RoleClaimType, role));
-                }
+                identity.AddClaim(new Claim(identity.RoleClaimType, user.Role.Name));
             }
         };
     });

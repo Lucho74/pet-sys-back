@@ -11,10 +11,10 @@ namespace Application.Validation
 {
     public static class UserProfileRules
     {
-        public static void Validate(User? existingUser, IReadOnlyCollection<string> roles, string? dni, string? registrationNumber)
+        public static void Validate(User? existingUser, string role, string? dni, string? registrationNumber)
         {
-            bool isClient = roles.Contains(RoleNames.Client);
-            bool isVeterinarian = roles.Contains(RoleNames.Veterinarian);
+            bool isClient = role == RoleNames.Client;
+            bool isVeterinarian = role == RoleNames.Veterinarian || role == RoleNames.Admin;
 
             var clientProfile = existingUser?.ClientProfile;
             var veterinarianProfile = existingUser?.VeterinarianProfile;
@@ -54,7 +54,7 @@ namespace Application.Validation
             {
                 if (!isVeterinarian)
                 {
-                    throw new BadRequestException("RegistrationNumber can only be provided when assigning Veterinarian.");
+                    throw new BadRequestException("RegistrationNumber can only be provided for Veterinarian or Admin.");
                 }
 
                 if (veterinarianProfile != null && registrationNumber.Trim() != veterinarianProfile.RegistrationNumber)

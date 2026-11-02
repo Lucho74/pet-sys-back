@@ -5,12 +5,12 @@
         public const string UsersRead = "Users.Read";
         public const string UsersReadAccount = "Users.ReadAccount";
         public const string UsersCreate = "Users.Create";
-        public const string UsersCreateWithRoles = "Users.CreateWithRoles";
+        public const string UsersCreateWithRole = "Users.CreateWithRole";
         public const string UsersUpdate = "Users.Update";
         public const string UsersUpdateAccount = "Users.UpdateAccount";
         public const string UsersSuspend = "Users.Suspend";
         public const string UsersReactivate = "Users.Reactivate";
-        public const string UsersAssignRoles = "Users.AssignRoles";
+        public const string UsersAssignRole = "Users.AssignRole";
 
         public const string ClientProfilesRead = "ClientProfiles.Read";
 

@@ -7,16 +7,10 @@ using System.Threading.Tasks;
 
 namespace Application.Models
 {
-    public class UpdateUserRolesDTO
+    public class UpdateUserRoleDTO
     {
         [Required]
-        [MinLength(1)]
-        public List<string> Roles { get; set; } = new();
-
-        [StringLength(8)]
-        public string? Dni { get; set; }
-
         [StringLength(50)]
-        public string? RegistrationNumber { get; set; }
+        public string Role { get; set; } = string.Empty;
     }
 }

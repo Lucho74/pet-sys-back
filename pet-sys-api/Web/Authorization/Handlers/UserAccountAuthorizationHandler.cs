@@ -35,7 +35,7 @@ namespace Web.Authorization.Handlers
         {
             var manageableRoles = UserAccountAccess.GetManageableRoles(context.User);
 
-            return target.Roles.Count > 0 && target.Roles.All(role => manageableRoles.Contains(role));
+            return manageableRoles.Contains(target.RoleName);
         }
 
         private static bool CanUpdateAccount(AuthorizationHandlerContext context, UserDTO target)

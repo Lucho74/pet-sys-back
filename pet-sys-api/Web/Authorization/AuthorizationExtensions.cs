@@ -36,9 +36,9 @@ namespace Web.Authorization
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
 
-                .AddPolicy(Policies.UsersCreateWithRoles, policy =>
+                .AddPolicy(Policies.UsersCreateWithRole, policy =>
                     policy.RequireAuthenticatedUser()
-                        .AddRequirements(new CreateUserRolesRequirement()))
+                        .AddRequirements(new CreateUserRoleRequirement()))
 
                 .AddPolicy(Policies.UsersUpdate, policy =>
                     policy.RequireAuthenticatedUser()
@@ -65,7 +65,7 @@ namespace Web.Authorization
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
 
-                .AddPolicy(Policies.UsersAssignRoles, policy =>
+                .AddPolicy(Policies.UsersAssignRole, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(RoleNames.SysAdmin))
 
@@ -119,7 +119,7 @@ namespace Web.Authorization
                     policy.RequireAuthenticatedUser()
                         .RequireRole(RoleNames.Veterinarian));
 
-            services.AddSingleton<IAuthorizationHandler, CreateUserRolesHandler>();
+            services.AddSingleton<IAuthorizationHandler, CreateUserRoleHandler>();
             services.AddSingleton<IAuthorizationHandler, UserAccountAuthorizationHandler>();
 
             return services;

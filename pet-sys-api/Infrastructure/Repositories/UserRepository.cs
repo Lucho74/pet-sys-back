@@ -18,8 +18,7 @@ namespace Infrastructure.Repositories
 
         protected override IQueryable<User> Query =>
             _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.Role)
                 .Include(u => u.ClientProfile)
                 .Include(u => u.VeterinarianProfile);
 
@@ -31,7 +30,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<User>> GetByRoleAsync(string roleName)
         {
             return await Query
-                .Where(u => u.UserRoles.Any(ur => ur.Role.Name == roleName))
+                .Where(u => u.Role.Name == roleName)
                 .ToListAsync();
         }
 

@@ -60,8 +60,7 @@ namespace Application.Services
         {
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
 
-            if (client == null ||
-                !client.UserRoles.Any(ur => ur.Role.Name == RoleNames.Client))
+            if (client == null || client.Role.Name != RoleNames.Client)
             {
                 throw new BadRequestException("ClientId does not reference an existing client.");
             }
@@ -113,7 +112,7 @@ namespace Application.Services
 
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
 
-            if (client == null || !client.UserRoles.Any(ur => ur.Role.Name == RoleNames.Client))
+            if (client == null || client.Role.Name != RoleNames.Client)
             {
                 throw new BadRequestException("ClientId does not reference an existing client.");
             }

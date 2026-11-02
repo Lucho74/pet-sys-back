@@ -12,7 +12,7 @@ namespace Application.Interfaces
         Task<ClientProfileDTO> GetClientProfileByUserIdAsync(int userId);
         Task<UserDTO> AddUserAsync(CreateUserDTO dto);
         Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto);
-        Task UpdateUserRolesAsync(int id, UpdateUserRolesDTO dto);
+        Task UpdateUserRoleAsync(int id, UpdateUserRoleDTO dto);
         Task DeleteUserAsync(int id);
         Task ReactivateUserAsync(int id);
         Task<UserDTO> AuthenticateAsync(LoginDTO dto);

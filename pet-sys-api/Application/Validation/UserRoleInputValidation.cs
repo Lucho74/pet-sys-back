@@ -11,15 +11,8 @@ namespace Application.Validation
 {
     public static class UserRoleInputValidation
     {
-        public static void Validate(IReadOnlyCollection<string>? roles)
+        public static void Validate(string? role)
         {
-            if (roles == null || roles.Count == 0)
-            {
-                throw new BadRequestException("At least one role is required.");
-            }
-
-            var errors = new List<string>();
-
             var availableRoles = new[]
             {
                 RoleNames.Client,
@@ -27,19 +20,9 @@ namespace Application.Validation
                 RoleNames.Admin
             };
 
-            if (roles.Any(role => !availableRoles.Contains(role)))
+            if (string.IsNullOrWhiteSpace(role) || !availableRoles.Contains(role))
             {
-                errors.Add("One or more roles are invalid.");
-            }
-
-            if (roles.Distinct().Count() != roles.Count)
-            {
-                errors.Add("Roles cannot be repeated.");
-            }
-
-            if (errors.Count > 0)
-            {
-                throw new BadRequestException(string.Join(" ", errors));
+                throw new BadRequestException("The requested role is invalid.");
             }
         }
     }

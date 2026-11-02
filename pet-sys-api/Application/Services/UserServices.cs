@@ -29,9 +29,7 @@ namespace Application.Services
         {
             var allowedRoles = readableRoles.ToArray();
 
-            IEnumerable<User> users = await _userRepository.FindAsync(
-                user => user.UserRoles.Any() && user.UserRoles.All( ur => allowedRoles.Contains(ur.Role.Name))
-            );
+            IEnumerable<User> users = await _userRepository.FindAsync(user => allowedRoles.Contains(user.Role.Name));
 
             return users.Select(user => new UserDTO
             {
@@ -40,10 +38,7 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
-                Roles = user.UserRoles
-                .Select(ur => ur.Role.Name)
-                .OrderBy(name => name)
-                .ToArray(),
+                RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             }).ToArray();
@@ -65,10 +60,7 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
-                Roles = user.UserRoles
-                .Select(ur => ur.Role.Name)
-                .OrderBy(name => name)
-                .ToArray(),
+                RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };
@@ -111,13 +103,9 @@ namespace Application.Services
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
-            UserRoleInputValidation.Validate(dto.Roles);
+            UserRoleInputValidation.Validate(dto.Role);
 
-            UserProfileRules.Validate(
-                existingUser: null,
-                roles: dto.Roles,
-                dni: dto.Dni,
-                registrationNumber: dto.RegistrationNumber);
+            UserProfileRules.Validate(existingUser: null, role: dto.Role, dni: dto.Dni, registrationNumber: dto.RegistrationNumber);
 
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
@@ -126,18 +114,11 @@ namespace Application.Services
                 throw new BadRequestException($"A user with email {dto.Email} already exists.");
             }
 
-            List<Role> roles = new List<Role>();
+            Role? role = await _userRepository.GetRoleByNameAsync(dto.Role);
 
-            foreach (var roleName in dto.Roles)
+            if (role == null)
             {
-                Role? role = await _userRepository.GetRoleByNameAsync(roleName);
-
-                if (role == null)
-                {
-                    throw new InvalidOperationException($"The role {roleName} has not been seeded.");
-                }
-
-                roles.Add(role);
+                throw new InvalidOperationException($"The role {dto.Role} has not been seeded.");
             }
 
             User newUser = new User
@@ -146,9 +127,11 @@ namespace Application.Services
                 Email = dto.Email,
                 Phone = dto.Phone,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                RoleId = role.Id,
+                Role = role
             };
 
-            if (dto.Roles.Contains(RoleNames.Client))
+            if (dto.Role == RoleNames.Client)
             {
                 newUser.ClientProfile = new ClientProfile
                 {
@@ -156,21 +139,12 @@ namespace Application.Services
                 };
             }
 
-            if (dto.Roles.Contains(RoleNames.Veterinarian))
+            if (dto.Role == RoleNames.Veterinarian || dto.Role == RoleNames.Admin)
             {
                 newUser.VeterinarianProfile = new VeterinarianProfile
                 {
                     RegistrationNumber = dto.RegistrationNumber!.Trim()
                 };
-            }
-
-            foreach (var role in roles)
-            {
-                newUser.UserRoles.Add(new UserRole
-                {
-                    RoleId = role.Id,
-                    Role = role
-                });
             }
 
             User created = await _userRepository.AddAsync(newUser);
@@ -182,10 +156,7 @@ namespace Application.Services
                 Email = created.Email,
                 Phone = created.Phone,
                 IsDeleted = created.IsDeleted,
-                Roles = created.UserRoles
-                    .Select(ur => ur.Role.Name)
-                    .OrderBy(name => name)
-                    .ToArray(),
+                RoleName = created.Role.Name,
                 Dni = created.ClientProfile?.Dni,
                 RegistrationNumber = created.VeterinarianProfile?.RegistrationNumber
             };
@@ -247,16 +218,13 @@ namespace Application.Services
                 Email = updated.Email,
                 Phone = updated.Phone,
                 IsDeleted = updated.IsDeleted,
-                Roles = updated.UserRoles
-                .Select(ur => ur.Role.Name)
-                .OrderBy(name => name)
-                .ToArray(),
+                RoleName = updated.Role.Name,
                 Dni = updated.ClientProfile?.Dni,
                 RegistrationNumber = updated.VeterinarianProfile?.RegistrationNumber
             };
         }
 
-        public async Task UpdateUserRolesAsync(int id, UpdateUserRolesDTO dto)
+        public async Task UpdateUserRoleAsync(int id, UpdateUserRoleDTO dto)
         {
             User? existing = await _userRepository.GetByIdAsync(id);
 
@@ -265,76 +233,32 @@ namespace Application.Services
                 throw new NotFoundException( $"User with id {id} was not found.");
             }
 
-            if (existing.UserRoles.Any(ur => ur.Role.Name == RoleNames.SysAdmin))
+            if (existing.Role.Name == RoleNames.SysAdmin)
             {
                 throw new ForbiddenException("The SysAdmin account roles cannot be modified.");
             }
 
-            UserRoleInputValidation.Validate(dto.Roles);
+            UserRoleInputValidation.Validate(dto.Role);
 
-            UserProfileRules.Validate(
-                existingUser: existing,
-                roles: dto.Roles,
-                dni: dto.Dni,
-                registrationNumber: dto.RegistrationNumber);
+            bool currentIsClient = existing.Role.Name == RoleNames.Client;
+            bool requestedIsClient = dto.Role == RoleNames.Client;
 
-            var roles = new List<Role>();
-
-            foreach (var roleName in dto.Roles)
+            if (currentIsClient != requestedIsClient)
             {
-                Role? role =
-                    await _userRepository.GetRoleByNameAsync(roleName);
-
-                if (role == null)
-                {
-                    throw new InvalidOperationException(
-                        $"The role {roleName} has not been seeded.");
-                }
-
-                roles.Add(role);
+                throw new BadRequestException("Client and staff accounts must remain separate. Create another account.");
             }
 
-            if (dto.Roles.Contains(RoleNames.Client) &&
-                existing.ClientProfile == null)
+            UserProfileRules.Validate(existingUser: existing, role: dto.Role, dni: null, registrationNumber: null);
+
+            Role? role = await _userRepository.GetRoleByNameAsync(dto.Role);
+
+            if (role == null)
             {
-                existing.ClientProfile = new ClientProfile
-                {
-                    UserId = existing.Id,
-                    Dni = dto.Dni!.Trim()
-                };
+                throw new InvalidOperationException($"The role {dto.Role} has not been seeded.");
             }
 
-            if (dto.Roles.Contains(RoleNames.Veterinarian) &&
-                existing.VeterinarianProfile == null)
-            {
-                existing.VeterinarianProfile = new VeterinarianProfile
-                {
-                    UserId = existing.Id,
-                    RegistrationNumber = dto.RegistrationNumber!.Trim()
-                };
-            }
-
-            var assignmentsToRemove = existing.UserRoles
-                .Where(ur => !dto.Roles.Contains(ur.Role.Name))
-                .ToList();
-
-            foreach (var assignment in assignmentsToRemove)
-            {
-                existing.UserRoles.Remove(assignment);
-            }
-
-            foreach (var role in roles)
-            {
-                if (!existing.UserRoles.Any(ur => ur.RoleId == role.Id))
-                {
-                    existing.UserRoles.Add(new UserRole
-                    {
-                        UserId = existing.Id,
-                        RoleId = role.Id,
-                        Role = role
-                    });
-                }
-            }
+            existing.RoleId = role.Id;
+            existing.Role = role;
 
             await _userRepository.UpdateAsync(id, existing);
         }
@@ -401,10 +325,7 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsDeleted = user.IsDeleted,
-                Roles = user.UserRoles
-                    .Select(ur => ur.Role.Name)
-                    .OrderBy(name => name)
-                    .ToArray(),
+                RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };

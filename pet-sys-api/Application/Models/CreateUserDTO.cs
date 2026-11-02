@@ -18,8 +18,8 @@ namespace Application.Models
         [StringLength(100, MinimumLength = 6)]
         public string Password { get; set; } = string.Empty;
         [Required]
-        [MinLength(1)]
-        public List<string> Roles { get; set; } = new();
+        [StringLength(50)]
+        public string Role { get; set; } = string.Empty;
         [StringLength(8)]
         public string? Dni { get; set; }
         [StringLength(50)]
