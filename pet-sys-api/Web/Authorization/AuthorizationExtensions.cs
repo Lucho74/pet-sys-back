@@ -138,7 +138,27 @@ namespace Web.Authorization
 
                 .AddPolicy(Policies.ConsultationsUpdateOwn, policy =>
                     policy.RequireAuthenticatedUser()
-                        .AddRequirements(ConsultationOperations.Update));
+                        .AddRequirements(ConsultationOperations.Update))
+
+                .AddPolicy(Policies.ConsultationsSuspend, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
+
+                .AddPolicy(Policies.ConsultationsSuspendRecord, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(ConsultationOperations.Suspend))
+
+                .AddPolicy(Policies.ConsultationsReactivate, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
+
+                .AddPolicy(Policies.ConsultationsReactivateRecord, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(ConsultationOperations.Reactivate));
 
             services.AddSingleton<IAuthorizationHandler, CreateUserRoleHandler>();
             services.AddSingleton<IAuthorizationHandler, UserAccountAuthorizationHandler>();

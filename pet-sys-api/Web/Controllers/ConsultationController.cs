@@ -86,5 +86,41 @@ namespace Web.Controllers
             var consultations = await _consultationServices.GetConsultationsByVeterinarianIdAsync(veterinarianId);
             return Ok(consultations);
         }
+
+        [Authorize(Policy = Policies.ConsultationsSuspend)]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> SuspendConsultation(int id)
+        {
+            var consultation = await _consultationServices.GetConsultationByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: consultation,
+                    policyName: Policies.ConsultationsSuspendRecord);
+            if (!authorizationResult.Succeeded)
+            {
+                return Forbid();
+            }
+            await _consultationServices.SuspendConsultationAsync(id);
+            return NoContent();
+        }
+
+        [Authorize(Policy = Policies.ConsultationsReactivate)]
+        [HttpPost("{id:int}/reactivate")]
+        public async Task<IActionResult> ReactivateConsultation(int id)
+        {
+            var consultation =  await _consultationServices.GetConsultationByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: consultation,
+                    policyName: Policies.ConsultationsReactivateRecord);
+            if (!authorizationResult.Succeeded)
+            {
+                return Forbid();
+            }
+            await _consultationServices.ReactivateConsultationAsync(id);
+            return NoContent();
+        }
     }
 }

@@ -26,5 +26,9 @@
         public const string ConsultationsCreate = "Consultations.Create";
         public const string ConsultationsUpdate = "Consultations.Update";
         public const string ConsultationsUpdateOwn = "Consultations.UpdateOwn";
+        public const string ConsultationsSuspend = "Consultations.Suspend";
+        public const string ConsultationsSuspendRecord = "Consultations.SuspendRecord";
+        public const string ConsultationsReactivate = "Consultations.Reactivate";
+        public const string ConsultationsReactivateRecord = "Consultations.ReactivateRecord";
     }
 }

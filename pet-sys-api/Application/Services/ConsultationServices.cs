@@ -118,7 +118,7 @@ namespace Application.Services
 
             if (existing.IsDeleted)
             {
-                throw new BadRequestException($"Consultation with id {id} belongs to a suspended client.");
+                throw new BadRequestException($"Consultation with id {id} is suspended.");
             }
 
             Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
@@ -205,6 +205,62 @@ namespace Application.Services
                 VeterinarianId = consultation.VeterinarianId,
                 IsDeleted = consultation.IsDeleted
             });
+        }
+
+        public async Task SuspendConsultationAsync(int id)
+        {
+            await SetDeletedAsync(id, true);
+        }
+
+        public async Task ReactivateConsultationAsync(int id)
+        {
+            await SetDeletedAsync(id, false);
+        }
+
+        private async Task SetDeletedAsync(int id, bool isDeleted)
+        {
+            Consultation? existing = await _consultationRepository.GetByIdAsync(id);
+
+            if (existing == null)
+            {
+                throw new NotFoundException($"Consultation with id {id} was not found.");
+            }
+
+            if (!isDeleted)
+            {
+                Pet? pet = await _petRepository.GetByIdAsync(existing.PetId);
+
+                if (pet == null)
+                {
+                    throw new BadRequestException("The consultation does not reference an existing pet.");
+                }
+
+                if (pet.IsDeleted)
+                {
+                    throw new BadRequestException("A consultation cannot be reactivated while its pet is suspended.");
+                }
+
+                User? client = await _userRepository.GetByIdAsync(pet.ClientId);
+
+                if (client == null || client.Role.Name != RoleNames.Client || client.ClientProfile == null)
+                {
+                    throw new BadRequestException( "The pet does not have a valid client.");
+                }
+
+                if (client.IsDeleted)
+                {
+                    throw new BadRequestException("A consultation cannot be reactivated while its owner is suspended.");
+                }
+            }
+
+            existing.IsDeleted = isDeleted;
+
+            var updated = await _consultationRepository.UpdateAsync(id, existing);
+
+            if (updated == null)
+            {
+                throw new NotFoundException($"Consultation with id {id} was not found.");
+            }
         }
     }
 }

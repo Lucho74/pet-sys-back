@@ -11,7 +11,19 @@ namespace Web.Authorization.Handlers
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, OperationAuthorizationRequirement requirement, ConsultationDTO target)
         {
-            if (requirement.Name == ConsultationOperations.Update.Name && CanUpdateOwnConsultation(context, target))
+            bool isAllowed = false;
+
+            if (requirement.Name == ConsultationOperations.Update.Name)
+            {
+                isAllowed = CanUpdateOwnConsultation(context, target);
+            }
+            else if (requirement.Name == ConsultationOperations.Suspend.Name ||
+                    requirement.Name == ConsultationOperations.Reactivate.Name)
+            {
+                isAllowed = context.User.IsInRole(RoleNames.Admin) || CanUpdateOwnConsultation(context, target);
+            }
+
+            if (isAllowed)
             {
                 context.Succeed(requirement);
             }
