@@ -56,7 +56,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto)
+        public async Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto, int veterinarianId) 
         {
             Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
 
@@ -70,7 +70,7 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
-            User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
+            User? veterinarian = await _userRepository.GetByIdAsync(veterinarianId);
 
             if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
             {
@@ -79,12 +79,12 @@ namespace Application.Services
 
             if (veterinarian.IsDeleted)
             {
-                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
+                throw new BadRequestException($"Veterinarian with id {veterinarianId} is suspended.");
             }
 
             if (veterinarian.VeterinarianProfile == null)
             {
-                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} does not have a veterinarian profile.");
+                throw new BadRequestException($"Veterinarian with id {veterinarianId} does not have a veterinarian profile.");
             }
 
             var consultation = new Consultation
@@ -92,7 +92,7 @@ namespace Application.Services
                 Description = dto.Description,
                 Date = dto.Date.Value,
                 PetId = dto.PetId,
-                VeterinarianId = dto.VeterinarianId
+                VeterinarianId = veterinarianId
             };
 
             var created = await _consultationRepository.AddAsync(consultation);
@@ -133,7 +133,7 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
             }
 
-            User? veterinarian = await _userRepository.GetByIdAsync(dto.VeterinarianId);
+            User? veterinarian = await _userRepository.GetByIdAsync(existing.VeterinarianId);
 
             if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
             {
@@ -142,18 +142,17 @@ namespace Application.Services
 
             if (veterinarian.IsDeleted)
             {
-                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
+                throw new BadRequestException($"Veterinarian with id {existing.VeterinarianId} is suspended.");
             }
 
             if (veterinarian.VeterinarianProfile == null)
             {
-                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} does not have a veterinarian profile.");
+                throw new BadRequestException($"Veterinarian with id {existing.VeterinarianId} does not have a veterinarian profile.");
             }
 
             existing.Description = dto.Description;
             existing.Date = dto.Date.Value;
             existing.PetId = dto.PetId;
-            existing.VeterinarianId = dto.VeterinarianId;
 
             var updated = await _consultationRepository.UpdateAsync(id, existing);
             if (updated == null)

@@ -23,5 +23,6 @@
         public const string ConsultationsReadByPet = "Consultations.ReadByPet";
         public const string ConsultationsCreate = "Consultations.Create";
         public const string ConsultationsUpdate = "Consultations.Update";
+        public const string ConsultationsUpdateOwn = "Consultations.UpdateOwn";
     }
 }

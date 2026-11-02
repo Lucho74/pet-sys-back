@@ -11,7 +11,5 @@ namespace Application.Models
         public DateTime? Date { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "PetId must be a positive number.")]
         public int PetId { get; set; }
-        [Range(1, int.MaxValue, ErrorMessage = "VeterinarianId must be a positive number.")]
-        public int VeterinarianId { get; set; }
     }
 }

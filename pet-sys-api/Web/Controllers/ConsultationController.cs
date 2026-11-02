@@ -39,7 +39,8 @@ namespace Web.Controllers
         [HttpPost("")]
         public async Task<IActionResult> AddConsultation([FromBody] CreateEditConsultationDTO dto)
         {
-            var created = await _consultationServices.AddConsultationAsync(dto);
+        int callerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var created = await _consultationServices.AddConsultationAsync(dto, callerId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -47,6 +48,16 @@ namespace Web.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateConsultation(int id, [FromBody] CreateEditConsultationDTO dto)
         {
+            var consultation = await _consultationServices.GetConsultationByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: consultation,
+                    policyName: Policies.ConsultationsUpdateOwn);
+            if (!authorizationResult.Succeeded)
+            {
+                return Forbid();
+            }
             var updated = await _consultationServices.UpdateConsultationAsync(id, dto);
             return Ok(updated);
         }
