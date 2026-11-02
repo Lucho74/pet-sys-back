@@ -107,7 +107,7 @@ namespace Application.Services
 
             if (existing.IsDeleted)
             {
-                throw new BadRequestException($"Pet with id {id} belongs to a suspended client.");
+                throw new BadRequestException($"Pet with id {id} is suspended.");
             }
 
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
@@ -164,6 +164,49 @@ namespace Application.Services
                 ClientId = pet.ClientId,
                 IsDeleted = pet.IsDeleted
             });
+        }
+        public async Task SuspendPetAsync(int id)
+        {
+            await SetDeletedAsync(id, true);
+        }
+
+        public async Task ReactivatePetAsync(int id)
+        {
+            await SetDeletedAsync(id, false);
+        }
+
+        private async Task SetDeletedAsync(int id, bool isDeleted)
+        {
+            Pet? existing = await _petRepository.GetByIdAsync(id);
+
+            if (existing == null)
+            {
+                throw new NotFoundException( $"Pet with id {id} was not found.");
+            }
+
+            if (!isDeleted)
+            {
+                User? client =await _userRepository.GetByIdAsync(existing.ClientId);
+
+                if (client == null || client.Role.Name != RoleNames.Client || client.ClientProfile == null)
+                {
+                    throw new BadRequestException("The pet does not have a valid client.");
+                }
+
+                if (client.IsDeleted)
+                {
+                    throw new BadRequestException("A pet cannot be reactivated while its owner is suspended.");
+                }
+            }
+
+            existing.IsDeleted = isDeleted;
+
+            var updated = await _petRepository.UpdateAsync(id, existing);
+
+            if (updated == null)
+            {
+                throw new NotFoundException($"Pet with id {id} was not found.");
+            }
         }
     }
 }

@@ -67,7 +67,7 @@ namespace Application.Services
 
             if (pet.IsDeleted)
             {
-                throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
+                throw new BadRequestException($"Pet with id {dto.PetId} is suspended.");
             }
 
             User? veterinarian = await _userRepository.GetByIdAsync(veterinarianId);
@@ -130,7 +130,7 @@ namespace Application.Services
 
             if (pet.IsDeleted)
             {
-                throw new BadRequestException($"Pet with id {dto.PetId} belongs to a suspended client.");
+                throw new BadRequestException($"Pet with id {dto.PetId} is suspended.");
             }
 
             User? veterinarian = await _userRepository.GetByIdAsync(existing.VeterinarianId);

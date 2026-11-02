@@ -99,6 +99,18 @@ namespace Web.Authorization
                             RoleNames.Veterinarian,
                             RoleNames.Admin))
 
+                .AddPolicy(Policies.PetsSuspend, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
+
+                .AddPolicy(Policies.PetsReactivate, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
+
                 .AddPolicy(Policies.ConsultationsRead, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(

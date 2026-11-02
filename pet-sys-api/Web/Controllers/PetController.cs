@@ -65,5 +65,21 @@ namespace Web.Controllers
             var pets = await _petServices.GetPetsByClientAsync(clientId);
             return Ok(pets);
         }
+
+        [Authorize(Policy = Policies.PetsSuspend)]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> SuspendPet(int id)
+        {
+            await _petServices.SuspendPetAsync(id);
+            return NoContent();
+        }
+
+        [Authorize(Policy = Policies.PetsReactivate)]
+        [HttpPost("{id:int}/reactivate")]
+        public async Task<IActionResult> ReactivatePet(int id)
+        {
+            await _petServices.ReactivatePetAsync(id);
+            return NoContent();
+        }
     }
 }

@@ -18,6 +18,8 @@
         public const string PetsReadOwn = "Pets.ReadOwn";
         public const string PetsCreate = "Pets.Create";
         public const string PetsUpdate = "Pets.Update";
+        public const string PetsSuspend = "Pets.Suspend";
+        public const string PetsReactivate = "Pets.Reactivate";
 
         public const string ConsultationsRead = "Consultations.Read";
         public const string ConsultationsReadByPet = "Consultations.ReadByPet";
