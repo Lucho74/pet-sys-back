@@ -1,66 +1,61 @@
 ﻿using Application.Exceptions;
 using Domain.Constants;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Validation
 {
     public static class UserProfileRules
     {
-        public static void Validate(User? existingUser, string role, string? dni, string? registrationNumber)
+        public static void ValidateCreation(string role, string? dni, string? registrationNumber)
         {
             bool isClient = role == RoleNames.Client;
-            bool isVeterinarian = role == RoleNames.Veterinarian || role == RoleNames.Admin;
+            bool isProfessional = role == RoleNames.Veterinarian || role == RoleNames.Admin;
 
-            var clientProfile = existingUser?.ClientProfile;
-            var veterinarianProfile = existingUser?.VeterinarianProfile;
-
-            if (isClient && clientProfile == null)
+            if (isClient)
             {
-                if (string.IsNullOrWhiteSpace(dni) ||dni.Trim().Length > 8)
+                if (string.IsNullOrWhiteSpace(dni) || dni.Trim().Length > 8)
                 {
                     throw new BadRequestException("A new client profile requires a Dni with at most 8 characters.");
                 }
             }
-
-            if (dni != null)
+            else if (dni != null)
             {
-                if (!isClient)
-                {
-                    throw new BadRequestException("Dni can only be provided when assigning Client.");
-                }
-
-                if (clientProfile != null &&
-                    dni.Trim() != clientProfile.Dni)
-                {
-                    throw new BadRequestException("Use the client profile operation to change Dni.");
-                }
+                throw new BadRequestException("Dni can only be provided when assigning Client.");
             }
 
-            if (isVeterinarian && veterinarianProfile == null)
+            if (isProfessional)
             {
-                if (string.IsNullOrWhiteSpace(registrationNumber) ||
-                    registrationNumber.Trim().Length > 50)
+                if (string.IsNullOrWhiteSpace(registrationNumber) || registrationNumber.Trim().Length > 50)
                 {
                     throw new BadRequestException("A new veterinarian profile requires a registration number with at most 50 characters.");
                 }
             }
-
-            if (registrationNumber != null)
+            else if (registrationNumber != null)
             {
-                if (!isVeterinarian)
-                {
-                    throw new BadRequestException("RegistrationNumber can only be provided for Veterinarian or Admin.");
-                }
+                throw new BadRequestException("RegistrationNumber can only be provided for Veterinarian or Admin.");
+            }
+        }
 
-                if (veterinarianProfile != null && registrationNumber.Trim() != veterinarianProfile.RegistrationNumber)
-                {
-                    throw new BadRequestException("Use the veterinarian profile operation to change the registration number.");
-                }
+        public static void ValidateRoleTransition(User user, string requestedRole)
+        {
+            bool currentIsClient = user.Role.Name == RoleNames.Client;
+            bool requestedIsClient = requestedRole == RoleNames.Client;
+
+            if (currentIsClient != requestedIsClient)
+            {
+                throw new BadRequestException("Client and staff accounts must remain separate. Create another account.");
+            }
+
+            if (requestedIsClient && user.ClientProfile == null)
+            {
+                throw new BadRequestException("The user does not have a valid client profile.");
+            }
+
+            bool isProfessional = requestedRole == RoleNames.Veterinarian || requestedRole == RoleNames.Admin;
+
+            if (isProfessional && user.VeterinarianProfile == null)
+            {
+                throw new BadRequestException("The user does not have a valid veterinarian profile.");
             }
         }
 

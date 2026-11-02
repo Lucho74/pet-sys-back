@@ -1,12 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
-using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -25,13 +20,6 @@ namespace Infrastructure.Repositories
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await Query.FirstOrDefaultAsync(u => u.Email == email);
-        }
-
-        public async Task<IEnumerable<User>> GetByRoleAsync(string roleName)
-        {
-            return await Query
-                .Where(u => u.Role.Name == roleName)
-                .ToListAsync();
         }
 
         public async Task<Role?> GetRoleByNameAsync(string roleName)

@@ -1,7 +1,6 @@
-﻿using Domain.Constants;
-using Microsoft.AspNetCore.Authorization;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Authorization;
 using Web.Authorization.Requirements;
+using Web.Authorization.Rules;
 
 namespace Web.Authorization.Handlers
 {
@@ -9,25 +8,7 @@ namespace Web.Authorization.Handlers
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, CreateUserRoleRequirement requirement, string requestedRole)
         {
-            var allowedRoles = new HashSet<string>(StringComparer.Ordinal);
-
-            if (context.User.IsInRole(RoleNames.Veterinarian))
-            {
-                allowedRoles.Add(RoleNames.Client);
-            }
-
-            if (context.User.IsInRole(RoleNames.Admin))
-            {
-                allowedRoles.Add(RoleNames.Client);
-                allowedRoles.Add(RoleNames.Veterinarian);
-            }
-
-            if (context.User.IsInRole(RoleNames.SysAdmin))
-            {
-                allowedRoles.Add(RoleNames.Client);
-                allowedRoles.Add(RoleNames.Veterinarian);
-                allowedRoles.Add(RoleNames.Admin);
-            }
+            var allowedRoles = UserAccountAccess.GetManageableRoles(context.User);
 
             if (allowedRoles.Contains(requestedRole))
             {

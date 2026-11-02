@@ -5,10 +5,6 @@ using Application.Validation;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -70,7 +66,7 @@ namespace Application.Services
         {
             UserRoleInputValidation.Validate(dto.Role);
 
-            UserProfileRules.Validate(existingUser: null, role: dto.Role, dni: dto.Dni, registrationNumber: dto.RegistrationNumber);
+            UserProfileRules.ValidateCreation(dto.Role, dto.Dni, dto.RegistrationNumber);
 
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
@@ -149,15 +145,13 @@ namespace Application.Services
             {
                 if (existing.ClientProfile == null)
                 {
-                    throw new BadRequestException(
-                        "The user does not have a client profile.");
+                    throw new BadRequestException("The user does not have a client profile.");
                 }
 
                 if (string.IsNullOrWhiteSpace(dto.Dni) ||
                     dto.Dni.Trim().Length > 8)
                 {
-                    throw new BadRequestException(
-                        "Dni must contain between 1 and 8 characters.");
+                    throw new BadRequestException("Dni must contain between 1 and 8 characters.");
                 }
 
                 existing.ClientProfile.Dni = dto.Dni.Trim();
@@ -212,15 +206,7 @@ namespace Application.Services
 
             UserRoleInputValidation.Validate(dto.Role);
 
-            bool currentIsClient = existing.Role.Name == RoleNames.Client;
-            bool requestedIsClient = dto.Role == RoleNames.Client;
-
-            if (currentIsClient != requestedIsClient)
-            {
-                throw new BadRequestException("Client and staff accounts must remain separate. Create another account.");
-            }
-
-            UserProfileRules.Validate(existingUser: existing, role: dto.Role, dni: null, registrationNumber: null);
+            UserProfileRules.ValidateRoleTransition(existing, dto.Role);
 
             Role? role = await _userRepository.GetRoleByNameAsync(dto.Role);
 
