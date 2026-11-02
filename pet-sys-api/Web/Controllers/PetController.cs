@@ -12,9 +12,11 @@ namespace Web.Controllers
     public class PetController : ControllerBase
     {
         private readonly IPetServices _petServices;
-        public PetController(IPetServices petServices)
+        private readonly IAuthorizationService _authorizationService;
+        public PetController(IPetServices petServices, IAuthorizationService authorizationService)
         {
             _petServices = petServices;
+            _authorizationService = authorizationService;
         }
 
         [Authorize(Policy = Policies.PetsRead)]
@@ -30,6 +32,15 @@ namespace Web.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var pet = await _petServices.GetPetByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: pet,
+                    policyName: Policies.PetsReadRecord);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
             return Ok(pet);
         }
 

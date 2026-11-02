@@ -87,6 +87,17 @@ namespace Web.Authorization
                     policy.RequireAuthenticatedUser()
                         .RequireRole(RoleNames.Client))
 
+                .AddPolicy(Policies.PetsReadSingle, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Client,
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
+
+                .AddPolicy(Policies.PetsReadRecord, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(PetOperations.Read))
+
                 .AddPolicy(Policies.PetsCreate, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(
@@ -118,6 +129,13 @@ namespace Web.Authorization
                             RoleNames.Admin))
 
                 .AddPolicy(Policies.ConsultationsReadByPet, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .RequireRole(
+                            RoleNames.Client,
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
+
+                .AddPolicy(Policies.ConsultationsReadSingle, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(
                             RoleNames.Client,
@@ -163,6 +181,7 @@ namespace Web.Authorization
             services.AddSingleton<IAuthorizationHandler, CreateUserRoleHandler>();
             services.AddSingleton<IAuthorizationHandler, UserAccountAuthorizationHandler>();
             services.AddSingleton<IAuthorizationHandler, ConsultationAuthorizationHandler>();
+            services.AddSingleton<IAuthorizationHandler, PetAuthorizationHandler>();
 
             return services;
         }

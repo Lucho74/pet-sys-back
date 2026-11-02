@@ -13,10 +13,12 @@ namespace Web.Controllers
     {
         private readonly IConsultationServices _consultationServices;
         private readonly IAuthorizationService _authorizationService;
-        public ConsultationController(IConsultationServices consultationServices, IAuthorizationService authorizationService)
+        private readonly IPetServices _petServices;
+        public ConsultationController(IConsultationServices consultationServices, IAuthorizationService authorizationService, IPetServices petServices)
         {
             _consultationServices = consultationServices;
             _authorizationService = authorizationService;
+            _petServices = petServices;
         }
 
         [Authorize(Policy = Policies.ConsultationsRead)]
@@ -32,6 +34,16 @@ namespace Web.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var consultation = await _consultationServices.GetConsultationByIdAsync(id);
+            var pet = await _petServices.GetPetByIdAsync(consultation.PetId);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: pet,
+                    policyName: Policies.PetsReadRecord);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
             return Ok(consultation);
         }
 
@@ -66,16 +78,17 @@ namespace Web.Controllers
         [HttpGet("pet/{petId:int}")]
         public async Task<IActionResult> GetByPetId(int petId)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(
-                User,
-                resource: null,
-                policyName: Policies.ConsultationsRead);
-
-            int? clientId = authorizationResult.Succeeded
-                ? null
-                : int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var consultations = await _consultationServices.GetConsultationsByPetIdAsync(petId, clientId);
+            var pet = await _petServices.GetPetByIdAsync(petId);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: pet,
+                    policyName: Policies.PetsReadRecord);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
+            var consultations = await _consultationServices.GetConsultationsByPetIdAsync(petId);
             return Ok(consultations);
         }
 

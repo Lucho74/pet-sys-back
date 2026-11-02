@@ -171,16 +171,8 @@ namespace Application.Services
             };
         }
 
-        public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId, int? clientId = null)
+        public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId)
         {
-            if (clientId != null)
-            {
-                var pet = await _petRepository.GetByIdAsync(petId);
-                if (pet == null || pet.ClientId != clientId)
-                {
-                    throw new NotFoundException($"Pet with id {petId} was not found.");
-                }
-            }
             var consultations = await _consultationRepository.GetByPetIdAsync(petId);
             return consultations.Select(consultation => new ConsultationDTO
             {
