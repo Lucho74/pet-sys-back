@@ -244,8 +244,12 @@ namespace Application.Services
 
             if (existing == null)
             {
-                throw new NotFoundException(
-                    $"User with id {id} was not found.");
+                throw new NotFoundException($"User with id {id} was not found.");
+            }
+
+            if (existing.Role.Name == RoleNames.SysAdmin)
+            {
+                throw new ForbiddenException("The SysAdmin account status cannot be modified.");
             }
 
             foreach (var pet in await _petRepository.GetByClientIdAsync(id))

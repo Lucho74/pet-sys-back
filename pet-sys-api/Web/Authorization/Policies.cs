@@ -9,7 +9,9 @@
         public const string UsersUpdate = "Users.Update";
         public const string UsersUpdateAccount = "Users.UpdateAccount";
         public const string UsersSuspend = "Users.Suspend";
+        public const string UsersSuspendAccount = "Users.SuspendAccount";
         public const string UsersReactivate = "Users.Reactivate";
+        public const string UsersReactivateAccount = "Users.ReactivateAccount";
         public const string UsersAssignRole = "Users.AssignRole";
 
         public const string PetsRead = "Pets.Read";

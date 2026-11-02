@@ -58,12 +58,20 @@ namespace Web.Authorization
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
 
+                .AddPolicy(Policies.UsersSuspendAccount, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(UserAccountOperations.Suspend))
+
                 .AddPolicy(Policies.UsersReactivate, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(
                             RoleNames.Veterinarian,
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
+
+                .AddPolicy(Policies.UsersReactivateAccount, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(UserAccountOperations.Reactivate))
 
                 .AddPolicy(Policies.UsersAssignRole, policy =>
                     policy.RequireAuthenticatedUser()

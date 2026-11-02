@@ -11,9 +11,21 @@ namespace Web.Authorization.Operations
             };
 
         public static readonly OperationAuthorizationRequirement Update =
-        new OperationAuthorizationRequirement
-        {
-            Name = nameof(Update)
-        };
+            new OperationAuthorizationRequirement
+            {
+                Name = nameof(Update)
+            };
+
+        public static readonly OperationAuthorizationRequirement Suspend =
+            new OperationAuthorizationRequirement
+            {
+                Name = nameof(Suspend)
+            };
+
+        public static readonly OperationAuthorizationRequirement Reactivate =
+            new OperationAuthorizationRequirement
+            {
+                Name = nameof(Reactivate)
+            };
     }
 }

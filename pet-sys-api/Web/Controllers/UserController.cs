@@ -104,6 +104,16 @@ namespace Web.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            var user = await _userServices.GetUserByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: user,
+                    policyName: Policies.UsersSuspendAccount);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
             await _userServices.DeleteUserAsync(id);
             return NoContent();
         }
@@ -112,6 +122,16 @@ namespace Web.Controllers
         [HttpPost("{id:int}/reactivate")]
         public async Task<IActionResult> ReactivateUser(int id)
         {
+            var user = await _userServices.GetUserByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: user,
+                    policyName: Policies.UsersReactivateAccount);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
             await _userServices.ReactivateUserAsync(id);
             return NoContent();
         }

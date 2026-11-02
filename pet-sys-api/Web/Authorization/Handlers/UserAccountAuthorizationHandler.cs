@@ -14,7 +14,9 @@ namespace Web.Authorization.Handlers
         {
             bool isAllowed = false;
 
-            if (requirement.Name == UserAccountOperations.Read.Name)
+            if (requirement.Name == UserAccountOperations.Read.Name ||
+                requirement.Name == UserAccountOperations.Suspend.Name ||
+                requirement.Name == UserAccountOperations.Reactivate.Name)
             {
                 isAllowed = CanAccessManagedAccount(context, target);
             }
