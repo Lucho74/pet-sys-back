@@ -5,7 +5,7 @@ namespace Web.Authorization.Rules
 {
     public static class UserAccountAccess
     {
-        public static string[] GetReadableRoles(ClaimsPrincipal user)
+        public static string[] GetManageableRoles(ClaimsPrincipal user)
         {
             var roles = new HashSet<string>(StringComparer.Ordinal);
 

@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -34,7 +35,7 @@ namespace Web.Controllers
         [HttpGet("")]
         public async Task<IActionResult> GetAllUser()
         {
-            var readableRoles = UserAccountAccess.GetReadableRoles(User);
+            var readableRoles = UserAccountAccess.GetManageableRoles(User);
             var users = await _userServices.GetAllUserAsync(readableRoles);
             return Ok(users);
         }
@@ -97,6 +98,16 @@ namespace Web.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
+            var user = await _userServices.GetUserByIdAsync(id);
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    resource: user,
+                    policyName: Policies.UsersUpdateAccount);
+            if (!authorizationResult.Succeeded)
+            {
+                return NotFound();
+            }
             var updated = await _userServices.UpdateUserAsync(id, dto);
             return Ok(updated);
         }

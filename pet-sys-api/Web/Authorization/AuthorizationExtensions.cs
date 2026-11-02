@@ -47,6 +47,10 @@ namespace Web.Authorization
                             RoleNames.Admin,
                             RoleNames.SysAdmin))
 
+                .AddPolicy(Policies.UsersUpdateAccount, policy =>
+                    policy.RequireAuthenticatedUser()
+                        .AddRequirements(UserAccountOperations.Update))
+
                 .AddPolicy(Policies.UsersSuspend, policy =>
                     policy.RequireAuthenticatedUser()
                         .RequireRole(

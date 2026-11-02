@@ -9,5 +9,11 @@ namespace Web.Authorization.Operations
             {
                 Name = nameof(Read)
             };
+
+        public static readonly OperationAuthorizationRequirement Update =
+        new OperationAuthorizationRequirement
+        {
+            Name = nameof(Update)
+        };
     }
 }

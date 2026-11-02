@@ -7,6 +7,7 @@
         public const string UsersCreate = "Users.Create";
         public const string UsersCreateWithRoles = "Users.CreateWithRoles";
         public const string UsersUpdate = "Users.Update";
+        public const string UsersUpdateAccount = "Users.UpdateAccount";
         public const string UsersSuspend = "Users.Suspend";
         public const string UsersReactivate = "Users.Reactivate";
         public const string UsersAssignRoles = "Users.AssignRoles";
