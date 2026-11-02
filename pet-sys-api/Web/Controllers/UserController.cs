@@ -96,6 +96,18 @@ namespace Web.Controllers
             {
                 return NotFound();
             }
+            if (dto.RegistrationNumber != null)
+            {
+                var profileAuthorizationResult =
+                    await _authorizationService.AuthorizeAsync(
+                        User,
+                        resource: null,
+                        policyName: Policies.VeterinarianProfilesUpdate);
+                if (!profileAuthorizationResult.Succeeded)
+                {
+                    return Forbid();
+                }
+            }
             var updated = await _userServices.UpdateUserAsync(id, dto);
             return Ok(updated);
         }

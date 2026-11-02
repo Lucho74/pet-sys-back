@@ -14,6 +14,8 @@
         public const string UsersReactivateAccount = "Users.ReactivateAccount";
         public const string UsersAssignRole = "Users.AssignRole";
 
+        public const string VeterinarianProfilesUpdate = "VeterinarianProfiles.Update";
+
         public const string PetsRead = "Pets.Read";
         public const string PetsReadOwn = "Pets.ReadOwn";
         public const string PetsReadSingle = "Pets.ReadSingle";

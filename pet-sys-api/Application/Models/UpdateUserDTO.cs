@@ -17,5 +17,7 @@ namespace Application.Models
         public string? Password { get; set; }
         [StringLength(8)]
         public string? Dni { get; set; }
+        [StringLength(50)]
+        public string? RegistrationNumber { get; set; }
     }
 }

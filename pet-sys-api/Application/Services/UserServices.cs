@@ -143,6 +143,8 @@ namespace Application.Services
                 throw new BadRequestException($"A user with email {dto.Email} already exists.");
             }
 
+            UserProfileRules.ValidateRegistrationNumberUpdate(existing, dto.RegistrationNumber);
+
             if (dto.Dni != null)
             {
                 if (existing.ClientProfile == null)
@@ -164,6 +166,11 @@ namespace Application.Services
             existing.FullName = dto.FullName;
             existing.Email = dto.Email;
             existing.Phone = dto.Phone;
+
+            if (dto.RegistrationNumber != null)
+            {
+                existing.VeterinarianProfile!.RegistrationNumber = dto.RegistrationNumber.Trim();
+            }
 
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {

@@ -63,5 +63,25 @@ namespace Application.Validation
                 }
             }
         }
+
+        public static void ValidateRegistrationNumberUpdate(User user, string? registrationNumber)
+        {
+            if (registrationNumber == null)
+            {
+                return;
+            }
+
+            bool isProfessional = user.Role.Name == RoleNames.Veterinarian || user.Role.Name == RoleNames.Admin;
+
+            if (!isProfessional || user.VeterinarianProfile == null)
+            {
+                throw new BadRequestException("The user does not have a valid veterinarian profile.");
+            }
+
+            if (string.IsNullOrWhiteSpace(registrationNumber) || registrationNumber.Trim().Length > 50)
+            {
+                throw new BadRequestException("Registration number must contain between 1 and 50 characters.");
+            }
+        }
     }
 }
