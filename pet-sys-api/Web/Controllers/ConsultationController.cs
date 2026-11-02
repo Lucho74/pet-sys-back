@@ -29,7 +29,7 @@ namespace Web.Controllers
             return Ok(consultations);
         }
 
-        [Authorize(Policy = Policies.ConsultationsRead)]
+        [Authorize(Policy = Policies.ConsultationsReadSingle)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {

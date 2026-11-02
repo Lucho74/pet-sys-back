@@ -27,7 +27,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Policy = Policies.PetsRead)]
+        [Authorize(Policy = Policies.PetsReadSingle)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
