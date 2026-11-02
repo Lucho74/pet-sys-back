@@ -12,8 +12,6 @@
         public const string UsersReactivate = "Users.Reactivate";
         public const string UsersAssignRole = "Users.AssignRole";
 
-        public const string ClientProfilesRead = "ClientProfiles.Read";
-
         public const string PetsRead = "Pets.Read";
         public const string PetsReadOwn = "Pets.ReadOwn";
         public const string PetsCreate = "Pets.Create";

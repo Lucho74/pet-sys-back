@@ -33,9 +33,15 @@ namespace Web.Controllers
 
         [Authorize(Policy = Policies.UsersRead)]
         [HttpGet("")]
-        public async Task<IActionResult> GetAllUser()
+        public async Task<IActionResult> GetAllUser([FromQuery] string? role)
         {
             var readableRoles = UserAccountAccess.GetManageableRoles(User);
+            if (role != null)
+            {
+                readableRoles = readableRoles
+                    .Where(allowedRole => allowedRole == role)
+                    .ToArray();
+            }
             var users = await _userServices.GetAllUserAsync(readableRoles);
             return Ok(users);
         }
@@ -55,24 +61,6 @@ namespace Web.Controllers
                 return NotFound();
             }
             return Ok(user);
-        }
-
-        [Authorize(Policy = Policies.ClientProfilesRead)]
-        [HttpGet("client-profiles")]
-        public async Task<IActionResult> GetClientProfiles()
-        {
-            var profiles = await _userServices.GetClientProfilesAsync();
-
-            return Ok(profiles);
-        }
-
-        [Authorize(Policy = Policies.ClientProfilesRead)]
-        [HttpGet("{id:int}/client-profile")]
-        public async Task<IActionResult> GetClientProfile(int id)
-        {
-            var profile = await _userServices.GetClientProfileByUserIdAsync(id);
-
-            return Ok(profile);
         }
 
         [Authorize(Policy = Policies.UsersCreate)]

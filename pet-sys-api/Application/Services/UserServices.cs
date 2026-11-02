@@ -66,41 +66,6 @@ namespace Application.Services
             };
         }
 
-        public async Task<IEnumerable<ClientProfileDTO>> GetClientProfilesAsync()
-        {
-            IEnumerable<User> users = await _userRepository.FindAsync(user => user.ClientProfile != null);
-
-            return users.Select(user => new ClientProfileDTO
-            {
-                UserId = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                Phone = user.Phone,
-                Dni = user.ClientProfile!.Dni,
-                IsDeleted = user.IsDeleted
-            }).ToArray();
-        }
-
-        public async Task<ClientProfileDTO> GetClientProfileByUserIdAsync(int userId)
-        {
-            User? user = await _userRepository.GetByIdAsync(userId);
-
-            if (user == null || user.ClientProfile == null)
-            {
-                throw new NotFoundException($"Client profile for user with id {userId} was not found.");
-            }
-
-            return new ClientProfileDTO
-            {
-                UserId = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                Phone = user.Phone,
-                Dni = user.ClientProfile.Dni,
-                IsDeleted = user.IsDeleted
-            };
-        }
-
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
             UserRoleInputValidation.Validate(dto.Role);
