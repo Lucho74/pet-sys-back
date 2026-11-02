@@ -113,11 +113,15 @@ namespace Web.Authorization
 
                 .AddPolicy(Policies.ConsultationsCreate, policy =>
                     policy.RequireAuthenticatedUser()
-                        .RequireRole(RoleNames.Veterinarian))
+                        .RequireRole(
+                            RoleNames.Veterinarian,
+                            RoleNames.Admin))
 
                 .AddPolicy(Policies.ConsultationsUpdate, policy =>
                     policy.RequireAuthenticatedUser()
-                        .RequireRole(RoleNames.Veterinarian));
+                        .RequireRole(
+                        RoleNames.Veterinarian,
+                        RoleNames.Admin));
 
             services.AddSingleton<IAuthorizationHandler, CreateUserRoleHandler>();
             services.AddSingleton<IAuthorizationHandler, UserAccountAuthorizationHandler>();

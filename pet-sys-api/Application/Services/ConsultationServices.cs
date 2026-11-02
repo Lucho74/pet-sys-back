@@ -145,6 +145,11 @@ namespace Application.Services
                 throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} is suspended.");
             }
 
+            if (veterinarian.VeterinarianProfile == null)
+            {
+                throw new BadRequestException($"Veterinarian with id {dto.VeterinarianId} does not have a veterinarian profile.");
+            }
+
             existing.Description = dto.Description;
             existing.Date = dto.Date.Value;
             existing.PetId = dto.PetId;
