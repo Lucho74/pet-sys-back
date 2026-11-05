@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -248,6 +249,34 @@ namespace Application.Services
                 Id = user.Id,
                 RoleName = user.GetType().Name
             };
+        }
+
+        public async Task<PaginatedList<UserDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize)
+        {
+            if(pageIndex < 1 || pageSize < 1)
+            {
+                throw new BadRequestException("Page index and page size must be greater than 0.");
+            }
+
+            if(pageSize > 50)
+            {
+                throw new BadRequestException("Page size cannot be greater than 50.");
+            }
+
+            var page = await _userRepository.ListAllByPagination(pageIndex, pageSize);
+
+            var items = page.Items.Select(user => new UserDTO
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                IsDeleted = user.IsDeleted,
+                RoleName = user.GetType().Name,
+                Dni = user is Client client ? client.Dni : null
+            }).ToList();
+
+            return new PaginatedList<UserDTO>(items, page.PageIndex, page.TotalPages);
         }
     }
 }

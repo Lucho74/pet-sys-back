@@ -1,4 +1,5 @@
 using Application.Models;
+using Domain.Common;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,5 +14,6 @@ namespace Application.Interfaces
         Task DeleteUserAsync(int id, int callerId, string callerRole);
         Task ReactivateUserAsync(int id, int callerId, string callerRole);
         Task<UserDTO> AuthenticateAsync(LoginDTO dto);
+        Task<PaginatedList<UserDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize);
     }
 }

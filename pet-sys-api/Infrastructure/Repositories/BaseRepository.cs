@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Interfaces;
 using Infrastructure.Context;
+using System.Text.RegularExpressions;
+using Domain.Common;
 
 namespace Infrastructure.Repositories
 {
@@ -54,6 +56,19 @@ namespace Infrastructure.Repositories
             _context.Entry(existingEntity).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
             return existingEntity;
+        }
+
+        public async Task<PaginatedList<T>> ListAllByPagination(int pageIndex, int pageSize)
+        {
+            var items = await _context.Set<T>()
+                .OrderBy(b => b.Id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var count = await _context.Set<T>().CountAsync();
+            var totalPages = (int)Math.Ceiling((double)count / pageSize);
+            return new PaginatedList<T>(items, pageIndex, totalPages);
         }
     }
 }

@@ -17,14 +17,6 @@ namespace Web.Controllers
         }
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllPet()
-        {
-            var pets = await _petServices.GetAllPetAsync();
-            return Ok(pets);
-        }
-
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -62,6 +54,14 @@ namespace Web.Controllers
         {
             var clientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var pets = await _petServices.GetPetsByClientAsync(clientId);
+            return Ok(pets);
+        }
+
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [HttpGet]
+        public async Task<IActionResult> GetPetsByPagination(int pageIndex = 1, int pageSize = 10)
+        {
+            var pets = await _petServices.ListAllByPaginationAsync(pageIndex, pageSize);
             return Ok(pets);
         }
     }
