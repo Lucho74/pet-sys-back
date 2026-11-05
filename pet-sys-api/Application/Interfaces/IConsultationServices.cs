@@ -1,4 +1,5 @@
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,5 +14,6 @@ namespace Application.Interfaces
         Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId, int? clientId = null);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
+        Task<PaginatedList<ConsultationDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize);
     }
 }

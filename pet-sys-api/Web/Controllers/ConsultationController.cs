@@ -18,14 +18,6 @@ namespace Web.Controllers
         }
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllConsultation()
-        {
-            var consultations = await _consultationServices.GetAllConsultationAsync();
-            return Ok(consultations);
-        }
-
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -65,6 +57,14 @@ namespace Web.Controllers
         public async Task<IActionResult> GetByVeterinarianId(int veterinarianId)
         {
             var consultations = await _consultationServices.GetConsultationsByVeterinarianIdAsync(veterinarianId);
+            return Ok(consultations);
+        }
+
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [HttpGet]
+        public async Task<IActionResult> GetConsultationsByPagination(int pageIndex = 1, int pageSize = 10)
+        {
+            var consultations = await _consultationServices.ListAllByPaginationAsync(pageIndex, pageSize);
             return Ok(consultations);
         }
     }

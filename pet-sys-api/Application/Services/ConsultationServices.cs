@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -178,6 +179,33 @@ namespace Application.Services
                 VeterinarianId = consultation.VeterinarianId,
                 IsDeleted = consultation.IsDeleted
             });
+        }
+
+        public async Task<PaginatedList<ConsultationDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize)
+        {
+            if(pageIndex < 1 || pageSize < 1)
+            {
+                throw new BadRequestException("Page index and page size must be greater than 0.");
+            }
+
+            if(pageSize > 50)
+            {
+                throw new BadRequestException("Page size cannot be greater than 50.");
+            }
+
+            var page = await _consultationRepository.ListAllByPagination(pageIndex, pageSize);
+
+            var items = page.Items.Select(consultation => new ConsultationDTO
+            {
+                Id = consultation.Id,
+                Description = consultation.Description,
+                Date = consultation.Date,
+                PetId = consultation.PetId,
+                VeterinarianId = consultation.VeterinarianId,
+                IsDeleted = consultation.IsDeleted
+            }).ToList();
+
+            return new PaginatedList<ConsultationDTO>(items, page.PageIndex, page.TotalPages);
         }
     }
 }

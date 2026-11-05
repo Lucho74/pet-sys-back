@@ -28,14 +28,6 @@ namespace Web.Controllers
         }
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllUser()
-        {
-            var users = await _userServices.GetAllUserAsync(CallerId, CallerRole);
-            return Ok(users);
-        }
-
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -73,6 +65,13 @@ namespace Web.Controllers
         {
             await _userServices.ReactivateUserAsync(id, CallerId, CallerRole);
             return NoContent();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsersByPagination(int pageIndex = 1, int pageSize = 10)
+        {
+            var users = await _userServices.ListAllByPaginationAsync(pageIndex, pageSize);
+            return Ok(users);
         }
     }
 }
