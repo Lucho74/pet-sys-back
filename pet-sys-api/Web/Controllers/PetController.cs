@@ -68,10 +68,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpPut("{id:int}/image")]
-        public async Task<IActionResult> UploadImage(
-            int id,
-            [FromForm] IFormFile file,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> UploadImage(int id, IFormFile file, CancellationToken cancellationToken)
         {
             using var stream = file.OpenReadStream();
 
@@ -82,9 +79,7 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpDelete("{id:int}/image")]
-        public async Task<IActionResult> DeleteImage(
-            int id,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken)
         {
             await _petServices.DeleteImageAsync(id, cancellationToken);
 
