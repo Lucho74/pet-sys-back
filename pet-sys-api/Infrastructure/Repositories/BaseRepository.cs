@@ -60,15 +60,26 @@ namespace Infrastructure.Repositories
 
         public async Task<PaginatedList<T>> ListAllByPagination(int pageIndex, int pageSize)
         {
-            var items = await _context.Set<T>()
-                .OrderBy(b => b.Id)
+            return await Paginate(_context.Set<T>().OrderBy(e => e.Id), pageIndex, pageSize);
+        }
+
+        protected async Task<PaginatedList<T>> Paginate(IQueryable<T> query, int pageIndex, int pageSize)
+        {
+            var count = await query.CountAsync();
+            var items = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            var count = await _context.Set<T>().CountAsync();
             var totalPages = (int)Math.Ceiling((double)count / pageSize);
             return new PaginatedList<T>(items, pageIndex, totalPages);
+        }
+
+        protected static IQueryable<T> ApplyOrder<TKey>(IQueryable<T> query, Expression<Func<T, TKey>> key, bool desc)
+        {
+            return desc
+                ? query.OrderByDescending(key).ThenByDescending(e => e.Id)
+                : query.OrderBy(key).ThenBy(e => e.Id);
         }
     }
 }

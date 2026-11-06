@@ -14,6 +14,6 @@ namespace Application.Interfaces
         Task DeleteUserAsync(int id, int callerId, string callerRole);
         Task ReactivateUserAsync(int id, int callerId, string callerRole);
         Task<UserDTO> AuthenticateAsync(LoginDTO dto);
-        Task<PaginatedList<UserDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize);
+        Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q);
     }
 }

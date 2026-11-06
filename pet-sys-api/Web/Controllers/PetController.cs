@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -59,9 +60,9 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet]
-        public async Task<IActionResult> GetPetsByPagination(int pageIndex = 1, int pageSize = 10)
+        public async Task<IActionResult> GetPetsByPagination([FromQuery] PetQuery query)
         {
-            var pets = await _petServices.ListAllByPaginationAsync(pageIndex, pageSize);
+            var pets = await _petServices.GetPetsPagedAsync(query);
             return Ok(pets);
         }
     }

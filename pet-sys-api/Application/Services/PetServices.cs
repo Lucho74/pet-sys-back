@@ -152,19 +152,19 @@ namespace Application.Services
             });
         }
 
-        public async Task<PaginatedList<PetDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize)
+        public async Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q)
         {
-            if(pageIndex < 1 || pageSize < 1)
+            if (q.PageIndex < 1 || q.PageSize < 1)
             {
                 throw new BadRequestException("Page index and page size must be greater than 0.");
             }
 
-            if(pageSize > 50)
+            if (q.PageSize > 50)
             {
                 throw new BadRequestException("Page size cannot be greater than 50.");
             }
 
-            var page = await _petRepository.ListAllByPagination(pageIndex, pageSize);
+            var page = await _petRepository.GetPagedAsync(q);
 
             var items = page.Items.Select(pet => new PetDTO
             {

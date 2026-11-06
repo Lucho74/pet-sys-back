@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -68,9 +69,9 @@ namespace Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsersByPagination(int pageIndex = 1, int pageSize = 10)
+        public async Task<IActionResult> GetUsersByPagination([FromQuery] UserQuery query)
         {
-            var users = await _userServices.ListAllByPaginationAsync(pageIndex, pageSize);
+            var users = await _userServices.GetUsersPagedAsync(query);
             return Ok(users);
         }
     }
