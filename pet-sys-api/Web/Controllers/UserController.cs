@@ -1,6 +1,5 @@
 using Application.Interfaces;
 using Application.Models;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -15,11 +14,9 @@ namespace Web.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserServices _userServices;
-        private readonly IAuthorizationService _authorizationService;
-        public UserController(IUserServices userServices, IAuthorizationService authorizationService)
+        public UserController(IUserServices userServices)
         {
             _userServices = userServices;
-            _authorizationService = authorizationService;
         }
 
         private int CallerId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -31,11 +28,11 @@ namespace Web.Controllers
             return Ok(user);
         }
 
-        [Authorize(Policy = Policies.UsersRead)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllUser([FromQuery] string? role)
         {
-            var readableRoles = UserAccountAccess.GetManageableRoles(User);
+            var readableRoles = ResourceAccess.GetManageableRoles(User);
             if (role != null)
             {
                 readableRoles = readableRoles
@@ -46,33 +43,23 @@ namespace Web.Controllers
             return Ok(users);
         }
 
-        [Authorize(Policy = Policies.UsersRead)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userServices.GetUserByIdAsync(id);
-            var authorizationResult =
-                await _authorizationService.AuthorizeAsync(
-                    User,
-                    resource: user,
-                    policyName: Policies.UsersReadAccount);
-            if (!authorizationResult.Succeeded)
+            if (!ResourceAccess.CanManageAccount(User, user.RoleName))
             {
                 return NotFound();
             }
             return Ok(user);
         }
 
-        [Authorize(Policy = Policies.UsersCreate)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
-            var authorizationResult = await _authorizationService.AuthorizeAsync(
-                User,
-                resource: dto.Role,
-                policyName: Policies.UsersCreateWithRole);
-
-            if (!authorizationResult.Succeeded)
+            if (!ResourceAccess.CanManageAccount(User, dto.Role))
             {
                 return Forbid();
             }
@@ -82,47 +69,30 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Policy = Policies.UsersUpdate)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
             var user = await _userServices.GetUserByIdAsync(id);
-            var authorizationResult =
-                await _authorizationService.AuthorizeAsync(
-                    User,
-                    resource: user,
-                    policyName: Policies.UsersUpdateAccount);
-            if (!authorizationResult.Succeeded)
+            if (!ResourceAccess.CanUpdateAccount(User, user))
             {
                 return NotFound();
             }
-            if (dto.RegistrationNumber != null)
+            if (dto.RegistrationNumber != null &&
+                !ResourceAccess.CanUpdateRegistrationNumber(User))
             {
-                var profileAuthorizationResult =
-                    await _authorizationService.AuthorizeAsync(
-                        User,
-                        resource: null,
-                        policyName: Policies.VeterinarianProfilesUpdate);
-                if (!profileAuthorizationResult.Succeeded)
-                {
-                    return Forbid();
-                }
+                return Forbid();
             }
             var updated = await _userServices.UpdateUserAsync(id, dto);
             return Ok(updated);
         }
 
-        [Authorize(Policy = Policies.UsersSuspend)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _userServices.GetUserByIdAsync(id);
-            var authorizationResult =
-                await _authorizationService.AuthorizeAsync(
-                    User,
-                    resource: user,
-                    policyName: Policies.UsersSuspendAccount);
-            if (!authorizationResult.Succeeded)
+            if (!ResourceAccess.CanManageAccount(User, user.RoleName))
             {
                 return NotFound();
             }
@@ -130,17 +100,12 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Policy = Policies.UsersReactivate)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("{id:int}/reactivate")]
         public async Task<IActionResult> ReactivateUser(int id)
         {
             var user = await _userServices.GetUserByIdAsync(id);
-            var authorizationResult =
-                await _authorizationService.AuthorizeAsync(
-                    User,
-                    resource: user,
-                    policyName: Policies.UsersReactivateAccount);
-            if (!authorizationResult.Succeeded)
+            if (!ResourceAccess.CanManageAccount(User, user.RoleName))
             {
                 return NotFound();
             }
@@ -148,7 +113,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Policy = Policies.UsersAssignRole)]
+        [Authorize(Policy = Policies.SysAdminOnly)]
         [HttpPut("{id:int}/role")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateUserRoleDTO dto)
         {

@@ -1,11 +1,11 @@
 using Application.Interfaces;
 using Application.Services;
+using Domain.Constants;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -89,7 +89,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAppAuthorization();
+var authenticatedPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build();
+
+builder.Services.AddAuthorizationBuilder()
+    .SetDefaultPolicy(authenticatedPolicy)
+    .SetFallbackPolicy(authenticatedPolicy)
+    .AddPolicy(Policies.Staff, policy =>
+        policy.RequireAuthenticatedUser()
+            .RequireRole(RoleNames.Veterinarian, RoleNames.Admin, RoleNames.SysAdmin))
+    .AddPolicy(Policies.SysAdminOnly, policy =>
+        policy.RequireAuthenticatedUser()
+            .RequireRole(RoleNames.SysAdmin))
+    .AddPolicy(Policies.ClientOnly, policy =>
+        policy.RequireAuthenticatedUser()
+            .RequireRole(RoleNames.Client));
 
 #region Repositories
 

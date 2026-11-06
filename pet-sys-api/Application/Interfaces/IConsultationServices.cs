@@ -9,8 +9,8 @@ namespace Application.Interfaces
     {
         Task<IEnumerable<ConsultationDTO>> GetAllConsultationAsync();
         Task<ConsultationDTO> GetConsultationByIdAsync(int id);
-        Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto, int veterinarianId);
-        Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto);
+        Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId);
+        Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
         Task SuspendConsultationAsync(int id);

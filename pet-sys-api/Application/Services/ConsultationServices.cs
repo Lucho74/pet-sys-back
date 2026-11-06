@@ -56,7 +56,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto, int veterinarianId) 
+        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId)
         {
             Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
 
@@ -90,7 +90,7 @@ namespace Application.Services
             var consultation = new Consultation
             {
                 Description = dto.Description,
-                Date = dto.Date.Value,
+                Date = dto.Date ?? throw new BadRequestException("Date is required."),
                 PetId = dto.PetId,
                 VeterinarianId = veterinarianId
             };
@@ -107,7 +107,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto)
+        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto)
         {
             Consultation? existing = await _consultationRepository.GetByIdAsync(id);
 
@@ -133,25 +133,8 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {dto.PetId} is suspended.");
             }
 
-            User? veterinarian = await _userRepository.GetByIdAsync(existing.VeterinarianId);
-
-            if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
-            {
-                throw new BadRequestException("VeterinarianId does not reference an existing professional.");
-            }
-
-            if (veterinarian.IsDeleted)
-            {
-                throw new BadRequestException($"Veterinarian with id {existing.VeterinarianId} is suspended.");
-            }
-
-            if (veterinarian.VeterinarianProfile == null)
-            {
-                throw new BadRequestException($"Veterinarian with id {existing.VeterinarianId} does not have a veterinarian profile.");
-            }
-
             existing.Description = dto.Description;
-            existing.Date = dto.Date.Value;
+            existing.Date = dto.Date ?? throw new BadRequestException("Date is required.");
             existing.PetId = dto.PetId;
 
             var updated = await _consultationRepository.UpdateAsync(id, existing);

@@ -4,22 +4,22 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Web.Authorization;
+using Web.Authorization.Rules;
 
 namespace Web.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PetController : ControllerBase
     {
         private readonly IPetServices _petServices;
-        private readonly IAuthorizationService _authorizationService;
-        public PetController(IPetServices petServices, IAuthorizationService authorizationService)
+        public PetController(IPetServices petServices)
         {
             _petServices = petServices;
-            _authorizationService = authorizationService;
         }
 
-        [Authorize(Policy = Policies.PetsRead)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllPet()
         {
@@ -27,24 +27,18 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Policy = Policies.PetsReadSingle)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var pet = await _petServices.GetPetByIdAsync(id);
-            var authorizationResult =
-                await _authorizationService.AuthorizeAsync(
-                    User,
-                    resource: pet,
-                    policyName: Policies.PetsReadRecord);
-            if (!authorizationResult.Succeeded)
+            if (!ResourceAccess.CanReadPet(User, pet))
             {
                 return NotFound();
             }
             return Ok(pet);
         }
 
-        [Authorize(Policy = Policies.PetsCreate)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("")]
         public async Task<IActionResult> AddPet([FromBody] CreateEditPetDTO dto)
         {
@@ -52,7 +46,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Policy = Policies.PetsUpdate)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdatePet(int id, [FromBody] CreateEditPetDTO dto)
         {
@@ -60,7 +54,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Policy = Policies.PetsRead)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {
@@ -68,7 +62,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Policy = Policies.PetsReadOwn)]
+        [Authorize(Policy = Policies.ClientOnly)]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyPets()
         {
@@ -77,7 +71,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Policy = Policies.PetsSuspend)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> SuspendPet(int id)
         {
@@ -85,7 +79,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Policy = Policies.PetsReactivate)]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("{id:int}/reactivate")]
         public async Task<IActionResult> ReactivatePet(int id)
         {
