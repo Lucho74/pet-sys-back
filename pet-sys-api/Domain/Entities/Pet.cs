@@ -23,6 +23,8 @@ namespace Domain.Entities
         [Required]
         [StringLength(50)]
         public string Breed { get; set; }
+        [StringLength(512)]
+        public string? BlobImage { get; set; } = null;
         [Required]
         [DataType(DataType.Date)]
         public DateOnly BirthDate { get; set; }

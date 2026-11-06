@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -14,11 +15,13 @@ namespace Application.Services
     {
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
+        public readonly IAzureBlobImageStorage _azureBlobImageStorage;
 
-        public PetServices(IPetRepository petRepository, IUserRepository userRepository)
+        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IAzureBlobImageStorage azureBlobImageStorage)
         {
             _petRepository = petRepository;
             _userRepository = userRepository;
+            _azureBlobImageStorage = azureBlobImageStorage;
         }
 
         public async Task<IEnumerable<PetDTO>> GetAllPetAsync()
@@ -30,6 +33,7 @@ namespace Application.Services
                 Name = pet.Name,
                 Specie = pet.Specie,
                 Breed = pet.Breed,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsDeleted = pet.IsDeleted
@@ -50,6 +54,7 @@ namespace Application.Services
                 Name = pet.Name,
                 Specie = pet.Specie,
                 Breed = pet.Breed,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsDeleted = pet.IsDeleted
@@ -172,12 +177,61 @@ namespace Application.Services
                 Name = pet.Name,
                 Specie = pet.Specie,
                 Breed = pet.Breed,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsDeleted = pet.IsDeleted
             }).ToList();
 
             return new PaginatedList<PetDTO>(items, page.PageIndex, page.TotalPages);
+        }
+
+        public async Task UploadImageAsync(int petId, Stream imageStream, string contentType, CancellationToken cancellationToken = default)
+        {
+            var existing = await _petRepository.GetByIdAsync(petId);
+            if (existing == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
+
+            if (existing.IsDeleted)
+            {
+                throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
+            }
+
+            var blobImage = await _azureBlobImageStorage.UploadAsync(imageStream, contentType, cancellationToken);
+
+            existing.BlobImage = blobImage;
+
+            var updated = await _petRepository.UpdateAsync(petId, existing);
+            if (updated == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
+        }
+
+        public async Task DeleteImageAsync(int petId, CancellationToken cancellationToken = default)
+        {
+            var existing = await _petRepository.GetByIdAsync(petId);
+            if (existing == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
+
+            if (existing.IsDeleted)
+            {
+                throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
+            }
+
+            await _azureBlobImageStorage.DeleteAsync(existing.BlobImage, cancellationToken);
+
+            existing.BlobImage = null;
+
+            var updated = await _petRepository.UpdateAsync(petId, existing);
+            if (updated == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
         }
     }
 }

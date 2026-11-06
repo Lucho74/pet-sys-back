@@ -14,6 +14,8 @@ namespace Application.Models
         [Required]
         [StringLength(50)]
         public string Breed { get; set; }
+        [StringLength(512)]
+        public string? BlobImage { get; set; }
         [Required]
         public DateOnly? BirthDate { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "ClientId must be a positive number.")]
