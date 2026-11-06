@@ -136,6 +136,7 @@ namespace Application.Services
                 Name = updated.Name,
                 Specie = updated.Specie,
                 Breed = updated.Breed,
+                BlobImage = updated.BlobImage,
                 BirthDate = updated.BirthDate,
                 ClientId = updated.ClientId,
                 IsDeleted = updated.IsDeleted
@@ -151,6 +152,7 @@ namespace Application.Services
                 Name = pet.Name,
                 Specie = pet.Specie,
                 Breed = pet.Breed,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsDeleted = pet.IsDeleted

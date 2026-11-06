@@ -67,6 +67,10 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("BlobImage")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<string>("Breed")
                         .IsRequired()
                         .HasMaxLength(50)
