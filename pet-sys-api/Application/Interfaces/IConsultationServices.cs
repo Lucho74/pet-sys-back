@@ -1,4 +1,5 @@
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,5 +16,6 @@ namespace Application.Interfaces
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
         Task SuspendConsultationAsync(int id);
         Task ReactivateConsultationAsync(int id);
+        Task<PaginatedList<ConsultationDTO>> GetConsultationsPagedAsync(PaginationQuery q);
     }
 }

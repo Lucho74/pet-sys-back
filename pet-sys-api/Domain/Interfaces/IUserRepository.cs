@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Common;
+using Domain.Entities;
 
 namespace Domain.Interfaces
 {
@@ -6,5 +7,6 @@ namespace Domain.Interfaces
     {
         Task<User?> GetByEmailAsync(string email);
         Task<Role?> GetRoleByNameAsync(string roleName);
+        Task<PaginatedList<User>> GetPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles);
     }
 }

@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Application.Validation;
 using Domain.Constants;
 using Domain.Entities;
@@ -293,6 +294,33 @@ namespace Application.Services
             };
         }
 
-        
+        public async Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles)
+        {
+            if (q.PageIndex < 1 || q.PageSize < 1)
+            {
+                throw new BadRequestException("Page index and page size must be greater than 0.");
+            }
+
+            if (q.PageSize > 50)
+            {
+                throw new BadRequestException("Page size cannot be greater than 50.");
+            }
+
+            var page = await _userRepository.GetPagedAsync(q, readableRoles);
+
+            var items = page.Items.Select(user => new UserDTO
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                IsDeleted = user.IsDeleted,
+                RoleName = user.Role.Name,
+                Dni = user.ClientProfile?.Dni,
+                RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
+            }).ToList();
+
+            return new PaginatedList<UserDTO>(items, page.PageIndex, page.TotalPages);
+        }
     }
 }

@@ -1,4 +1,5 @@
 using Application.Models;
+using Domain.Common;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,5 +15,6 @@ namespace Application.Interfaces
         Task DeleteUserAsync(int id);
         Task ReactivateUserAsync(int id);
         Task<UserDTO> AuthenticateAsync(LoginDTO dto);
+        Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles);
     }
 }

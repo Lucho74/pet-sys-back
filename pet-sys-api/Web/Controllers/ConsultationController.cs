@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,13 +23,7 @@ namespace Web.Controllers
             _petServices = petServices;
         }
 
-        [Authorize(Policy = Policies.Staff)]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllConsultation()
-        {
-            var consultations = await _consultationServices.GetAllConsultationAsync();
-            return Ok(consultations);
-        }
+
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
@@ -114,6 +109,14 @@ namespace Web.Controllers
         {
             await _consultationServices.ReactivateConsultationAsync(id);
             return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpGet]
+        public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query)
+        {
+            var consultations = await _consultationServices.GetConsultationsPagedAsync(query);
+            return Ok(consultations);
         }
     }
 }

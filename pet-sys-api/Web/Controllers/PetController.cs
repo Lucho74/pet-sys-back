@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,14 +18,6 @@ namespace Web.Controllers
         public PetController(IPetServices petServices)
         {
             _petServices = petServices;
-        }
-
-        [Authorize(Policy = Policies.Staff)]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllPet()
-        {
-            var pets = await _petServices.GetAllPetAsync();
-            return Ok(pets);
         }
 
         [HttpGet("{id:int}")]
@@ -85,6 +78,14 @@ namespace Web.Controllers
         {
             await _petServices.ReactivatePetAsync(id);
             return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpGet]
+        public async Task<IActionResult> GetPetsByPagination([FromQuery] PetQuery query)
+        {
+            var pets = await _petServices.GetPetsPagedAsync(query);
+            return Ok(pets);
         }
     }
 }

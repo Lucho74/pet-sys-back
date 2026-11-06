@@ -1,4 +1,5 @@
 using Application.Models;
+using Domain.Common;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,6 +14,7 @@ namespace Application.Interfaces
         Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto);
         Task SuspendPetAsync(int id);
         Task ReactivatePetAsync(int id);
+        Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q);
 
 
     }

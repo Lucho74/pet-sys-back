@@ -2,6 +2,7 @@ using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Constants;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -236,6 +237,33 @@ namespace Application.Services
             {
                 throw new NotFoundException($"Consultation with id {id} was not found.");
             }
+        }
+
+        public async Task<PaginatedList<ConsultationDTO>> GetConsultationsPagedAsync(PaginationQuery q)
+        {
+            if (q.PageIndex < 1 || q.PageSize < 1)
+            {
+                throw new BadRequestException("Page index and page size must be greater than 0.");
+            }
+
+            if (q.PageSize > 50)
+            {
+                throw new BadRequestException("Page size cannot be greater than 50.");
+            }
+
+            var page = await _consultationRepository.GetPagedAsync(q);
+
+            var items = page.Items.Select(consultation => new ConsultationDTO
+            {
+                Id = consultation.Id,
+                Description = consultation.Description,
+                Date = consultation.Date,
+                PetId = consultation.PetId,
+                VeterinarianId = consultation.VeterinarianId,
+                IsDeleted = consultation.IsDeleted
+            }).ToList();
+
+            return new PaginatedList<ConsultationDTO>(items, page.PageIndex, page.TotalPages);
         }
     }
 }

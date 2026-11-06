@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -26,21 +27,6 @@ namespace Web.Controllers
         {
             var user = await _userServices.GetUserByIdAsync(CallerId);
             return Ok(user);
-        }
-
-        [Authorize(Policy = Policies.Staff)]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllUser([FromQuery] string? role)
-        {
-            var readableRoles = ResourceAccess.GetManageableRoles(User);
-            if (role != null)
-            {
-                readableRoles = readableRoles
-                    .Where(allowedRole => allowedRole == role)
-                    .ToArray();
-            }
-            var users = await _userServices.GetAllUserAsync(readableRoles);
-            return Ok(users);
         }
 
         [Authorize(Policy = Policies.Staff)]
@@ -119,6 +105,17 @@ namespace Web.Controllers
         {
             await _userServices.UpdateUserRoleAsync(id, dto);
             return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpGet]
+        public async Task<IActionResult> GetUsersByPagination([FromQuery] UserQuery query)
+        {
+            var readableRoles = ResourceAccess.GetManageableRoles(User);
+
+            var users = await _userServices.GetUsersPagedAsync(query, readableRoles);
+
+            return Ok(users);
         }
     }
 }
