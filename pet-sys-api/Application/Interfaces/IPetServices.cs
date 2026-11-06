@@ -12,6 +12,8 @@ namespace Application.Interfaces
         Task<PetDTO> GetPetByIdAsync(int id);
         Task<PetDTO> AddPetAsync(CreateEditPetDTO dto);
         Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto);
+        Task SuspendPetAsync(int id);
+        Task ReactivatePetAsync(int id);
         Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q);
 
 

@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -26,10 +27,11 @@ namespace Domain.Entities
         [Required]
         [DataType(DataType.Date)]
         public DateOnly BirthDate { get; set; }
-        [Required]
-        [ForeignKey(nameof(Client))]
         public int ClientId { get; set; }
-        public Client Client { get; set; }
+
+        [ForeignKey(nameof(ClientId))]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
+        public ClientProfile Client { get; set; } = null!;
 
         public bool IsDeleted { get; set; } = false;
 
