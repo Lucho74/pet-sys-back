@@ -12,7 +12,7 @@ namespace Application.Interfaces
         Task<PetDTO> GetPetByIdAsync(int id);
         Task<PetDTO> AddPetAsync(CreateEditPetDTO dto);
         Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto);
-        Task<PaginatedList<PetDTO>> ListAllByPaginationAsync(int pageIndex, int pageSize);
+        Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q);
 
 
     }

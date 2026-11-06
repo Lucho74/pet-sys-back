@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,9 +63,9 @@ namespace Web.Controllers
 
         [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet]
-        public async Task<IActionResult> GetConsultationsByPagination(int pageIndex = 1, int pageSize = 10)
+        public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query)
         {
-            var consultations = await _consultationServices.ListAllByPaginationAsync(pageIndex, pageSize);
+            var consultations = await _consultationServices.GetConsultationsPagedAsync(query);
             return Ok(consultations);
         }
     }
