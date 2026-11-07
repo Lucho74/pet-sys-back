@@ -34,7 +34,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
@@ -56,7 +56,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
@@ -117,7 +117,7 @@ namespace Application.Services
                 FullName = created.FullName,
                 Email = created.Email,
                 Phone = created.Phone,
-                IsDeleted = created.IsDeleted,
+                IsSuspended = created.IsSuspended,
                 RoleName = created.Role.Name,
                 Dni = created.ClientProfile?.Dni,
                 RegistrationNumber = created.VeterinarianProfile?.RegistrationNumber
@@ -184,7 +184,7 @@ namespace Application.Services
                 FullName = updated.FullName,
                 Email = updated.Email,
                 Phone = updated.Phone,
-                IsDeleted = updated.IsDeleted,
+                IsSuspended = updated.IsSuspended,
                 RoleName = updated.Role.Name,
                 Dni = updated.ClientProfile?.Dni,
                 RegistrationNumber = updated.VeterinarianProfile?.RegistrationNumber
@@ -224,15 +224,15 @@ namespace Application.Services
 
         public async Task DeleteUserAsync(int id)
         {
-            await SetDeletedAsync(id, true);
+            await SetSuspendedAsync(id, true);
         }
 
         public async Task ReactivateUserAsync(int id)
         {
-            await SetDeletedAsync(id, false);
+            await SetSuspendedAsync(id, false);
         }
 
-        private async Task SetDeletedAsync(int id, bool isDeleted)
+        private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
             User? existing = await _userRepository.GetByIdAsync(id);
 
@@ -251,18 +251,18 @@ namespace Application.Services
                 foreach (var consultation in
                     await _consultationRepository.GetByPetIdAsync(pet.Id))
                 {
-                    consultation.IsDeleted = isDeleted;
+                    consultation.IsSuspended = isSuspended;
 
                     await _consultationRepository.UpdateAsync(
                         consultation.Id, consultation);
                 }
 
-                pet.IsDeleted = isDeleted;
+                pet.IsSuspended = isSuspended;
 
                 await _petRepository.UpdateAsync(pet.Id, pet);
             }
 
-            existing.IsDeleted = isDeleted;
+            existing.IsSuspended = isSuspended;
 
             await _userRepository.UpdateAsync(id, existing);
         }
@@ -271,7 +271,7 @@ namespace Application.Services
         {
             User? user = await _userRepository.GetByEmailAsync(dto.Email);
 
-            if (user == null || user.IsDeleted)
+            if (user == null || user.IsSuspended)
             {
                 throw new UnauthorizedException("Invalid email or password.");
             }
@@ -287,7 +287,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
@@ -314,7 +314,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber

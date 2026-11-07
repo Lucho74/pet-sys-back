@@ -14,7 +14,7 @@ namespace Application.Models
         [Required]
         [Phone]
         public string Phone { get; set; }
-        public bool IsDeleted { get; set; } = false;
+        public bool IsSuspended { get; set; } = false;
         public string RoleName { get; set; } = string.Empty;
         [StringLength(8)]
         public string? Dni { get; set; }

@@ -29,6 +29,6 @@ namespace Domain.Entities
         [ForeignKey(nameof(VeterinarianId))]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public VeterinarianProfile Veterinarian { get; set; } = null!;
-        public bool IsDeleted { get; set; } = false;
+        public bool IsSuspended { get; set; } = false;
     }
 }

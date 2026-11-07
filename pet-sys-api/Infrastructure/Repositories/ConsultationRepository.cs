@@ -35,8 +35,8 @@ namespace Infrastructure.Repositories
         {
             var query = _context.Set<Consultation>().AsQueryable();
 
-            if (!q.IncludeDeleted)
-                query = query.Where(c => !c.IsDeleted);
+            if (!q.IncludeSuspended)
+                query = query.Where(c => !c.IsSuspended);
 
             if (!string.IsNullOrWhiteSpace(q.Search))
             {

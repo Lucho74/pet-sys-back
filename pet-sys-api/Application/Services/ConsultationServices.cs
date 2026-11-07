@@ -34,7 +34,7 @@ namespace Application.Services
                 Date = consultation.Date,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
-                IsDeleted = consultation.IsDeleted
+                IsSuspended = consultation.IsSuspended
             });
         }
 
@@ -53,7 +53,7 @@ namespace Application.Services
                 Date = consultation.Date,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
-                IsDeleted = consultation.IsDeleted
+                IsSuspended = consultation.IsSuspended
             };
         }
 
@@ -66,7 +66,7 @@ namespace Application.Services
                 throw new BadRequestException("PetId does not reference an existing pet.");
             }
 
-            if (pet.IsDeleted)
+            if (pet.IsSuspended)
             {
                 throw new BadRequestException($"Pet with id {dto.PetId} is suspended.");
             }
@@ -78,7 +78,7 @@ namespace Application.Services
                 throw new BadRequestException("VeterinarianId does not reference an existing professional.");
             }
 
-            if (veterinarian.IsDeleted)
+            if (veterinarian.IsSuspended)
             {
                 throw new BadRequestException($"Veterinarian with id {veterinarianId} is suspended.");
             }
@@ -104,7 +104,7 @@ namespace Application.Services
                 Date = created.Date,
                 PetId = created.PetId,
                 VeterinarianId = created.VeterinarianId,
-                IsDeleted = created.IsDeleted
+                IsSuspended = created.IsSuspended
             };
         }
 
@@ -117,7 +117,7 @@ namespace Application.Services
                 throw new NotFoundException($"Consultation with id {id} was not found.");
             }
 
-            if (existing.IsDeleted)
+            if (existing.IsSuspended)
             {
                 throw new BadRequestException($"Consultation with id {id} is suspended.");
             }
@@ -129,7 +129,7 @@ namespace Application.Services
                 throw new BadRequestException("PetId does not reference an existing pet.");
             }
 
-            if (pet.IsDeleted)
+            if (pet.IsSuspended)
             {
                 throw new BadRequestException($"Pet with id {dto.PetId} is suspended.");
             }
@@ -151,7 +151,7 @@ namespace Application.Services
                 Date = updated.Date,
                 PetId = updated.PetId,
                 VeterinarianId = updated.VeterinarianId,
-                IsDeleted = updated.IsDeleted
+                IsSuspended = updated.IsSuspended
             };
         }
 
@@ -165,7 +165,7 @@ namespace Application.Services
                 Date = consultation.Date,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
-                IsDeleted = consultation.IsDeleted
+                IsSuspended = consultation.IsSuspended
             });
         }
 
@@ -179,21 +179,21 @@ namespace Application.Services
                 Date = consultation.Date,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
-                IsDeleted = consultation.IsDeleted
+                IsSuspended = consultation.IsSuspended
             });
         }
 
         public async Task SuspendConsultationAsync(int id)
         {
-            await SetDeletedAsync(id, true);
+            await SetSuspendedAsync(id, true);
         }
 
         public async Task ReactivateConsultationAsync(int id)
         {
-            await SetDeletedAsync(id, false);
+            await SetSuspendedAsync(id, false);
         }
 
-        private async Task SetDeletedAsync(int id, bool isDeleted)
+        private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
             Consultation? existing = await _consultationRepository.GetByIdAsync(id);
 
@@ -202,7 +202,7 @@ namespace Application.Services
                 throw new NotFoundException($"Consultation with id {id} was not found.");
             }
 
-            if (!isDeleted)
+            if (!isSuspended)
             {
                 Pet? pet = await _petRepository.GetByIdAsync(existing.PetId);
 
@@ -211,7 +211,7 @@ namespace Application.Services
                     throw new BadRequestException("The consultation does not reference an existing pet.");
                 }
 
-                if (pet.IsDeleted)
+                if (pet.IsSuspended)
                 {
                     throw new BadRequestException("A consultation cannot be reactivated while its pet is suspended.");
                 }
@@ -223,13 +223,13 @@ namespace Application.Services
                     throw new BadRequestException( "The pet does not have a valid client.");
                 }
 
-                if (client.IsDeleted)
+                if (client.IsSuspended)
                 {
                     throw new BadRequestException("A consultation cannot be reactivated while its owner is suspended.");
                 }
             }
 
-            existing.IsDeleted = isDeleted;
+            existing.IsSuspended = isSuspended;
 
             var updated = await _consultationRepository.UpdateAsync(id, existing);
 
@@ -260,7 +260,7 @@ namespace Application.Services
                 Date = consultation.Date,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
-                IsDeleted = consultation.IsDeleted
+                IsSuspended = consultation.IsSuspended
             }).ToList();
 
             return new PaginatedList<ConsultationDTO>(items, page.PageIndex, page.TotalPages);

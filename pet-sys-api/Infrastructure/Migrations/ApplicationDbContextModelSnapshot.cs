@@ -53,7 +53,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsSuspended")
                         .HasColumnType("bit");
 
                     b.Property<int>("PetId")
@@ -90,7 +90,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsSuspended")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -171,7 +171,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsSuspended")
                         .HasColumnType("bit");
 
                     b.Property<string>("Password")

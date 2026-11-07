@@ -33,7 +33,7 @@ namespace Application.Services
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
-                IsDeleted = pet.IsDeleted
+                IsSuspended = pet.IsSuspended
             });
         }
 
@@ -53,7 +53,7 @@ namespace Application.Services
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
-                IsDeleted = pet.IsDeleted
+                IsSuspended = pet.IsSuspended
             };
         }
 
@@ -66,7 +66,7 @@ namespace Application.Services
                 throw new BadRequestException("ClientId does not reference an existing client.");
             }
 
-            if (client.IsDeleted)
+            if (client.IsSuspended)
             {
                 throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
             }
@@ -94,7 +94,7 @@ namespace Application.Services
                 Breed = created.Breed,
                 BirthDate = created.BirthDate,
                 ClientId = created.ClientId,
-                IsDeleted = created.IsDeleted
+                IsSuspended = created.IsSuspended
             };
         }
 
@@ -106,7 +106,7 @@ namespace Application.Services
                 throw new NotFoundException($"Pet with id {id} was not found.");
             }
 
-            if (existing.IsDeleted)
+            if (existing.IsSuspended)
             {
                 throw new BadRequestException($"Pet with id {id} is suspended.");
             }
@@ -118,7 +118,7 @@ namespace Application.Services
                 throw new BadRequestException("ClientId does not reference an existing client.");
             }
 
-            if (client.IsDeleted)
+            if (client.IsSuspended)
             {
                 throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
             }
@@ -148,7 +148,7 @@ namespace Application.Services
                 Breed = updated.Breed,
                 BirthDate = updated.BirthDate,
                 ClientId = updated.ClientId,
-                IsDeleted = updated.IsDeleted
+                IsSuspended = updated.IsSuspended
             };
         }
 
@@ -163,20 +163,20 @@ namespace Application.Services
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
-                IsDeleted = pet.IsDeleted
+                IsSuspended = pet.IsSuspended
             });
         }
         public async Task SuspendPetAsync(int id)
         {
-            await SetDeletedAsync(id, true);
+            await SetSuspendedAsync(id, true);
         }
 
         public async Task ReactivatePetAsync(int id)
         {
-            await SetDeletedAsync(id, false);
+            await SetSuspendedAsync(id, false);
         }
 
-        private async Task SetDeletedAsync(int id, bool isDeleted)
+        private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
             Pet? existing = await _petRepository.GetByIdAsync(id);
 
@@ -185,7 +185,7 @@ namespace Application.Services
                 throw new NotFoundException( $"Pet with id {id} was not found.");
             }
 
-            if (!isDeleted)
+            if (!isSuspended)
             {
                 User? client =await _userRepository.GetByIdAsync(existing.ClientId);
 
@@ -194,13 +194,13 @@ namespace Application.Services
                     throw new BadRequestException("The pet does not have a valid client.");
                 }
 
-                if (client.IsDeleted)
+                if (client.IsSuspended)
                 {
                     throw new BadRequestException("A pet cannot be reactivated while its owner is suspended.");
                 }
             }
 
-            existing.IsDeleted = isDeleted;
+            existing.IsSuspended = isSuspended;
 
             var updated = await _petRepository.UpdateAsync(id, existing);
 
@@ -232,7 +232,7 @@ namespace Application.Services
                 Breed = pet.Breed,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
-                IsDeleted = pet.IsDeleted
+                IsSuspended = pet.IsSuspended
             }).ToList();
 
             return new PaginatedList<PetDTO>(items, page.PageIndex, page.TotalPages);

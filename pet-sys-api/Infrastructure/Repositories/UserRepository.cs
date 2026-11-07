@@ -35,8 +35,8 @@ namespace Infrastructure.Repositories
 
             var query = Query.Where(user => allowedRoles.Contains(user.Role.Name));
 
-            if (!filters.IncludeDeleted)
-                query = query.Where(user => !user.IsDeleted);
+            if (!filters.IncludeSuspended)
+                query = query.Where(user => !user.IsSuspended);
 
             if (!string.IsNullOrWhiteSpace(filters.Search))
             {

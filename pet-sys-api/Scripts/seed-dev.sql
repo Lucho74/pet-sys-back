@@ -22,7 +22,7 @@ DECLARE @Today date = CAST(GETDATE() AS date);
 BEGIN TRANSACTION;
 
 SET IDENTITY_INSERT [dbo].[Users] ON;
-INSERT INTO [dbo].[Users] ([Id], [FullName], [Password], [Email], [Phone], [IsDeleted], [UserType], [Dni]) VALUES
+INSERT INTO [dbo].[Users] ([Id], [FullName], [Password], [Email], [Phone], [IsSuspended], [UserType], [Dni]) VALUES
     (1, N'Camila Sánchez', @PasswordHash, N'admin1@4patas.com', N'341-452-7489', 0, N'Admin', NULL),
     (2, N'Agustina López', @PasswordHash, N'admin2@4patas.com', N'341-446-2089', 0, N'Admin', NULL),
     (3, N'Juan Álvarez', @PasswordHash, N'admin3@4patas.com', N'341-681-5741', 0, N'Admin', NULL),
