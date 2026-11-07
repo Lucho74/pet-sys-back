@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Web.Authorization;
 
 namespace Web.Controllers
 {
@@ -15,7 +16,7 @@ namespace Web.Controllers
             _speciesServices = speciesServices;
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllSpecies()
         {
@@ -23,7 +24,7 @@ namespace Web.Controllers
             return Ok(species);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -31,7 +32,7 @@ namespace Web.Controllers
             return Ok(species);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("")]
         public async Task<IActionResult> AddSpecies([FromBody] CreateEditSpeciesDTO dto)
         {
@@ -39,7 +40,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateSpecies(int id, [FromBody] CreateEditSpeciesDTO dto)
         {
@@ -47,7 +48,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteSpecies(int id)
         {

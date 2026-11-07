@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Common;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,6 @@ namespace Domain.Interfaces
     public interface IPetRepository : IBaseRepository<Pet>
     {
         Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId);
+        Task<PaginatedList<Pet>> GetPagedAsync(PetQuery q);
     }
 }

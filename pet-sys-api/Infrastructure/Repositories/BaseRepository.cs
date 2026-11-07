@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Domain.Interfaces;
 using Infrastructure.Context;
+using System.Text.RegularExpressions;
+using Domain.Common;
 
 namespace Infrastructure.Repositories
 {
@@ -20,32 +22,36 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public virtual async Task<T?> GetByIdAsync(int id)
+        protected virtual IQueryable<T> Query => _context.Set<T>();
+
+        public async Task<T?> GetByIdAsync(int id)
         {
-            var entity = await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
-            return entity;
+            return await Query.FirstOrDefaultAsync(e => e.Id == id);
         }
 
-        public virtual async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _context.Set<T>().ToListAsync();
+            return await Query.ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> FindAsync(
+            Expression<Func<T, bool>> predicate)
         {
-            return await _context.Set<T>().Where(predicate).ToListAsync();
+            return await Query.Where(predicate).ToListAsync();
         }
 
         public async Task<T> AddAsync(T entity)
         {
             _context.Set<T>().Add(entity);
             await _context.SaveChangesAsync();
+
             return entity;
         }
 
         public async Task<T?> UpdateAsync(int id, T entity)
         {
             var existingEntity = await _context.Set<T>().FindAsync(id);
+
             if (existingEntity == null)
             {
                 return null;
@@ -53,7 +59,32 @@ namespace Infrastructure.Repositories
 
             _context.Entry(existingEntity).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
+
             return existingEntity;
+        }
+
+        public async Task<PaginatedList<T>> ListAllByPagination(int pageIndex, int pageSize)
+        {
+            return await Paginate(_context.Set<T>().OrderBy(e => e.Id), pageIndex, pageSize);
+        }
+
+        protected async Task<PaginatedList<T>> Paginate(IQueryable<T> query, int pageIndex, int pageSize)
+        {
+            var count = await query.CountAsync();
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var totalPages = (int)Math.Ceiling((double)count / pageSize);
+            return new PaginatedList<T>(items, pageIndex, totalPages);
+        }
+
+        protected static IQueryable<T> ApplyOrder<TKey>(IQueryable<T> query, Expression<Func<T, TKey>> key, bool desc)
+        {
+            return desc
+                ? query.OrderByDescending(key).ThenByDescending(e => e.Id)
+                : query.OrderBy(key).ThenBy(e => e.Id);
         }
     }
 }

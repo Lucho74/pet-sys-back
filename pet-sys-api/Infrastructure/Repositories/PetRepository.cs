@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Common;
+using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using System;
@@ -16,29 +17,45 @@ namespace Infrastructure.Repositories
         {
         }
 
-        public override async Task<Pet?> GetByIdAsync(int id)
-        {
-            return await _context.Set<Pet>()
-                .Include(p => p.Species)
-                .Include(p => p.Breed)
-                .FirstOrDefaultAsync(p => p.Id == id);
-        }
-
-        public override async Task<IEnumerable<Pet>> GetAllAsync()
-        {
-            return await _context.Set<Pet>()
-                .Include(p => p.Species)
-                .Include(p => p.Breed)
-                .ToListAsync();
-        }
+        protected override IQueryable<Pet> Query => _context.Set<Pet>()
+            .Include(p => p.Species)
+            .Include(p => p.Breed);
 
         public async Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId)
         {
-            return await _context.Set<Pet>()
-            .Include(p => p.Species)
-            .Include(p => p.Breed)
+            return await Query
             .Where(p => p.ClientId == clientId)
             .ToListAsync();
+        }
+
+        public async Task<PaginatedList<Pet>> GetPagedAsync(PetQuery q)
+        {
+            var query = Query;
+
+            if (!q.IncludeDeleted)
+                query = query.Where(p => !p.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(q.Search))
+            {
+                var pattern = $"%{q.Search.Trim()}%";
+                query = query.Where(p => EF.Functions.Like(p.Name, pattern));
+            }
+
+            if (q.SpeciesId.HasValue)
+                query = query.Where(p => p.SpeciesId == q.SpeciesId.Value);
+
+            if (q.BreedId.HasValue)
+                query = query.Where(p => p.BreedId == q.BreedId.Value);
+
+            query = q.SortBy?.ToLowerInvariant() switch
+            {
+                "name" => ApplyOrder(query, p => p.Name, q.SortDesc),
+                "species" => ApplyOrder(query, p => p.Species.Name, q.SortDesc),
+                "breed" => ApplyOrder(query, p => p.Breed.Name, q.SortDesc),
+                _ => ApplyOrder(query, p => p.Id, q.SortDesc)
+            };
+
+            return await Paginate(query, q.PageIndex, q.PageSize);
         }
     }
 }

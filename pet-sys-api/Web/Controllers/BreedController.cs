@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Web.Authorization;
 
 namespace Web.Controllers
 {
@@ -15,7 +16,7 @@ namespace Web.Controllers
             _breedServices = breedServices;
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("")]
         public async Task<IActionResult> GetAllBreed()
         {
@@ -23,7 +24,7 @@ namespace Web.Controllers
             return Ok(breeds);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -31,7 +32,7 @@ namespace Web.Controllers
             return Ok(breed);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("species/{speciesId:int}")]
         public async Task<IActionResult> GetBySpeciesId(int speciesId)
         {
@@ -39,7 +40,7 @@ namespace Web.Controllers
             return Ok(breeds);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("")]
         public async Task<IActionResult> AddBreed([FromBody] CreateEditBreedDTO dto)
         {
@@ -47,7 +48,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateBreed(int id, [FromBody] CreateEditBreedDTO dto)
         {
@@ -55,7 +56,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteBreed(int id)
         {

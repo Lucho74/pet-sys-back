@@ -5,14 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Entities
+namespace Application.Models
 {
-    public class Client : User
+    public class UpdateUserRoleDTO
     {
         [Required]
-        [StringLength(20)]
-        public string Dni { get; set; }
-
-        public ICollection<Pet> Pets { get; set; } = new List<Pet>();
+        [StringLength(50)]
+        public string Role { get; set; } = string.Empty;
     }
 }

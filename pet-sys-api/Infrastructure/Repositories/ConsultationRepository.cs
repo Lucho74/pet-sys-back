@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Common;
+using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using System;
@@ -28,6 +29,28 @@ namespace Infrastructure.Repositories
             return await _context.Set<Consultation>()
                 .Where(c => c.PetId == petId)
                 .ToListAsync();
+        }
+
+        public async Task<PaginatedList<Consultation>> GetPagedAsync(PaginationQuery q)
+        {
+            var query = _context.Set<Consultation>().AsQueryable();
+
+            if (!q.IncludeDeleted)
+                query = query.Where(c => !c.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(q.Search))
+            {
+                var pattern = $"%{q.Search.Trim()}%";
+                query = query.Where(c => EF.Functions.Like(c.Description, pattern));
+            }
+
+            query = q.SortBy?.ToLowerInvariant() switch
+            {
+                "date" => ApplyOrder(query, c => c.Date, q.SortDesc),
+                _ => ApplyOrder(query, c => c.Id, q.SortDesc)
+            };
+
+            return await Paginate(query, q.PageIndex, q.PageSize);
         }
     }
 }

@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Constants;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Context
 {
@@ -8,13 +9,12 @@ namespace Infrastructure.Context
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-
-        public DbSet<Admin> Admins { get; set; }
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Pet> Pets { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Veterinarian> Veterinarians { get; set; }
-        public DbSet<Client> Clients { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<ClientProfile> ClientProfiles { get; set; }
+        public DbSet<VeterinarianProfile> VeterinarianProfiles { get; set; }
         public DbSet<Species> Species { get; set; }
         public DbSet<Breed> Breeds { get; set; }
 
@@ -22,30 +22,11 @@ namespace Infrastructure.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-                .HasDiscriminator<string>("UserType")
-                .HasValue<Admin>("Admin")
-                .HasValue<Client>("Client")
-                .HasValue<Veterinarian>("Veterinarian")
-                .HasValue<SysAdmin>("SysAdmin");
-
-            modelBuilder.Entity<Pet>()
-                .HasOne(p => p.Client)
-                .WithMany(c => c.Pets)
-                .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Consultation>()
                 .HasOne(c => c.Pet)
                 .WithMany(p => p.Consultations)
                 .HasForeignKey(c => c.PetId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Consultation>()
-                .HasOne(c => c.Veterinarian)
-                .WithMany(v => v.Consultations)
-                .HasForeignKey(c => c.VeterinarianId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Pet>()
                 .Property(p => p.BirthDate)
@@ -60,8 +41,6 @@ namespace Infrastructure.Context
             modelBuilder.Entity<User>().Property(u => u.Email).HasMaxLength(200).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Phone).HasMaxLength(50).IsRequired();
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
-
-            modelBuilder.Entity<Client>().Property(c => c.Dni).HasMaxLength(20).IsRequired();
 
             modelBuilder.Entity<Pet>().Property(p => p.Name).HasMaxLength(50).IsRequired();
 
@@ -155,6 +134,13 @@ namespace Infrastructure.Context
                 new Breed { Id = 50, SpeciesId = 6, Name = "Gecko" },
                 new Breed { Id = 51, SpeciesId = 6, Name = "Serpiente" },
                 new Breed { Id = 52, SpeciesId = 7, Name = "No especificada" });
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = RoleNames.SysAdmin },
+                new Role { Id = 2, Name = RoleNames.Admin },
+                new Role { Id = 3, Name = RoleNames.Veterinarian },
+                new Role { Id = 4, Name = RoleNames.Client }
+            );
         }
     }
 }
