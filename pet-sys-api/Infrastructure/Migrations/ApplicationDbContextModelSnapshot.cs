@@ -59,6 +59,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("PetId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("SuspendedWithOwner")
+                        .HasColumnType("bit");
+
                     b.Property<int>("VeterinarianId")
                         .HasColumnType("int");
 
@@ -102,6 +105,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("SuspendedWithOwner")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

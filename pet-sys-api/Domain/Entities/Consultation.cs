@@ -30,5 +30,6 @@ namespace Domain.Entities
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public VeterinarianProfile Veterinarian { get; set; } = null!;
         public bool IsSuspended { get; set; } = false;
+        public bool SuspendedWithOwner { get; set; } = false;
     }
 }

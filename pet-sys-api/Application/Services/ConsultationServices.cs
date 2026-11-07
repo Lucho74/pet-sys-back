@@ -230,6 +230,7 @@ namespace Application.Services
             }
 
             existing.IsSuspended = isSuspended;
+            existing.SuspendedWithOwner = false;
 
             var updated = await _consultationRepository.UpdateAsync(id, existing);
 

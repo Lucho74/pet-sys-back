@@ -201,6 +201,7 @@ namespace Application.Services
             }
 
             existing.IsSuspended = isSuspended;
+            existing.SuspendedWithOwner = false;
 
             var updated = await _petRepository.UpdateAsync(id, existing);
 

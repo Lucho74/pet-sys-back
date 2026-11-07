@@ -72,10 +72,18 @@ namespace Infrastructure.Repositories
             user.IsSuspended = isSuspended;
             foreach (var pet in pets)
             {
-                pet.IsSuspended = isSuspended;
+                if (pet.IsSuspended == pet.SuspendedWithOwner)
+                {
+                    pet.IsSuspended = isSuspended;
+                    pet.SuspendedWithOwner = isSuspended;
+                }
                 foreach (var consultation in pet.Consultations)
                 {
-                    consultation.IsSuspended = isSuspended;
+                    if (consultation.IsSuspended == consultation.SuspendedWithOwner)
+                    {
+                        consultation.IsSuspended = isSuspended;
+                        consultation.SuspendedWithOwner = isSuspended;
+                    }
                 }
             }
 
