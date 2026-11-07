@@ -1,4 +1,4 @@
-using Application.Exceptions;
+﻿using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
@@ -134,21 +134,17 @@ namespace Application.Services
             existing.BirthDate = dto.BirthDate.Value;
             existing.ClientId = dto.ClientId;
 
-            var updated = await _petRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"Pet with id {id} was not found.");
-            }
+            await _petRepository.UpdateAsync(id, existing);
 
             return new PetDTO
             {
-                Id = updated.Id,
-                Name = updated.Name,
-                Specie = updated.Specie,
-                Breed = updated.Breed,
-                BirthDate = updated.BirthDate,
-                ClientId = updated.ClientId,
-                IsSuspended = updated.IsSuspended
+                Id = existing.Id,
+                Name = existing.Name,
+                Specie = existing.Specie,
+                Breed = existing.Breed,
+                BirthDate = existing.BirthDate,
+                ClientId = existing.ClientId,
+                IsSuspended = existing.IsSuspended
             };
         }
 
@@ -203,12 +199,7 @@ namespace Application.Services
             existing.IsSuspended = isSuspended;
             existing.SuspendedWithOwner = false;
 
-            var updated = await _petRepository.UpdateAsync(id, existing);
-
-            if (updated == null)
-            {
-                throw new NotFoundException($"Pet with id {id} was not found.");
-            }
+            await _petRepository.UpdateAsync(id, existing);
         }
 
         public async Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q)

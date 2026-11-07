@@ -129,6 +129,11 @@ namespace Application.Services
                 throw new NotFoundException($"User with id {id} was not found.");
             }
 
+            if (existing.IsSuspended)
+            {
+                throw new BadRequestException($"User with id {id} is suspended.");
+            }
+
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
             if (sameEmail != null && sameEmail.Id != id)
@@ -168,22 +173,18 @@ namespace Application.Services
                 existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
-            User? updated = await _userRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
+            await _userRepository.UpdateAsync(id, existing);
 
             return new UserDTO
             {
-                Id = updated.Id,
-                FullName = updated.FullName,
-                Email = updated.Email,
-                Phone = updated.Phone,
-                IsSuspended = updated.IsSuspended,
-                RoleName = updated.Role.Name,
-                Dni = updated.ClientProfile?.Dni,
-                RegistrationNumber = updated.VeterinarianProfile?.RegistrationNumber
+                Id = existing.Id,
+                FullName = existing.FullName,
+                Email = existing.Email,
+                Phone = existing.Phone,
+                IsSuspended = existing.IsSuspended,
+                RoleName = existing.Role.Name,
+                Dni = existing.ClientProfile?.Dni,
+                RegistrationNumber = existing.VeterinarianProfile?.RegistrationNumber
             };
         }
 

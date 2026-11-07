@@ -1,4 +1,4 @@
-using Application.Exceptions;
+﻿using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Constants;
@@ -138,20 +138,16 @@ namespace Application.Services
             existing.Date = dto.Date ?? throw new BadRequestException("Date is required.");
             existing.PetId = dto.PetId;
 
-            var updated = await _consultationRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"Consultation with id {id} was not found.");
-            }
+            await _consultationRepository.UpdateAsync(id, existing);
 
             return new ConsultationDTO
             {
-                Id = updated.Id,
-                Description = updated.Description,
-                Date = updated.Date,
-                PetId = updated.PetId,
-                VeterinarianId = updated.VeterinarianId,
-                IsSuspended = updated.IsSuspended
+                Id = existing.Id,
+                Description = existing.Description,
+                Date = existing.Date,
+                PetId = existing.PetId,
+                VeterinarianId = existing.VeterinarianId,
+                IsSuspended = existing.IsSuspended
             };
         }
 
@@ -232,12 +228,7 @@ namespace Application.Services
             existing.IsSuspended = isSuspended;
             existing.SuspendedWithOwner = false;
 
-            var updated = await _consultationRepository.UpdateAsync(id, existing);
-
-            if (updated == null)
-            {
-                throw new NotFoundException($"Consultation with id {id} was not found.");
-            }
+            await _consultationRepository.UpdateAsync(id, existing);
         }
 
         public async Task<PaginatedList<ConsultationDTO>> GetConsultationsPagedAsync(PaginationQuery q)
