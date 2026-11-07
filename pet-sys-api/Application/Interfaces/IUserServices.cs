@@ -7,13 +7,14 @@ namespace Application.Interfaces
 {
     public interface IUserServices
     {
-        Task<IEnumerable<UserDTO>> GetAllUserAsync(int callerId, string callerRole);
-        Task<UserDTO> GetUserByIdAsync(int id, int callerId, string callerRole);
-        Task<UserDTO> AddUserAsync(CreateUserDTO dto, string callerRole);
-        Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto, int callerId, string callerRole);
-        Task DeleteUserAsync(int id, int callerId, string callerRole);
-        Task ReactivateUserAsync(int id, int callerId, string callerRole);
+        Task<IEnumerable<UserDTO>> GetAllUserAsync(IReadOnlyCollection<string> readableRoles);
+        Task<UserDTO> GetUserByIdAsync(int id);
+        Task<UserDTO> AddUserAsync(CreateUserDTO dto);
+        Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto);
+        Task UpdateUserRoleAsync(int id, UpdateUserRoleDTO dto);
+        Task DeleteUserAsync(int id);
+        Task ReactivateUserAsync(int id);
         Task<UserDTO> AuthenticateAsync(LoginDTO dto);
-        Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q);
+        Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles);
     }
 }

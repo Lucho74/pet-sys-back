@@ -10,10 +10,12 @@ namespace Application.Interfaces
     {
         Task<IEnumerable<ConsultationDTO>> GetAllConsultationAsync();
         Task<ConsultationDTO> GetConsultationByIdAsync(int id);
-        Task<ConsultationDTO> AddConsultationAsync(CreateEditConsultationDTO dto);
-        Task<ConsultationDTO> UpdateConsultationAsync(int id, CreateEditConsultationDTO dto);
-        Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId, int? clientId = null);
+        Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId);
+        Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto);
+        Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId);
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
+        Task SuspendConsultationAsync(int id);
+        Task ReactivateConsultationAsync(int id);
         Task<PaginatedList<ConsultationDTO>> GetConsultationsPagedAsync(PaginationQuery q);
     }
 }

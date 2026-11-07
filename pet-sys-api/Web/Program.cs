@@ -1,16 +1,17 @@
 using Application.Interfaces;
 using Application.Services;
+using Domain.Constants;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using Web.Authorization;
 using Web.ExceptionHandling;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,18 +51,60 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnTokenValidated = async context =>
             {
+                if (context.Principal?.Identity is not ClaimsIdentity identity || !identity.IsAuthenticated)
+                {
+                    context.Fail("Invalid identity.");
+                    return;
+                }
+
+                var userIdClaim = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId) || userId <= 0)
+                {
+                    context.Fail("Invalid user identifier.");
+                    return;
+                }
+
                 var userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                var userId = int.Parse(context.Principal!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
                 var user = await userRepository.GetByIdAsync(userId);
+
                 if (user == null || user.IsDeleted)
                 {
-                    context.Fail("User is suspended.");
+                    context.Fail("User does not exist or is suspended.");
+                    return;
                 }
+
+                var previousRoleClaims = identity
+                    .FindAll(identity.RoleClaimType)
+                    .ToList();
+
+                foreach (var claim in previousRoleClaims)
+                {
+                    identity.RemoveClaim(claim);
+                }
+
+                identity.AddClaim(new Claim(identity.RoleClaimType, user.Role.Name));
             }
         };
     });
 
-builder.Services.AddAuthorization();
+var authenticatedPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build();
+
+builder.Services.AddAuthorizationBuilder()
+    .SetDefaultPolicy(authenticatedPolicy)
+    .SetFallbackPolicy(authenticatedPolicy)
+    .AddPolicy(Policies.Staff, policy =>
+        policy.RequireAuthenticatedUser()
+            .RequireRole(RoleNames.Veterinarian, RoleNames.Admin, RoleNames.SysAdmin))
+    .AddPolicy(Policies.SysAdminOnly, policy =>
+        policy.RequireAuthenticatedUser()
+            .RequireRole(RoleNames.SysAdmin))
+    .AddPolicy(Policies.ClientOnly, policy =>
+        policy.RequireAuthenticatedUser()
+            .RequireRole(RoleNames.Client));
 
 #region Repositories
 
