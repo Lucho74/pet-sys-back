@@ -12,14 +12,10 @@ namespace Application.Services
     public class UserServices : IUserServices
     {
         public readonly IUserRepository _userRepository;
-        public readonly IPetRepository _petRepository;
-        public readonly IConsultationRepository _consultationRepository;
 
-        public UserServices(IUserRepository userRepository, IPetRepository petRepository, IConsultationRepository consultationRepository)
+        public UserServices(IUserRepository userRepository)
         {
             _userRepository = userRepository;
-            _petRepository = petRepository;
-            _consultationRepository = consultationRepository;
         }
 
         public async Task<IEnumerable<UserDTO>> GetAllUserAsync(IReadOnlyCollection<string> readableRoles)
@@ -246,25 +242,7 @@ namespace Application.Services
                 throw new ForbiddenException("The SysAdmin account status cannot be modified.");
             }
 
-            foreach (var pet in await _petRepository.GetByClientIdAsync(id))
-            {
-                foreach (var consultation in
-                    await _consultationRepository.GetByPetIdAsync(pet.Id))
-                {
-                    consultation.IsSuspended = isSuspended;
-
-                    await _consultationRepository.UpdateAsync(
-                        consultation.Id, consultation);
-                }
-
-                pet.IsSuspended = isSuspended;
-
-                await _petRepository.UpdateAsync(pet.Id, pet);
-            }
-
-            existing.IsSuspended = isSuspended;
-
-            await _userRepository.UpdateAsync(id, existing);
+            await _userRepository.SetSuspendedAsync(id, isSuspended);
         }
 
         public async Task<UserDTO> AuthenticateAsync(LoginDTO dto)

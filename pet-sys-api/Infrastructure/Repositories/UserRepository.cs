@@ -60,5 +60,26 @@ namespace Infrastructure.Repositories
 
             return await Paginate(query, filters.PageIndex, filters.PageSize);
         }
+
+        public async Task SetSuspendedAsync(int userId, bool isSuspended)
+        {
+            var user = await _context.Users.FirstAsync(u => u.Id == userId);
+            var pets = await _context.Pets
+                .Include(p => p.Consultations)
+                .Where(p => p.ClientId == userId)
+                .ToListAsync();
+
+            user.IsSuspended = isSuspended;
+            foreach (var pet in pets)
+            {
+                pet.IsSuspended = isSuspended;
+                foreach (var consultation in pet.Consultations)
+                {
+                    consultation.IsSuspended = isSuspended;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
