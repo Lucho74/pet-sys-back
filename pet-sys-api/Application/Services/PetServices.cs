@@ -275,7 +275,13 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
             }
 
-            await _azureBlobImageStorage.DeleteAsync(existing.BlobImage, cancellationToken);
+            var blobImage = existing.BlobImage;
+            if (string.IsNullOrWhiteSpace(blobImage))
+            {
+                return;
+            }
+
+            await _azureBlobImageStorage.DeleteAsync(blobImage, cancellationToken);
 
             existing.BlobImage = null;
 
