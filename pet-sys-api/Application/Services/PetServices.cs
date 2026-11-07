@@ -246,7 +246,7 @@ namespace Application.Services
                 throw new NotFoundException($"Pet with id {petId} was not found.");
             }
 
-            if (existing.IsDeleted)
+            if (existing.IsSuspended)
             {
                 throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
             }
@@ -270,7 +270,7 @@ namespace Application.Services
                 throw new NotFoundException($"Pet with id {petId} was not found.");
             }
 
-            if (existing.IsDeleted)
+            if (existing.IsSuspended)
             {
                 throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
             }
