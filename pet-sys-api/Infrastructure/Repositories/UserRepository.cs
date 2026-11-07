@@ -35,8 +35,8 @@ namespace Infrastructure.Repositories
 
             var query = Query.Where(user => allowedRoles.Contains(user.Role.Name));
 
-            if (!filters.IncludeDeleted)
-                query = query.Where(user => !user.IsDeleted);
+            if (!filters.IncludeSuspended)
+                query = query.Where(user => !user.IsSuspended);
 
             if (!string.IsNullOrWhiteSpace(filters.Search))
             {
@@ -59,6 +59,35 @@ namespace Infrastructure.Repositories
             };
 
             return await Paginate(query, filters.PageIndex, filters.PageSize);
+        }
+
+        public async Task SetSuspendedAsync(int userId, bool isSuspended)
+        {
+            var user = await _context.Users.FirstAsync(u => u.Id == userId);
+            var pets = await _context.Pets
+                .Include(p => p.Consultations)
+                .Where(p => p.ClientId == userId)
+                .ToListAsync();
+
+            user.IsSuspended = isSuspended;
+            foreach (var pet in pets)
+            {
+                if (pet.IsSuspended == pet.SuspendedWithOwner)
+                {
+                    pet.IsSuspended = isSuspended;
+                    pet.SuspendedWithOwner = isSuspended;
+                }
+                foreach (var consultation in pet.Consultations)
+                {
+                    if (consultation.IsSuspended == consultation.SuspendedWithOwner)
+                    {
+                        consultation.IsSuspended = isSuspended;
+                        consultation.SuspendedWithOwner = isSuspended;
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

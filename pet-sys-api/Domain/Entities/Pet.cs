@@ -35,7 +35,8 @@ namespace Domain.Entities
         [DeleteBehavior(DeleteBehavior.Cascade)]
         public ClientProfile Client { get; set; } = null!;
 
-        public bool IsDeleted { get; set; } = false;
+        public bool IsSuspended { get; set; } = false;
+        public bool SuspendedWithOwner { get; set; } = false;
 
         public ICollection<Consultation> Consultations { get; set; } = new List<Consultation>();
     }

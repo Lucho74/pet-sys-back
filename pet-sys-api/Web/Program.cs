@@ -70,7 +70,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
                 var user = await userRepository.GetByIdAsync(userId);
 
-                if (user == null || user.IsDeleted)
+                if (user == null || user.IsSuspended)
                 {
                     context.Fail("User does not exist or is suspended.");
                     return;
