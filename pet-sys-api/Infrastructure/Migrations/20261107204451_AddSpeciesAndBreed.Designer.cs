@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261107201101_AddSpeciesAndBreed")]
+    [Migration("20261107204451_AddSpeciesAndBreed")]
     partial class AddSpeciesAndBreed
     {
         /// <inheritdoc />
@@ -355,12 +355,6 @@ namespace Infrastructure.Migrations
                             Id = 51,
                             Name = "Serpiente",
                             SpeciesId = 6
-                        },
-                        new
-                        {
-                            Id = 52,
-                            Name = "No especificada",
-                            SpeciesId = 7
                         });
                 });
 
@@ -441,9 +435,6 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("SpeciesId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("SuspendedWithOwner")
                         .HasColumnType("bit");
 
@@ -452,8 +443,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("BreedId");
 
                     b.HasIndex("ClientId");
-
-                    b.HasIndex("SpeciesId");
 
                     b.ToTable("Pets");
                 });
@@ -552,11 +541,6 @@ namespace Infrastructure.Migrations
                         {
                             Id = 6,
                             Name = "Reptil"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Name = "Otra"
                         });
                 });
 
@@ -624,7 +608,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Species", "Species")
                         .WithMany("Breeds")
                         .HasForeignKey("SpeciesId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Species");
@@ -674,17 +658,9 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Species", "Species")
-                        .WithMany("Pets")
-                        .HasForeignKey("SpeciesId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Breed");
 
                     b.Navigation("Client");
-
-                    b.Navigation("Species");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -732,8 +708,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Species", b =>
                 {
                     b.Navigation("Breeds");
-
-                    b.Navigation("Pets");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>

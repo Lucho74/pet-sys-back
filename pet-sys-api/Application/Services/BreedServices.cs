@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -20,15 +21,28 @@ namespace Application.Services
             _speciesRepository = speciesRepository;
         }
 
-        public async Task<IEnumerable<BreedDTO>> GetAllBreedAsync()
+        public async Task<PaginatedList<BreedDTO>> GetBreedsPagedAsync(BreedQuery q)
         {
-            var breeds = await _breedRepository.GetAllAsync();
-            return breeds.Select(b => new BreedDTO
+            if (q.PageIndex < 1 || q.PageSize < 1)
+            {
+                throw new BadRequestException("Page index and page size must be greater than 0.");
+            }
+
+            if (q.PageSize > 50)
+            {
+                throw new BadRequestException("Page size cannot be greater than 50.");
+            }
+
+            var page = await _breedRepository.GetPagedAsync(q);
+
+            var items = page.Items.Select(b => new BreedDTO
             {
                 Id = b.Id,
                 Name = b.Name,
                 SpeciesId = b.SpeciesId
-            });
+            }).ToList();
+
+            return new PaginatedList<BreedDTO>(items, page.PageIndex, page.TotalPages);
         }
 
         public async Task<IEnumerable<BreedDTO>> GetBreedsBySpeciesIdAsync(int speciesId)
@@ -63,7 +77,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<BreedDTO> AddBreedAsync(CreateEditBreedDTO dto)
+        public async Task<BreedDTO> AddBreedAsync(CreateBreedDTO dto)
         {
             if (await _speciesRepository.GetByIdAsync(dto.SpeciesId) == null)
             {
@@ -91,7 +105,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<BreedDTO> UpdateBreedAsync(int id, CreateEditBreedDTO dto)
+        public async Task<BreedDTO> UpdateBreedAsync(int id, UpdateBreedDTO dto)
         {
             var existing = await _breedRepository.GetByIdAsync(id);
             if (existing == null)
@@ -99,38 +113,23 @@ namespace Application.Services
                 throw new NotFoundException($"Breed with id {id} was not found.");
             }
 
-            if (await _speciesRepository.GetByIdAsync(dto.SpeciesId) == null)
-            {
-                throw new BadRequestException("SpeciesId does not reference an existing species.");
-            }
-
-            // Cambiarle la especie a una raza en uso dejaría mascotas con raza y especie inconsistentes
-            if (existing.SpeciesId != dto.SpeciesId && await _breedRepository.HasPetsAsync(id))
-            {
-                throw new BadRequestException($"Breed with id {id} is assigned to at least one pet; its species can't be changed.");
-            }
-
+            // La especie de una raza no se cambia: para corregirla se borra y se crea de nuevo
             var name = dto.Name.Trim();
-            var duplicate = await _breedRepository.GetByNameAsync(dto.SpeciesId, name);
+            var duplicate = await _breedRepository.GetByNameAsync(existing.SpeciesId, name);
             if (duplicate != null && duplicate.Id != id)
             {
-                throw new BadRequestException($"Breed '{name}' already exists for species with id {dto.SpeciesId}.");
+                throw new BadRequestException($"Breed '{name}' already exists for species with id {existing.SpeciesId}.");
             }
 
             existing.Name = name;
-            existing.SpeciesId = dto.SpeciesId;
 
-            var updated = await _breedRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"Breed with id {id} was not found.");
-            }
+            await _breedRepository.UpdateAsync(id, existing);
 
             return new BreedDTO
             {
-                Id = updated.Id,
-                Name = updated.Name,
-                SpeciesId = updated.SpeciesId
+                Id = existing.Id,
+                Name = existing.Name,
+                SpeciesId = existing.SpeciesId
             };
         }
 
@@ -146,6 +145,12 @@ namespace Application.Services
             if (await _breedRepository.HasPetsAsync(id))
             {
                 throw new BadRequestException($"Breed with id {id} is assigned to at least one pet.");
+            }
+
+            // Una especie sin razas no se podría asignar a ninguna mascota; para borrarla entera se borra la especie
+            if (await _breedRepository.CountBySpeciesIdAsync(breed.SpeciesId) == 1)
+            {
+                throw new BadRequestException($"Breed with id {id} is the last breed of its species; delete the species instead.");
             }
 
             await _breedRepository.DeleteAsync(breed);

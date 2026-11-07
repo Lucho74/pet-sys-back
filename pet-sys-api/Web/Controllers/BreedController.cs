@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.Authorization;
@@ -17,10 +18,10 @@ namespace Web.Controllers
         }
 
         [Authorize(Policy = Policies.Staff)]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllBreed()
+        [HttpGet]
+        public async Task<IActionResult> GetBreedsByPagination([FromQuery] BreedQuery query)
         {
-            var breeds = await _breedServices.GetAllBreedAsync();
+            var breeds = await _breedServices.GetBreedsPagedAsync(query);
             return Ok(breeds);
         }
 
@@ -42,7 +43,7 @@ namespace Web.Controllers
 
         [Authorize(Policy = Policies.Staff)]
         [HttpPost("")]
-        public async Task<IActionResult> AddBreed([FromBody] CreateEditBreedDTO dto)
+        public async Task<IActionResult> AddBreed([FromBody] CreateBreedDTO dto)
         {
             var created = await _breedServices.AddBreedAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -50,7 +51,7 @@ namespace Web.Controllers
 
         [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateBreed(int id, [FromBody] CreateEditBreedDTO dto)
+        public async Task<IActionResult> UpdateBreed(int id, [FromBody] UpdateBreedDTO dto)
         {
             var updated = await _breedServices.UpdateBreedAsync(id, dto);
             return Ok(updated);

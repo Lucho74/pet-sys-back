@@ -18,8 +18,8 @@ namespace Infrastructure.Repositories
         }
 
         protected override IQueryable<Pet> Query => _context.Set<Pet>()
-            .Include(p => p.Species)
-            .Include(p => p.Breed);
+            .Include(p => p.Breed)
+                .ThenInclude(b => b.Species);
 
         public async Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId)
         {
@@ -42,7 +42,7 @@ namespace Infrastructure.Repositories
             }
 
             if (q.SpeciesId.HasValue)
-                query = query.Where(p => p.SpeciesId == q.SpeciesId.Value);
+                query = query.Where(p => p.Breed.SpeciesId == q.SpeciesId.Value);
 
             if (q.BreedId.HasValue)
                 query = query.Where(p => p.BreedId == q.BreedId.Value);
@@ -50,7 +50,7 @@ namespace Infrastructure.Repositories
             query = q.SortBy?.ToLowerInvariant() switch
             {
                 "name" => ApplyOrder(query, p => p.Name, q.SortDesc),
-                "species" => ApplyOrder(query, p => p.Species.Name, q.SortDesc),
+                "species" => ApplyOrder(query, p => p.Breed.Species.Name, q.SortDesc),
                 "breed" => ApplyOrder(query, p => p.Breed.Name, q.SortDesc),
                 _ => ApplyOrder(query, p => p.Id, q.SortDesc)
             };

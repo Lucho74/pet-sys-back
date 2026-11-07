@@ -1,7 +1,9 @@
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
@@ -19,18 +21,32 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> HasPetsAsync(int id)
         {
-            return await _context.Set<Pet>().AnyAsync(p => p.SpeciesId == id);
-        }
-
-        public async Task<bool> HasBreedsAsync(int id)
-        {
-            return await _context.Set<Breed>().AnyAsync(b => b.SpeciesId == id);
+            return await _context.Set<Pet>().AnyAsync(p => p.Breed.SpeciesId == id);
         }
 
         public async Task DeleteAsync(Species species)
         {
             _context.Set<Species>().Remove(species);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<PaginatedList<Species>> GetPagedAsync(PaginationQuery q)
+        {
+            var query = _context.Set<Species>().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(q.Search))
+            {
+                var pattern = $"%{q.Search.Trim()}%";
+                query = query.Where(s => EF.Functions.Like(s.Name, pattern));
+            }
+
+            query = q.SortBy?.ToLowerInvariant() switch
+            {
+                "name" => ApplyOrder(query, s => s.Name, q.SortDesc),
+                _ => ApplyOrder(query, s => s.Id, q.SortDesc)
+            };
+
+            return await Paginate(query, q.PageIndex, q.PageSize);
         }
     }
 }

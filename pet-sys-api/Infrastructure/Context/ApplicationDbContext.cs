@@ -46,24 +46,19 @@ namespace Infrastructure.Context
 
             modelBuilder.Entity<Consultation>().Property(c => c.Description).HasMaxLength(500).IsRequired();
 
-            // Restrict: no se puede borrar una especie/raza en uso, ni una especie que todavía tiene razas
-            modelBuilder.Entity<Pet>()
-                .HasOne(p => p.Species)
-                .WithMany(s => s.Pets)
-                .HasForeignKey(p => p.SpeciesId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // Restrict: no se puede borrar una raza asignada a una mascota (tampoco, por cascada, su especie)
             modelBuilder.Entity<Pet>()
                 .HasOne(p => p.Breed)
                 .WithMany(b => b.Pets)
                 .HasForeignKey(p => p.BreedId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Cascade: borrar una especie borra sus razas (el service ya verificó que ninguna esté en uso)
             modelBuilder.Entity<Breed>()
                 .HasOne(b => b.Species)
                 .WithMany(s => s.Breeds)
                 .HasForeignKey(b => b.SpeciesId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // CI_AI: "Hurón", "huron" y "HURON" se consideran el mismo nombre (índice único y búsquedas), pero se guarda como se escribió
             modelBuilder.Entity<Species>().Property(s => s.Name).HasMaxLength(50).IsRequired().UseCollation("Latin1_General_CI_AI");
@@ -78,8 +73,7 @@ namespace Infrastructure.Context
                 new Species { Id = 3, Name = "Ave" },
                 new Species { Id = 4, Name = "Conejo" },
                 new Species { Id = 5, Name = "Roedor" },
-                new Species { Id = 6, Name = "Reptil" },
-                new Species { Id = 7, Name = "Otra" });
+                new Species { Id = 6, Name = "Reptil" });
 
             modelBuilder.Entity<Breed>().HasData(
                 new Breed { Id = 1, SpeciesId = 1, Name = "No especificada" },
@@ -132,8 +126,7 @@ namespace Infrastructure.Context
                 new Breed { Id = 48, SpeciesId = 6, Name = "Tortuga" },
                 new Breed { Id = 49, SpeciesId = 6, Name = "Iguana" },
                 new Breed { Id = 50, SpeciesId = 6, Name = "Gecko" },
-                new Breed { Id = 51, SpeciesId = 6, Name = "Serpiente" },
-                new Breed { Id = 52, SpeciesId = 7, Name = "No especificada" });
+                new Breed { Id = 51, SpeciesId = 6, Name = "Serpiente" });
 
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = RoleNames.SysAdmin },

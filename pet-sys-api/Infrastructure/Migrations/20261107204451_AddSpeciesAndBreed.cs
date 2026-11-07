@@ -19,13 +19,6 @@ namespace Infrastructure.Migrations
                 nullable: false,
                 defaultValue: 0);
 
-            migrationBuilder.AddColumn<int>(
-                name: "SpeciesId",
-                table: "Pets",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
             migrationBuilder.CreateTable(
                 name: "Species",
                 columns: table => new
@@ -56,7 +49,7 @@ namespace Infrastructure.Migrations
                         column: x => x.SpeciesId,
                         principalTable: "Species",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
@@ -69,8 +62,7 @@ namespace Infrastructure.Migrations
                     { 3, "Ave" },
                     { 4, "Conejo" },
                     { 5, "Roedor" },
-                    { 6, "Reptil" },
-                    { 7, "Otra" }
+                    { 6, "Reptil" }
                 });
 
             migrationBuilder.InsertData(
@@ -128,21 +120,32 @@ namespace Infrastructure.Migrations
                     { 48, "Tortuga", 6 },
                     { 49, "Iguana", 6 },
                     { 50, "Gecko", 6 },
-                    { 51, "Serpiente", 6 },
-                    { 52, "No especificada", 7 }
+                    { 51, "Serpiente", 6 }
                 });
 
-            // Convierte los strings existentes al catálogo (sin distinguir mayúsculas ni tildes);
-            // lo que no coincide queda como "Otra" / "No especificada"
+            // Convierte los strings existentes al catálogo, comparando sin mayúsculas ni tildes.
+            // Lo que no está en el catálogo se crea (cada especie nueva con su "No especificada"), así no se pierde nada.
             migrationBuilder.Sql(@"
-UPDATE p SET p.SpeciesId = COALESCE(s.Id, 7)
+INSERT INTO Species (Name)
+SELECT DISTINCT LTRIM(RTRIM(p.Specie)) COLLATE Latin1_General_CI_AI
 FROM Pets p
-LEFT JOIN Species s ON s.Name = LTRIM(RTRIM(p.Specie)) COLLATE Latin1_General_CI_AI;
+WHERE NOT EXISTS (SELECT 1 FROM Species s WHERE s.Name = LTRIM(RTRIM(p.Specie)) COLLATE Latin1_General_CI_AI);
 
-UPDATE p SET p.BreedId = COALESCE(b.Id, nb.Id)
+INSERT INTO Breeds (Name, SpeciesId)
+SELECT N'No especificada', s.Id
+FROM Species s
+WHERE NOT EXISTS (SELECT 1 FROM Breeds b WHERE b.SpeciesId = s.Id AND b.Name = N'No especificada');
+
+INSERT INTO Breeds (Name, SpeciesId)
+SELECT DISTINCT LTRIM(RTRIM(p.Breed)) COLLATE Latin1_General_CI_AI, s.Id
 FROM Pets p
-LEFT JOIN Breeds b ON b.SpeciesId = p.SpeciesId AND b.Name = LTRIM(RTRIM(p.Breed)) COLLATE Latin1_General_CI_AI
-JOIN Breeds nb ON nb.SpeciesId = p.SpeciesId AND nb.Name = N'No especificada';
+JOIN Species s ON s.Name = LTRIM(RTRIM(p.Specie)) COLLATE Latin1_General_CI_AI
+WHERE NOT EXISTS (SELECT 1 FROM Breeds b WHERE b.SpeciesId = s.Id AND b.Name = LTRIM(RTRIM(p.Breed)) COLLATE Latin1_General_CI_AI);
+
+UPDATE p SET p.BreedId = b.Id
+FROM Pets p
+JOIN Species s ON s.Name = LTRIM(RTRIM(p.Specie)) COLLATE Latin1_General_CI_AI
+JOIN Breeds b ON b.SpeciesId = s.Id AND b.Name = LTRIM(RTRIM(p.Breed)) COLLATE Latin1_General_CI_AI;
 ");
 
             migrationBuilder.DropColumn(
@@ -157,11 +160,6 @@ JOIN Breeds nb ON nb.SpeciesId = p.SpeciesId AND nb.Name = N'No especificada';
                 name: "IX_Pets_BreedId",
                 table: "Pets",
                 column: "BreedId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Pets_SpeciesId",
-                table: "Pets",
-                column: "SpeciesId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Breeds_SpeciesId_Name",
@@ -180,14 +178,6 @@ JOIN Breeds nb ON nb.SpeciesId = p.SpeciesId AND nb.Name = N'No especificada';
                 table: "Pets",
                 column: "BreedId",
                 principalTable: "Breeds",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Pets_Species_SpeciesId",
-                table: "Pets",
-                column: "SpeciesId",
-                principalTable: "Species",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
         }
@@ -214,16 +204,12 @@ JOIN Breeds nb ON nb.SpeciesId = p.SpeciesId AND nb.Name = N'No especificada';
             migrationBuilder.Sql(@"
 UPDATE p SET p.Specie = s.Name, p.Breed = b.Name
 FROM Pets p
-JOIN Species s ON s.Id = p.SpeciesId
-JOIN Breeds b ON b.Id = p.BreedId;
+JOIN Breeds b ON b.Id = p.BreedId
+JOIN Species s ON s.Id = b.SpeciesId;
 ");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Pets_Breeds_BreedId",
-                table: "Pets");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Pets_Species_SpeciesId",
                 table: "Pets");
 
             migrationBuilder.DropTable(
@@ -236,16 +222,8 @@ JOIN Breeds b ON b.Id = p.BreedId;
                 name: "IX_Pets_BreedId",
                 table: "Pets");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Pets_SpeciesId",
-                table: "Pets");
-
             migrationBuilder.DropColumn(
                 name: "BreedId",
-                table: "Pets");
-
-            migrationBuilder.DropColumn(
-                name: "SpeciesId",
                 table: "Pets");
         }
     }

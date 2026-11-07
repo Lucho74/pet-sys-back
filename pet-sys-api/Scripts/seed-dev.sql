@@ -8,7 +8,7 @@
 -- Si la tabla Users ya tiene filas, el script no inserta nada.
 -- Las fechas de las consultas son relativas al día en que se corre (con hora entre las 9 y las 18).
 -- Si cambian las entidades/migraciones, este script se tiene que actualizar a mano.
--- Las especies y razas (SpeciesId/BreedId de Pets) no se siembran acá: las carga la migración AddSpeciesAndBreed.
+-- Las especies y razas no se siembran acá: las carga la migración AddSpeciesAndBreed (Pets solo guarda BreedId).
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -244,27 +244,27 @@ INSERT INTO [dbo].[ClientProfiles] ([UserId], [Dni]) VALUES
     (105, N'38290135');
 
 SET IDENTITY_INSERT [dbo].[Pets] ON;
-INSERT INTO [dbo].[Pets] ([Id], [Name], [SpeciesId], [BreedId], [BirthDate], [ClientId]) VALUES
-    (1, N'Luna', 3, 29, '2021-08-13', 30),
-    (2, N'Simón', 3, 28, '2013-03-01', 36),
-    (3, N'Toby', 2, 22, '2019-08-28', 28),
-    (4, N'Mía', 4, 38, '2014-07-21', 37),
-    (5, N'Rocco', 3, 29, '2017-08-16', 33),
-    (6, N'Lola', 4, 37, '2020-03-27', 34),
-    (7, N'Milo', 1, 4, '2020-12-18', 38),
-    (8, N'Nala', 3, 29, '2014-01-06', 32),
-    (9, N'Coco', 3, 29, '2017-11-19', 21),
-    (10, N'Bruno', 2, 20, '2015-02-18', 35),
-    (11, N'Kiara', 4, 37, '2013-01-21', 23),
-    (12, N'Thor', 4, 36, '2015-10-04', 36),
-    (13, N'Olivia', 1, 4, '2023-04-07', 23),
-    (14, N'Felipe', 4, 36, '2023-08-17', 26),
-    (15, N'Frida', 3, 29, '2013-07-20', 40),
-    (16, N'Manchita', 4, 38, '2026-03-09', 28),
-    (17, N'Pancho', 2, 21, '2024-06-06', 22),
-    (18, N'Chispa', 4, 36, '2024-10-05', 29),
-    (19, N'Oreo', 1, 5, '2012-03-03', 40),
-    (20, N'Tango', 2, 19, '2023-04-03', 25);
+INSERT INTO [dbo].[Pets] ([Id], [Name], [BreedId], [BirthDate], [ClientId]) VALUES
+    (1, N'Luna', 29, '2021-08-13', 30),
+    (2, N'Simón', 28, '2013-03-01', 36),
+    (3, N'Toby', 22, '2019-08-28', 28),
+    (4, N'Mía', 38, '2014-07-21', 37),
+    (5, N'Rocco', 29, '2017-08-16', 33),
+    (6, N'Lola', 37, '2020-03-27', 34),
+    (7, N'Milo', 4, '2020-12-18', 38),
+    (8, N'Nala', 29, '2014-01-06', 32),
+    (9, N'Coco', 29, '2017-11-19', 21),
+    (10, N'Bruno', 20, '2015-02-18', 35),
+    (11, N'Kiara', 37, '2013-01-21', 23),
+    (12, N'Thor', 36, '2015-10-04', 36),
+    (13, N'Olivia', 4, '2023-04-07', 23),
+    (14, N'Felipe', 36, '2023-08-17', 26),
+    (15, N'Frida', 29, '2013-07-20', 40),
+    (16, N'Manchita', 38, '2026-03-09', 28),
+    (17, N'Pancho', 21, '2024-06-06', 22),
+    (18, N'Chispa', 36, '2024-10-05', 29),
+    (19, N'Oreo', 5, '2012-03-03', 40),
+    (20, N'Tango', 19, '2023-04-03', 25);
 SET IDENTITY_INSERT [dbo].[Pets] OFF;
 
 SET IDENTITY_INSERT [dbo].[Consultations] ON;

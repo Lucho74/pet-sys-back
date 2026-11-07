@@ -19,10 +19,6 @@ namespace Domain.Entities
         [StringLength(50)]
         public string Name { get; set; }
         [Required]
-        [ForeignKey(nameof(Species))]
-        public int SpeciesId { get; set; }
-        public Species Species { get; set; }
-        [Required]
         [ForeignKey(nameof(Breed))]
         public int BreedId { get; set; }
         public Breed Breed { get; set; }

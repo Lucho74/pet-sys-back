@@ -15,14 +15,12 @@ namespace Application.Services
     {
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
-        public readonly ISpeciesRepository _speciesRepository;
         public readonly IBreedRepository _breedRepository;
 
-        public PetServices(IPetRepository petRepository, IUserRepository userRepository, ISpeciesRepository speciesRepository, IBreedRepository breedRepository)
+        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository)
         {
             _petRepository = petRepository;
             _userRepository = userRepository;
-            _speciesRepository = speciesRepository;
             _breedRepository = breedRepository;
         }
 
@@ -33,8 +31,8 @@ namespace Application.Services
             {
                 Id = pet.Id,
                 Name = pet.Name,
-                SpeciesId = pet.SpeciesId,
-                SpeciesName = pet.Species.Name,
+                SpeciesId = pet.Breed.SpeciesId,
+                SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
                 BirthDate = pet.BirthDate,
@@ -55,8 +53,8 @@ namespace Application.Services
             {
                 Id = pet.Id,
                 Name = pet.Name,
-                SpeciesId = pet.SpeciesId,
-                SpeciesName = pet.Species.Name,
+                SpeciesId = pet.Breed.SpeciesId,
+                SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
                 BirthDate = pet.BirthDate,
@@ -84,12 +82,11 @@ namespace Application.Services
                 throw new BadRequestException($"Client with id {dto.ClientId} does not have a client profile.");
             }
 
-            var (species, breed) = await GetSpeciesAndBreedAsync(dto.SpeciesId, dto.BreedId);
+            var breed = await GetBreedAsync(dto.BreedId);
 
             var pet = new Pet
             {
                 Name = dto.Name,
-                SpeciesId = dto.SpeciesId,
                 BreedId = dto.BreedId,
                 BirthDate = dto.BirthDate.Value,
                 ClientId = dto.ClientId
@@ -100,8 +97,8 @@ namespace Application.Services
             {
                 Id = created.Id,
                 Name = created.Name,
-                SpeciesId = created.SpeciesId,
-                SpeciesName = species.Name,
+                SpeciesId = breed.SpeciesId,
+                SpeciesName = breed.Species.Name,
                 BreedId = created.BreedId,
                 BreedName = breed.Name,
                 BirthDate = created.BirthDate,
@@ -140,10 +137,9 @@ namespace Application.Services
                 throw new BadRequestException($"Client with id {dto.ClientId} does not have a client profile.");
             }
 
-            var (species, breed) = await GetSpeciesAndBreedAsync(dto.SpeciesId, dto.BreedId);
+            var breed = await GetBreedAsync(dto.BreedId);
 
             existing.Name = dto.Name;
-            existing.SpeciesId = dto.SpeciesId;
             existing.BreedId = dto.BreedId;
             existing.BirthDate = dto.BirthDate.Value;
             existing.ClientId = dto.ClientId;
@@ -154,8 +150,8 @@ namespace Application.Services
             {
                 Id = existing.Id,
                 Name = existing.Name,
-                SpeciesId = existing.SpeciesId,
-                SpeciesName = species.Name,
+                SpeciesId = breed.SpeciesId,
+                SpeciesName = breed.Species.Name,
                 BreedId = existing.BreedId,
                 BreedName = breed.Name,
                 BirthDate = existing.BirthDate,
@@ -171,8 +167,8 @@ namespace Application.Services
             {
                 Id = pet.Id,
                 Name = pet.Name,
-                SpeciesId = pet.SpeciesId,
-                SpeciesName = pet.Species.Name,
+                SpeciesId = pet.Breed.SpeciesId,
+                SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
                 BirthDate = pet.BirthDate,
@@ -238,8 +234,8 @@ namespace Application.Services
             {
                 Id = pet.Id,
                 Name = pet.Name,
-                SpeciesId = pet.SpeciesId,
-                SpeciesName = pet.Species.Name,
+                SpeciesId = pet.Breed.SpeciesId,
+                SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
                 BirthDate = pet.BirthDate,
@@ -250,26 +246,15 @@ namespace Application.Services
             return new PaginatedList<PetDTO>(items, page.PageIndex, page.TotalPages);
         }
 
-        private async Task<(Species, Breed)> GetSpeciesAndBreedAsync(int speciesId, int breedId)
+        private async Task<Breed> GetBreedAsync(int breedId)
         {
-            var species = await _speciesRepository.GetByIdAsync(speciesId);
-            if (species == null)
-            {
-                throw new BadRequestException("SpeciesId does not reference an existing species.");
-            }
-
             var breed = await _breedRepository.GetByIdAsync(breedId);
             if (breed == null)
             {
                 throw new BadRequestException("BreedId does not reference an existing breed.");
             }
 
-            if (breed.SpeciesId != speciesId)
-            {
-                throw new BadRequestException($"Breed with id {breedId} does not belong to species with id {speciesId}.");
-            }
-
-            return (species, breed);
+            return breed;
         }
     }
 }

@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.Authorization;
@@ -17,10 +18,10 @@ namespace Web.Controllers
         }
 
         [Authorize(Policy = Policies.Staff)]
-        [HttpGet("")]
-        public async Task<IActionResult> GetAllSpecies()
+        [HttpGet]
+        public async Task<IActionResult> GetSpeciesByPagination([FromQuery] PaginationQuery query)
         {
-            var species = await _speciesServices.GetAllSpeciesAsync();
+            var species = await _speciesServices.GetSpeciesPagedAsync(query);
             return Ok(species);
         }
 

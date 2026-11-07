@@ -1,6 +1,7 @@
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
@@ -11,6 +12,9 @@ namespace Application.Services
 {
     public class SpeciesServices : ISpeciesServices
     {
+        // Toda especie nace con esta raza, así se puede asignar a una mascota sin crear otra raza antes
+        private const string DefaultBreedName = "No especificada";
+
         public readonly ISpeciesRepository _speciesRepository;
 
         public SpeciesServices(ISpeciesRepository speciesRepository)
@@ -18,14 +22,27 @@ namespace Application.Services
             _speciesRepository = speciesRepository;
         }
 
-        public async Task<IEnumerable<SpeciesDTO>> GetAllSpeciesAsync()
+        public async Task<PaginatedList<SpeciesDTO>> GetSpeciesPagedAsync(PaginationQuery q)
         {
-            var species = await _speciesRepository.GetAllAsync();
-            return species.Select(s => new SpeciesDTO
+            if (q.PageIndex < 1 || q.PageSize < 1)
+            {
+                throw new BadRequestException("Page index and page size must be greater than 0.");
+            }
+
+            if (q.PageSize > 50)
+            {
+                throw new BadRequestException("Page size cannot be greater than 50.");
+            }
+
+            var page = await _speciesRepository.GetPagedAsync(q);
+
+            var items = page.Items.Select(s => new SpeciesDTO
             {
                 Id = s.Id,
                 Name = s.Name
-            });
+            }).ToList();
+
+            return new PaginatedList<SpeciesDTO>(items, page.PageIndex, page.TotalPages);
         }
 
         public async Task<SpeciesDTO> GetSpeciesByIdAsync(int id)
@@ -53,7 +70,8 @@ namespace Application.Services
 
             var species = new Species
             {
-                Name = name
+                Name = name,
+                Breeds = new List<Breed> { new Breed { Name = DefaultBreedName } }
             };
 
             var created = await _speciesRepository.AddAsync(species);
@@ -81,16 +99,12 @@ namespace Application.Services
 
             existing.Name = name;
 
-            var updated = await _speciesRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"Species with id {id} was not found.");
-            }
+            await _speciesRepository.UpdateAsync(id, existing);
 
             return new SpeciesDTO
             {
-                Id = updated.Id,
-                Name = updated.Name
+                Id = existing.Id,
+                Name = existing.Name
             };
         }
 
@@ -105,14 +119,10 @@ namespace Application.Services
             // Las mascotas suspendidas también cuentan, para no romper su historia clínica
             if (await _speciesRepository.HasPetsAsync(id))
             {
-                throw new BadRequestException($"Species with id {id} is assigned to at least one pet.");
+                throw new BadRequestException($"Species with id {id} has breeds assigned to at least one pet.");
             }
 
-            if (await _speciesRepository.HasBreedsAsync(id))
-            {
-                throw new BadRequestException($"Species with id {id} still has breeds; delete them first.");
-            }
-
+            // Sus razas se borran en cascada
             await _speciesRepository.DeleteAsync(species);
         }
     }
