@@ -7,6 +7,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -16,11 +17,13 @@ namespace Application.Services
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
         public readonly IBreedRepository _breedRepository;
+        public readonly IAzureBlobImageStorage _azureBlobImageStorage;
 
-        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository)
+        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository, IAzureBlobImageStorage azureBlobImageStorage)
         {
             _petRepository = petRepository;
             _userRepository = userRepository;
+            _azureBlobImageStorage = azureBlobImageStorage;
             _breedRepository = breedRepository;
         }
 
@@ -35,6 +38,7 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsSuspended = pet.IsSuspended
@@ -57,6 +61,7 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsSuspended = pet.IsSuspended
@@ -154,6 +159,7 @@ namespace Application.Services
                 SpeciesName = breed.Species.Name,
                 BreedId = existing.BreedId,
                 BreedName = breed.Name,
+                BlobImage = existing.BlobImage,
                 BirthDate = existing.BirthDate,
                 ClientId = existing.ClientId,
                 IsSuspended = existing.IsSuspended
@@ -171,6 +177,7 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsSuspended = pet.IsSuspended
@@ -238,6 +245,7 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
+                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 IsSuspended = pet.IsSuspended
@@ -255,6 +263,60 @@ namespace Application.Services
             }
 
             return breed;
+        }
+
+        public async Task UploadImageAsync(int petId, Stream imageStream, string contentType, CancellationToken cancellationToken = default)
+        {
+            var existing = await _petRepository.GetByIdAsync(petId);
+            if (existing == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
+
+            if (existing.IsSuspended)
+            {
+                throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
+            }
+
+            var blobImage = await _azureBlobImageStorage.UploadAsync(imageStream, contentType, cancellationToken);
+
+            existing.BlobImage = blobImage;
+
+            var updated = await _petRepository.UpdateAsync(petId, existing);
+            if (updated == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
+        }
+
+        public async Task DeleteImageAsync(int petId, CancellationToken cancellationToken = default)
+        {
+            var existing = await _petRepository.GetByIdAsync(petId);
+            if (existing == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
+
+            if (existing.IsSuspended)
+            {
+                throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
+            }
+
+            var blobImage = existing.BlobImage;
+            if (string.IsNullOrWhiteSpace(blobImage))
+            {
+                return;
+            }
+
+            await _azureBlobImageStorage.DeleteAsync(blobImage, cancellationToken);
+
+            existing.BlobImage = null;
+
+            var updated = await _petRepository.UpdateAsync(petId, existing);
+            if (updated == null)
+            {
+                throw new NotFoundException($"Pet with id {petId} was not found.");
+            }
         }
     }
 }

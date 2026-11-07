@@ -87,5 +87,25 @@ namespace Web.Controllers
             var pets = await _petServices.GetPetsPagedAsync(query);
             return Ok(pets);
         }
+
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [HttpPut("{id:int}/image")]
+        public async Task<IActionResult> UploadImage(int id, IFormFile file, CancellationToken cancellationToken)
+        {
+            using var stream = file.OpenReadStream();
+
+            await _petServices.UploadImageAsync(id, stream, file.ContentType, cancellationToken);
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [HttpDelete("{id:int}/image")]
+        public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken)
+        {
+            await _petServices.DeleteImageAsync(id, cancellationToken);
+
+            return NoContent();
+        }
     }
 }

@@ -1,8 +1,11 @@
 using Application.Interfaces;
 using Application.Services;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Domain.Constants;
 using Domain.Interfaces;
 using Infrastructure.Context;
+using Infrastructure.ExternalServices;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,8 +29,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
     }));
-
-// Add services to the container.
 
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -106,6 +107,19 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireAuthenticatedUser()
             .RequireRole(RoleNames.Client));
 
+string ServiceUri = builder.Configuration["AzureStorage:ServiceUri"] ?? throw new InvalidOperationException("Falta configurar AzureStorage:ServiceUri."); ;
+string ContainerName = builder.Configuration["AzureStorage:ContainerName"] ?? throw new InvalidOperationException("Falta configurar AzureStorage:ContainerName."); ;
+
+builder.Services.AddSingleton<BlobContainerClient>(_ =>
+{
+    var blobServiceClient = new BlobServiceClient(
+            new Uri(ServiceUri),
+            new DefaultAzureCredential());
+
+    return blobServiceClient.GetBlobContainerClient(ContainerName);
+});
+
+
 #region Repositories
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -123,6 +137,7 @@ builder.Services.AddScoped<IPetServices, PetServices>();
 builder.Services.AddScoped<IConsultationServices, ConsultationServices>();
 builder.Services.AddScoped<ISpeciesServices, SpeciesServices>();
 builder.Services.AddScoped<IBreedServices, BreedServices>();
+builder.Services.AddScoped<IAzureBlobImageStorage, AzureBlobImageStorage>();
 
 
 #endregion

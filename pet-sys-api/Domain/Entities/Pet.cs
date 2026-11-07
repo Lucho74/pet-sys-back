@@ -22,6 +22,8 @@ namespace Domain.Entities
         [ForeignKey(nameof(Breed))]
         public int BreedId { get; set; }
         public Breed Breed { get; set; }
+        [StringLength(512)]
+        public string? BlobImage { get; set; } = null;
         [Required]
         [DataType(DataType.Date)]
         public DateOnly BirthDate { get; set; }
