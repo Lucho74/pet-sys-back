@@ -8,5 +8,6 @@ namespace Domain.Interfaces
         Task<User?> GetByEmailAsync(string email);
         Task<Role?> GetRoleByNameAsync(string roleName);
         Task<PaginatedList<User>> GetPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles);
+        Task SetSuspendedAsync(int userId, bool isSuspended);
     }
 }

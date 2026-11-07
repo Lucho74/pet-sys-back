@@ -33,7 +33,7 @@ namespace Domain.Entities
         [ForeignKey(nameof(RoleId))]
         [DeleteBehavior(DeleteBehavior.Restrict)]
         public Role Role { get; set; } = null!;
-        public bool IsDeleted { get; set; } = false;
+        public bool IsSuspended { get; set; } = false;
         public ClientProfile? ClientProfile { get; set; }
         public VeterinarianProfile? VeterinarianProfile { get; set; }
 

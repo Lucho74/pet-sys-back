@@ -11,7 +11,7 @@ namespace Domain.Common
         public int PageSize { get; set; } = 10;
 
         public string? Search { get; set; }
-        public bool IncludeDeleted { get; set; } = false;
+        public bool IncludeSuspended { get; set; } = false;
         public string? SortBy { get; set; }
         public bool SortDesc { get; set; } = false;
     }
