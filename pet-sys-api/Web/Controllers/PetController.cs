@@ -4,9 +4,12 @@ using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Web.Authorization;
+using Web.Authorization.Rules;
 
 namespace Web.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PetController : ControllerBase
@@ -17,15 +20,18 @@ namespace Web.Controllers
             _petServices = petServices;
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var pet = await _petServices.GetPetByIdAsync(id);
+            if (!ResourceAccess.CanReadPet(User, pet))
+            {
+                return NotFound();
+            }
             return Ok(pet);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPost("")]
         public async Task<IActionResult> AddPet([FromBody] CreateEditPetDTO dto)
         {
@@ -33,7 +39,7 @@ namespace Web.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdatePet(int id, [FromBody] CreateEditPetDTO dto)
         {
@@ -41,7 +47,7 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {
@@ -49,7 +55,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Roles = "Client")]
+        [Authorize(Policy = Policies.ClientOnly)]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyPets()
         {
@@ -58,7 +64,23 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> SuspendPet(int id)
+        {
+            await _petServices.SuspendPetAsync(id);
+            return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpPost("{id:int}/reactivate")]
+        public async Task<IActionResult> ReactivatePet(int id)
+        {
+            await _petServices.ReactivatePetAsync(id);
+            return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
         [HttpGet]
         public async Task<IActionResult> GetPetsByPagination([FromQuery] PetQuery query)
         {

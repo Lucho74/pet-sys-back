@@ -2,12 +2,7 @@
 using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
-using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -17,48 +12,53 @@ namespace Infrastructure.Repositories
         {
         }
 
+        protected override IQueryable<User> Query =>
+            _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.ClientProfile)
+                .Include(u => u.VeterinarianProfile);
+
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Set<User>().FirstOrDefaultAsync(x => x.Email == email);
+            return await Query.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<IEnumerable<T>> GetByRoleAsync<T>() where T : User
+        public async Task<Role?> GetRoleByNameAsync(string roleName)
         {
-            return await _context.Set<User>().OfType<T>().ToListAsync();
+            return await _context.Roles
+                .SingleOrDefaultAsync(r => r.Name == roleName);
         }
 
-        public async Task<PaginatedList<User>> GetPagedAsync(UserQuery q)
+        public async Task<PaginatedList<User>> GetPagedAsync(UserQuery filters, IReadOnlyCollection<string> readableRoles)
         {
-            var query = _context.Set<User>().AsQueryable();
+            var allowedRoles = readableRoles.ToArray();
 
-            if (!q.IncludeDeleted)
-                query = query.Where(u => !u.IsDeleted);
+            var query = Query.Where(user => allowedRoles.Contains(user.Role.Name));
 
-            if (!string.IsNullOrWhiteSpace(q.Search))
+            if (!filters.IncludeDeleted)
+                query = query.Where(user => !user.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(filters.Search))
             {
-                var pattern = $"%{q.Search.Trim()}%";
-                query = query.Where(u => EF.Functions.Like(u.FullName, pattern) || EF.Functions.Like(u.Email, pattern));
+                var pattern = $"%{filters.Search.Trim()}%";
+                query = query.Where(user => EF.Functions.Like(user.FullName, pattern) || EF.Functions.Like(user.Email, pattern));
             }
 
-            if (q.Role.HasValue)
+            if (!string.IsNullOrWhiteSpace(filters.Role))
             {
-                query = q.Role.Value switch
-                {
-                    UserType.Admin => query.Where(u => u is Admin),
-                    UserType.Client => query.Where(u => u is Client),
-                    UserType.Veterinarian => query.Where(u => u is Veterinarian),
-                    _ => query
-                };
+                var role = filters.Role.Trim();
+
+                query = query.Where(user => user.Role.Name == role);
             }
 
-            query = q.SortBy?.ToLowerInvariant() switch
+            query = filters.SortBy?.ToLowerInvariant() switch
             {
-                "fullname" => ApplyOrder(query, u => u.FullName, q.SortDesc),
-                "email" => ApplyOrder(query, u => u.Email, q.SortDesc),
-                _ => ApplyOrder(query, u => u.Id, q.SortDesc)
+                "fullname" => ApplyOrder(query, user => user.FullName, filters.SortDesc),
+                "email" => ApplyOrder(query, user => user.Email, filters.SortDesc),
+                _ => ApplyOrder(query, user => user.Id, filters.SortDesc)
             };
 
-            return await Paginate(query, q.PageIndex, q.PageSize);
+            return await Paginate(query, filters.PageIndex, filters.PageSize);
         }
     }
 }

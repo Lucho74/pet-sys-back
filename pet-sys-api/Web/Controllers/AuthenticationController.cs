@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,6 +22,7 @@ namespace Web.Controllers
             _userServices = userServices;
         }
 
+        [AllowAnonymous]
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] LoginDTO credentials)
         {
@@ -31,22 +33,28 @@ namespace Web.Controllers
 
             var claimsForToken = new List<Claim>
             {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.RoleName)
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.RoleName)
             };
+
+            var expirationMinutes =
+                _config.GetValue<int?>("Authentication:AccessTokenExpirationMinutes")
+                ?? throw new InvalidOperationException("Access token expiration has not been configured.");
+
+            if (expirationMinutes <= 0)
+            {
+                throw new InvalidOperationException("Access token expiration must be greater than zero.");
+            }
+
+            var now = DateTime.UtcNow;
 
             var jwtSecurityToken = new JwtSecurityToken(
                 _config["Authentication:Issuer"],
                 _config["Authentication:Audience"],
-                claimsForToken,
-                DateTime.UtcNow,
-                DateTime.UtcNow.Add(user.RoleName switch
-                {
-                    "Veterinarian" => TimeSpan.FromHours(8),
-                    "Admin" or "SysAdmin" => TimeSpan.FromHours(24),
-                    _ => TimeSpan.FromHours(1)
-                }),
-                signature
+                 claimsForToken,
+                 now,
+                now.AddMinutes(expirationMinutes),
+                 signature
             );
 
             var tokenToReturn = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
