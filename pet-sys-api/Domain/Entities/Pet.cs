@@ -19,11 +19,9 @@ namespace Domain.Entities
         [StringLength(50)]
         public string Name { get; set; }
         [Required]
-        [StringLength(50)]
-        public string Specie { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Breed { get; set; }
+        [ForeignKey(nameof(Breed))]
+        public int BreedId { get; set; }
+        public Breed Breed { get; set; }
         [Required]
         [DataType(DataType.Date)]
         public DateOnly BirthDate { get; set; }

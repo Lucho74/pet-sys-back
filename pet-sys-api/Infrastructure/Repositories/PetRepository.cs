@@ -17,16 +17,20 @@ namespace Infrastructure.Repositories
         {
         }
 
+        protected override IQueryable<Pet> Query => _context.Set<Pet>()
+            .Include(p => p.Breed)
+                .ThenInclude(b => b.Species);
+
         public async Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId)
         {
-            return await _context.Set<Pet>()
+            return await Query
             .Where(p => p.ClientId == clientId)
             .ToListAsync();
         }
 
         public async Task<PaginatedList<Pet>> GetPagedAsync(PetQuery q)
         {
-            var query = _context.Set<Pet>().AsQueryable();
+            var query = Query;
 
             if (!q.IncludeSuspended)
                 query = query.Where(p => !p.IsSuspended);
@@ -37,23 +41,17 @@ namespace Infrastructure.Repositories
                 query = query.Where(p => EF.Functions.Like(p.Name, pattern));
             }
 
-            if (!string.IsNullOrWhiteSpace(q.Specie))
-            {
-                var specie = q.Specie.Trim();
-                query = query.Where(p => p.Specie == specie);
-            }
+            if (q.SpeciesId.HasValue)
+                query = query.Where(p => p.Breed.SpeciesId == q.SpeciesId.Value);
 
-            if (!string.IsNullOrWhiteSpace(q.Breed))
-            {
-                var breed = q.Breed.Trim();
-                query = query.Where(p => p.Breed == breed);
-            }
+            if (q.BreedId.HasValue)
+                query = query.Where(p => p.BreedId == q.BreedId.Value);
 
             query = q.SortBy?.ToLowerInvariant() switch
             {
                 "name" => ApplyOrder(query, p => p.Name, q.SortDesc),
-                "specie" => ApplyOrder(query, p => p.Specie, q.SortDesc),
-                "breed" => ApplyOrder(query, p => p.Breed, q.SortDesc),
+                "species" => ApplyOrder(query, p => p.Breed.Species.Name, q.SortDesc),
+                "breed" => ApplyOrder(query, p => p.Breed.Name, q.SortDesc),
                 _ => ApplyOrder(query, p => p.Id, q.SortDesc)
             };
 
