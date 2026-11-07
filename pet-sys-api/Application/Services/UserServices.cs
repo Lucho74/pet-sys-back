@@ -12,14 +12,10 @@ namespace Application.Services
     public class UserServices : IUserServices
     {
         public readonly IUserRepository _userRepository;
-        public readonly IPetRepository _petRepository;
-        public readonly IConsultationRepository _consultationRepository;
 
-        public UserServices(IUserRepository userRepository, IPetRepository petRepository, IConsultationRepository consultationRepository)
+        public UserServices(IUserRepository userRepository)
         {
             _userRepository = userRepository;
-            _petRepository = petRepository;
-            _consultationRepository = consultationRepository;
         }
 
         public async Task<IEnumerable<UserDTO>> GetAllUserAsync(IReadOnlyCollection<string> readableRoles)
@@ -34,7 +30,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
@@ -56,7 +52,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
@@ -117,7 +113,7 @@ namespace Application.Services
                 FullName = created.FullName,
                 Email = created.Email,
                 Phone = created.Phone,
-                IsDeleted = created.IsDeleted,
+                IsSuspended = created.IsSuspended,
                 RoleName = created.Role.Name,
                 Dni = created.ClientProfile?.Dni,
                 RegistrationNumber = created.VeterinarianProfile?.RegistrationNumber
@@ -131,6 +127,11 @@ namespace Application.Services
             if (existing == null)
             {
                 throw new NotFoundException($"User with id {id} was not found.");
+            }
+
+            if (existing.IsSuspended)
+            {
+                throw new BadRequestException($"User with id {id} is suspended.");
             }
 
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
@@ -172,22 +173,18 @@ namespace Application.Services
                 existing.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
-            User? updated = await _userRepository.UpdateAsync(id, existing);
-            if (updated == null)
-            {
-                throw new NotFoundException($"User with id {id} was not found.");
-            }
+            await _userRepository.UpdateAsync(id, existing);
 
             return new UserDTO
             {
-                Id = updated.Id,
-                FullName = updated.FullName,
-                Email = updated.Email,
-                Phone = updated.Phone,
-                IsDeleted = updated.IsDeleted,
-                RoleName = updated.Role.Name,
-                Dni = updated.ClientProfile?.Dni,
-                RegistrationNumber = updated.VeterinarianProfile?.RegistrationNumber
+                Id = existing.Id,
+                FullName = existing.FullName,
+                Email = existing.Email,
+                Phone = existing.Phone,
+                IsSuspended = existing.IsSuspended,
+                RoleName = existing.Role.Name,
+                Dni = existing.ClientProfile?.Dni,
+                RegistrationNumber = existing.VeterinarianProfile?.RegistrationNumber
             };
         }
 
@@ -224,15 +221,15 @@ namespace Application.Services
 
         public async Task DeleteUserAsync(int id)
         {
-            await SetDeletedAsync(id, true);
+            await SetSuspendedAsync(id, true);
         }
 
         public async Task ReactivateUserAsync(int id)
         {
-            await SetDeletedAsync(id, false);
+            await SetSuspendedAsync(id, false);
         }
 
-        private async Task SetDeletedAsync(int id, bool isDeleted)
+        private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
             User? existing = await _userRepository.GetByIdAsync(id);
 
@@ -246,32 +243,14 @@ namespace Application.Services
                 throw new ForbiddenException("The SysAdmin account status cannot be modified.");
             }
 
-            foreach (var pet in await _petRepository.GetByClientIdAsync(id))
-            {
-                foreach (var consultation in
-                    await _consultationRepository.GetByPetIdAsync(pet.Id))
-                {
-                    consultation.IsDeleted = isDeleted;
-
-                    await _consultationRepository.UpdateAsync(
-                        consultation.Id, consultation);
-                }
-
-                pet.IsDeleted = isDeleted;
-
-                await _petRepository.UpdateAsync(pet.Id, pet);
-            }
-
-            existing.IsDeleted = isDeleted;
-
-            await _userRepository.UpdateAsync(id, existing);
+            await _userRepository.SetSuspendedAsync(id, isSuspended);
         }
 
         public async Task<UserDTO> AuthenticateAsync(LoginDTO dto)
         {
             User? user = await _userRepository.GetByEmailAsync(dto.Email);
 
-            if (user == null || user.IsDeleted)
+            if (user == null || user.IsSuspended)
             {
                 throw new UnauthorizedException("Invalid email or password.");
             }
@@ -287,7 +266,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
@@ -314,7 +293,7 @@ namespace Application.Services
                 FullName = user.FullName,
                 Email = user.Email,
                 Phone = user.Phone,
-                IsDeleted = user.IsDeleted,
+                IsSuspended = user.IsSuspended,
                 RoleName = user.Role.Name,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber

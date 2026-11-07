@@ -32,8 +32,8 @@ namespace Infrastructure.Repositories
         {
             var query = Query;
 
-            if (!q.IncludeDeleted)
-                query = query.Where(p => !p.IsDeleted);
+            if (!q.IncludeSuspended)
+                query = query.Where(p => !p.IsSuspended);
 
             if (!string.IsNullOrWhiteSpace(q.Search))
             {

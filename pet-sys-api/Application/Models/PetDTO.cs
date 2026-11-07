@@ -16,6 +16,6 @@ namespace Application.Models
         public DateOnly? BirthDate { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "ClientId must be a positive number.")]
         public int ClientId { get; set; }
-        public bool IsDeleted { get; set; }
+        public bool IsSuspended { get; set; }
     }
 }
