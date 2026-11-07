@@ -125,6 +125,8 @@ builder.Services.AddSingleton<BlobContainerClient>(_ =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPetRepository, PetRepository>();
 builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
+builder.Services.AddScoped<ISpeciesRepository, SpeciesRepository>();
+builder.Services.AddScoped<IBreedRepository, BreedRepository>();
 
 #endregion
 
@@ -133,6 +135,8 @@ builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IPetServices, PetServices>();
 builder.Services.AddScoped<IConsultationServices, ConsultationServices>();
+builder.Services.AddScoped<ISpeciesServices, SpeciesServices>();
+builder.Services.AddScoped<IBreedServices, BreedServices>();
 builder.Services.AddScoped<IAzureBlobImageStorage, AzureBlobImageStorage>();
 
 
