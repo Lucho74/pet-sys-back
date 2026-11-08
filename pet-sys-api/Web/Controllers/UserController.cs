@@ -23,9 +23,10 @@ namespace Web.Controllers
         private int CallerId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpGet("me")]
-        public IActionResult GetMe()
+        public async Task<IActionResult> GetMe()
         {
-            return Ok();
+            var user = await _userServices.GetUserByIdAsync(CallerId);
+            return Ok(user);
         }
 
         [Authorize(Policy = Policies.Staff)]
