@@ -16,11 +16,15 @@ namespace Domain.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
+        [StringLength(100)]
+        public string Title { get; set; }
+        [Required]
         [StringLength(500)]
         public string Description { get; set; }
         [Required]
         [DataType(DataType.DateTime)]
         public DateTime Date { get; set; }
+        public List<string> AttachmentBlobNames { get; set; } = new();
         [Required]
         [ForeignKey(nameof(Pet))]
         public int PetId { get; set; }
