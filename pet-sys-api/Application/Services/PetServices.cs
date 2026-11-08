@@ -1,5 +1,4 @@
-﻿using Application.Exceptions;
-using Application.Interfaces;
+﻿using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
 using Domain.Constants;
@@ -50,7 +49,7 @@ namespace Application.Services
             var pet = await _petRepository.GetByIdAsync(id);
             if (pet == null)
             {
-                throw new NotFoundException($"Pet with id {id} was not found.");
+                throw new KeyNotFoundException($"Pet with id {id} was not found.");
             }
 
             return new PetDTO
@@ -74,17 +73,17 @@ namespace Application.Services
 
             if (client == null || client.Role.Name != RoleNames.Client)
             {
-                throw new BadRequestException("ClientId does not reference an existing client.");
+                throw new ArgumentException("ClientId does not reference an existing client.");
             }
 
             if (client.IsSuspended)
             {
-                throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
+                throw new ArgumentException($"Client with id {dto.ClientId} is suspended.");
             }
 
             if (client.ClientProfile == null)
             {
-                throw new BadRequestException($"Client with id {dto.ClientId} does not have a client profile.");
+                throw new ArgumentException($"Client with id {dto.ClientId} does not have a client profile.");
             }
 
             var breed = await GetBreedAsync(dto.BreedId);
@@ -117,29 +116,29 @@ namespace Application.Services
             Pet? existing = await _petRepository.GetByIdAsync(id);
             if (existing == null)
             {
-                throw new NotFoundException($"Pet with id {id} was not found.");
+                throw new KeyNotFoundException($"Pet with id {id} was not found.");
             }
 
             if (existing.IsSuspended)
             {
-                throw new BadRequestException($"Pet with id {id} is suspended.");
+                throw new ArgumentException($"Pet with id {id} is suspended.");
             }
 
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
 
             if (client == null || client.Role.Name != RoleNames.Client)
             {
-                throw new BadRequestException("ClientId does not reference an existing client.");
+                throw new ArgumentException("ClientId does not reference an existing client.");
             }
 
             if (client.IsSuspended)
             {
-                throw new BadRequestException($"Client with id {dto.ClientId} is suspended.");
+                throw new ArgumentException($"Client with id {dto.ClientId} is suspended.");
             }
 
             if (client.ClientProfile == null)
             {
-                throw new BadRequestException($"Client with id {dto.ClientId} does not have a client profile.");
+                throw new ArgumentException($"Client with id {dto.ClientId} does not have a client profile.");
             }
 
             var breed = await GetBreedAsync(dto.BreedId);
@@ -199,7 +198,7 @@ namespace Application.Services
 
             if (existing == null)
             {
-                throw new NotFoundException( $"Pet with id {id} was not found.");
+                throw new KeyNotFoundException($"Pet with id {id} was not found.");
             }
 
             if (!isSuspended)
@@ -208,12 +207,12 @@ namespace Application.Services
 
                 if (client == null || client.Role.Name != RoleNames.Client || client.ClientProfile == null)
                 {
-                    throw new BadRequestException("The pet does not have a valid client.");
+                    throw new ArgumentException("The pet does not have a valid client.");
                 }
 
                 if (client.IsSuspended)
                 {
-                    throw new BadRequestException("A pet cannot be reactivated while its owner is suspended.");
+                    throw new ArgumentException("A pet cannot be reactivated while its owner is suspended.");
                 }
             }
 
@@ -227,12 +226,12 @@ namespace Application.Services
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
-                throw new BadRequestException("Page index and page size must be greater than 0.");
+                throw new ArgumentException("Page index and page size must be greater than 0.");
             }
 
             if (q.PageSize > 50)
             {
-                throw new BadRequestException("Page size cannot be greater than 50.");
+                throw new ArgumentException("Page size cannot be greater than 50.");
             }
 
             var page = await _petRepository.GetPagedAsync(q);
@@ -259,7 +258,7 @@ namespace Application.Services
             var breed = await _breedRepository.GetByIdAsync(breedId);
             if (breed == null)
             {
-                throw new BadRequestException("BreedId does not reference an existing breed.");
+                throw new ArgumentException("BreedId does not reference an existing breed.");
             }
 
             return breed;
@@ -270,12 +269,12 @@ namespace Application.Services
             var existing = await _petRepository.GetByIdAsync(petId);
             if (existing == null)
             {
-                throw new NotFoundException($"Pet with id {petId} was not found.");
+                throw new KeyNotFoundException($"Pet with id {petId} was not found.");
             }
 
             if (existing.IsSuspended)
             {
-                throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
+                throw new ArgumentException($"Pet with id {petId} belongs to a suspended client.");
             }
 
             var blobImage = await _azureBlobImageStorage.UploadAsync(imageStream, contentType, cancellationToken);
@@ -285,7 +284,7 @@ namespace Application.Services
             var updated = await _petRepository.UpdateAsync(petId, existing);
             if (updated == null)
             {
-                throw new NotFoundException($"Pet with id {petId} was not found.");
+                throw new KeyNotFoundException($"Pet with id {petId} was not found.");
             }
         }
 
@@ -294,12 +293,12 @@ namespace Application.Services
             var existing = await _petRepository.GetByIdAsync(petId);
             if (existing == null)
             {
-                throw new NotFoundException($"Pet with id {petId} was not found.");
+                throw new KeyNotFoundException($"Pet with id {petId} was not found.");
             }
 
             if (existing.IsSuspended)
             {
-                throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
+                throw new ArgumentException($"Pet with id {petId} belongs to a suspended client.");
             }
 
             var blobImage = existing.BlobImage;
@@ -315,7 +314,7 @@ namespace Application.Services
             var updated = await _petRepository.UpdateAsync(petId, existing);
             if (updated == null)
             {
-                throw new NotFoundException($"Pet with id {petId} was not found.");
+                throw new KeyNotFoundException($"Pet with id {petId} was not found.");
             }
         }
     }

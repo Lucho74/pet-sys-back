@@ -1,4 +1,3 @@
-using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
@@ -26,12 +25,12 @@ namespace Application.Services
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
-                throw new BadRequestException("Page index and page size must be greater than 0.");
+                throw new ArgumentException("Page index and page size must be greater than 0.");
             }
 
             if (q.PageSize > 50)
             {
-                throw new BadRequestException("Page size cannot be greater than 50.");
+                throw new ArgumentException("Page size cannot be greater than 50.");
             }
 
             var page = await _speciesRepository.GetPagedAsync(q);
@@ -50,7 +49,7 @@ namespace Application.Services
             var species = await _speciesRepository.GetByIdAsync(id);
             if (species == null)
             {
-                throw new NotFoundException($"Species with id {id} was not found.");
+                throw new KeyNotFoundException($"Species with id {id} was not found.");
             }
 
             return new SpeciesDTO
@@ -65,7 +64,7 @@ namespace Application.Services
             var name = dto.Name.Trim();
             if (await _speciesRepository.GetByNameAsync(name) != null)
             {
-                throw new BadRequestException($"Species '{name}' already exists.");
+                throw new ArgumentException($"Species '{name}' already exists.");
             }
 
             var species = new Species
@@ -87,14 +86,14 @@ namespace Application.Services
             var existing = await _speciesRepository.GetByIdAsync(id);
             if (existing == null)
             {
-                throw new NotFoundException($"Species with id {id} was not found.");
+                throw new KeyNotFoundException($"Species with id {id} was not found.");
             }
 
             var name = dto.Name.Trim();
             var duplicate = await _speciesRepository.GetByNameAsync(name);
             if (duplicate != null && duplicate.Id != id)
             {
-                throw new BadRequestException($"Species '{name}' already exists.");
+                throw new ArgumentException($"Species '{name}' already exists.");
             }
 
             existing.Name = name;
@@ -113,13 +112,13 @@ namespace Application.Services
             var species = await _speciesRepository.GetByIdAsync(id);
             if (species == null)
             {
-                throw new NotFoundException($"Species with id {id} was not found.");
+                throw new KeyNotFoundException($"Species with id {id} was not found.");
             }
 
             // Las mascotas suspendidas también cuentan, para no romper su historia clínica
             if (await _speciesRepository.HasPetsAsync(id))
             {
-                throw new BadRequestException($"Species with id {id} has breeds assigned to at least one pet.");
+                throw new ArgumentException($"Species with id {id} has breeds assigned to at least one pet.");
             }
 
             // Sus razas se borran en cascada

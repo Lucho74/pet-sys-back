@@ -1,6 +1,7 @@
 using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
+using Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -103,6 +104,11 @@ namespace Web.Controllers
         [HttpPut("{id:int}/role")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] UpdateUserRoleDTO dto)
         {
+            var user = await _userServices.GetUserByIdAsync(id);
+            if (user.RoleName == RoleNames.SysAdmin)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { title = "The SysAdmin account roles cannot be modified." });
+            }
             await _userServices.UpdateUserRoleAsync(id, dto);
             return NoContent();
         }
