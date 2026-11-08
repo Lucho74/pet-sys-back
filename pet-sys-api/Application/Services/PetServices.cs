@@ -17,13 +17,13 @@ namespace Application.Services
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
         public readonly IBreedRepository _breedRepository;
-        public readonly IAzureBlobImageStorage _azureBlobImageStorage;
+        public readonly IAzureBlobStorage _azureBlobStorage;
 
-        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository, IAzureBlobImageStorage azureBlobImageStorage)
+        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository, IAzureBlobStorage azureBlobStorage)
         {
             _petRepository = petRepository;
             _userRepository = userRepository;
-            _azureBlobImageStorage = azureBlobImageStorage;
+            _azureBlobStorage = azureBlobStorage;
             _breedRepository = breedRepository;
         }
 
@@ -278,7 +278,7 @@ namespace Application.Services
                 throw new BadRequestException($"Pet with id {petId} belongs to a suspended client.");
             }
 
-            var blobImage = await _azureBlobImageStorage.UploadAsync(imageStream, contentType, cancellationToken);
+            var blobImage = await _azureBlobStorage.UploadImageAsync(imageStream, contentType, cancellationToken);
 
             existing.BlobImage = blobImage;
 
@@ -308,7 +308,7 @@ namespace Application.Services
                 return;
             }
 
-            await _azureBlobImageStorage.DeleteAsync(blobImage, cancellationToken);
+            await _azureBlobStorage.DeleteBlobAsync(blobImage, cancellationToken);
 
             existing.BlobImage = null;
 

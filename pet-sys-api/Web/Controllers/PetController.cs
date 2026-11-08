@@ -88,7 +88,7 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}/image")]
         public async Task<IActionResult> UploadImage(int id, IFormFile file, CancellationToken cancellationToken)
         {
@@ -99,7 +99,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpDelete("{id:int}/image")]
         public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken)
         {

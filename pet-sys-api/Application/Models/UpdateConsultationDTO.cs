@@ -7,10 +7,13 @@ namespace Application.Models
     public class UpdateConsultationDTO
     {
         [Required]
-        [StringLength(500)]
-        public string Description { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string Title { get; set; }
         [Required]
-        public DateTime? Date { get; set; }
+        [StringLength(500)]
+        public string Description { get; set; }
+        [Required]
+        public DateTime Date { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "PetId must be a positive number.")]
         public int PetId { get; set; }
     }

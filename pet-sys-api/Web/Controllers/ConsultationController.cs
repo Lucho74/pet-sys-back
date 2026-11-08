@@ -118,5 +118,25 @@ namespace Web.Controllers
             var consultations = await _consultationServices.GetConsultationsPagedAsync(query);
             return Ok(consultations);
         }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpPost("{id:int}/attachments")]
+        public async Task<IActionResult> UploadAttachment(int id, IFormFile file, CancellationToken cancellationToken)
+        {
+            using var stream = file.OpenReadStream();
+
+            await _consultationServices.UploadAttachmentAsync(id, stream, file.ContentType, cancellationToken);
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpDelete("{id:int}/attachments")]
+        public async Task<IActionResult> DeleteAttachment(int id, [FromQuery] string blobName, CancellationToken cancellationToken)
+        {
+            await _consultationServices.DeleteAttachmentAsync(id, blobName, cancellationToken);
+
+            return NoContent();
+        }
     }
 }
