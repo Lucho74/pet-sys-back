@@ -23,7 +23,7 @@ namespace Infrastructure.Migrations
                 type: "nvarchar(100)",
                 maxLength: 100,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "Sin título");
         }
 
         /// <inheritdoc />

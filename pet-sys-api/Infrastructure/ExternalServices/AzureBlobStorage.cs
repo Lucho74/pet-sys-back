@@ -1,7 +1,9 @@
-﻿using Azure;
+﻿using Application.Interfaces;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Application.Interfaces;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Sas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,38 @@ namespace Infrastructure.ExternalServices
         public AzureBlobStorage(BlobContainerClient containerClient)
         {
             _containerClient = containerClient;
+        }
+        public async Task<Uri> GetReadUrlAsync(string blobName, CancellationToken cancellationToken = default)
+        {
+            var blobClient = _containerClient.GetBlobClient(blobName);
+            var serviceClient = _containerClient.GetParentBlobServiceClient();
+
+            var now = DateTimeOffset.UtcNow;
+            var startsOn = now.AddMinutes(-5);
+            var expiresOn = now.AddMinutes(5);
+
+            var keyOptions = new BlobGetUserDelegationKeyOptions(expiresOn)
+            {
+                StartsOn = startsOn
+            };
+
+            var delegationKey = await serviceClient.GetUserDelegationKeyAsync(keyOptions, cancellationToken);
+
+            var sas = new BlobSasBuilder
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                StartsOn = startsOn,
+                ExpiresOn = expiresOn,
+                Protocol = SasProtocol.Https
+            };
+            sas.SetPermissions(BlobSasPermissions.Read);
+
+            return new BlobUriBuilder(blobClient.Uri)
+            {
+                Sas = sas.ToSasQueryParameters(delegationKey.Value, serviceClient.AccountName)
+            }.ToUri();
         }
         public async Task<string> UploadImageAsync(Stream image, string contentType, CancellationToken cancellationToken = default)
         {
