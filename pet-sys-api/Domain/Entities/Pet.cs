@@ -21,6 +21,7 @@ namespace Domain.Entities
         [Required]
         [ForeignKey(nameof(Breed))]
         public int BreedId { get; set; }
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public Breed Breed { get; set; }
         [StringLength(512)]
         public string? BlobImage { get; set; } = null;
