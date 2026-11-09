@@ -17,7 +17,7 @@ namespace Application.Interfaces
         Task SuspendConsultationAsync(int id);
         Task ReactivateConsultationAsync(int id);
         Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q);
-        Task UploadAttachmentAsync(int id, Stream fileStream, string contentType, CancellationToken cancellationToken = default);
+        Task UploadAttachmentAsync(int id, Stream fileStream, string contentType, string fileName, CancellationToken cancellationToken = default);
         Task DeleteAttachmentAsync(int id, string blobName, CancellationToken cancellationToken = default);
     }
 }

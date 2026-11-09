@@ -1,11 +1,15 @@
 ﻿using Domain.Constants;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace Infrastructure.Context
 {
     public class ApplicationDbContext: DbContext
     {
+        private static readonly JsonSerializerOptions AttachmentJsonOptions = new(JsonSerializerDefaults.Web);
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
@@ -35,6 +39,17 @@ namespace Infrastructure.Context
             modelBuilder.Entity<Consultation>()
                 .Property(c => c.Date)
                 .HasColumnType("datetime2");
+
+            modelBuilder.Entity<Consultation>()
+                .Property(c => c.Attachments)
+                .HasConversion(
+                    attachments => JsonSerializer.Serialize(attachments, AttachmentJsonOptions),
+                    json => JsonSerializer.Deserialize<List<ConsultationAttachment>>(json, AttachmentJsonOptions) ?? new List<ConsultationAttachment>(),
+                    new ValueComparer<List<ConsultationAttachment>>(
+                        (left, right) => left == right || (left != null && right != null && left.SequenceEqual(right)),
+                        attachments => attachments.Aggregate(0, (hash, attachment) => HashCode.Combine(hash, attachment)),
+                        attachments => attachments.ToList()))
+                .IsRequired();
 
             modelBuilder.Entity<User>().Property(u => u.FullName).HasMaxLength(100).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Password).HasMaxLength(100).IsRequired();

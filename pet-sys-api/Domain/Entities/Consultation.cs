@@ -24,7 +24,7 @@ namespace Domain.Entities
         [Required]
         [DataType(DataType.DateTime)]
         public DateTime Date { get; set; }
-        public List<string> AttachmentBlobNames { get; set; } = new();
+        public List<ConsultationAttachment> Attachments { get; set; } = new();
         [Required]
         [ForeignKey(nameof(Pet))]
         public int PetId { get; set; }
