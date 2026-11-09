@@ -41,7 +41,7 @@ namespace Application.Services
             });
         }
 
-        public async Task<ConsultationDTO> GetConsultationByIdAsync(int id)
+        public async Task<ConsultationWithParticipantsDTO> GetConsultationByIdAsync(int id)
         {
             var consultation = await _consultationRepository.GetByIdWithParticipantsAsync(id);
             if (consultation == null)
@@ -49,7 +49,7 @@ namespace Application.Services
                 throw new KeyNotFoundException($"Consultation with id {id} was not found.");
             }
 
-            return new ConsultationDTO
+            return new ConsultationWithParticipantsDTO
             {
                 Id = consultation.Id,
                 Title = consultation.Title,
@@ -248,7 +248,7 @@ namespace Application.Services
             await _consultationRepository.UpdateAsync(id, existing);
         }
 
-        public async Task<PaginatedList<ConsultationDTO>> GetConsultationsPagedAsync(PaginationQuery q)
+        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q)
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
@@ -262,7 +262,7 @@ namespace Application.Services
 
             var page = await _consultationRepository.GetPagedAsync(q);
 
-            var items = page.Items.Select(consultation => new ConsultationDTO
+            var items = page.Items.Select(consultation => new ConsultationWithParticipantsDTO
             {
                 Id = consultation.Id,
                 Title = consultation.Title,
@@ -276,7 +276,7 @@ namespace Application.Services
                 IsSuspended = consultation.IsSuspended
             }).ToList();
 
-            return new PaginatedList<ConsultationDTO>(items, page.PageIndex, page.TotalPages);
+            return new PaginatedList<ConsultationWithParticipantsDTO>(items, page.PageIndex, page.TotalPages);
         }
 
         public async Task UploadAttachmentAsync(int id, Stream fileStream, string contentType, CancellationToken cancellationToken = default)
