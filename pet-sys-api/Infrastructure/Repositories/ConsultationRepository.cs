@@ -17,6 +17,16 @@ namespace Infrastructure.Repositories
         {
         }
 
+        private IQueryable<Consultation> QueryWithParticipants => Query
+            .Include(c => c.Pet)
+            .Include(c => c.Veterinarian)
+                .ThenInclude(v => v.User);
+
+        public async Task<Consultation?> GetByIdWithParticipantsAsync(int id)
+        {
+            return await QueryWithParticipants.FirstOrDefaultAsync(c => c.Id == id);
+        }
+
         public async Task<IEnumerable<Consultation>> GetRecentAsync(int take)
         {
             return await _context.Set<Consultation>()
@@ -45,7 +55,7 @@ namespace Infrastructure.Repositories
 
         public async Task<PaginatedList<Consultation>> GetPagedAsync(PaginationQuery q)
         {
-            var query = _context.Set<Consultation>().AsQueryable();
+            var query = QueryWithParticipants;
 
             if (!q.IncludeSuspended)
                 query = query.Where(c => !c.IsSuspended);

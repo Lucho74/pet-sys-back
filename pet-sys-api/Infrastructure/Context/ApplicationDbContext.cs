@@ -1,11 +1,15 @@
 ﻿using Domain.Constants;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace Infrastructure.Context
 {
     public class ApplicationDbContext: DbContext
     {
+        private static readonly JsonSerializerOptions AttachmentJsonOptions = new(JsonSerializerDefaults.Web);
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
@@ -23,48 +27,25 @@ namespace Infrastructure.Context
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Consultation>()
-                .HasOne(c => c.Pet)
-                .WithMany(p => p.Consultations)
-                .HasForeignKey(c => c.PetId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .Property(c => c.Attachments)
+                .HasConversion(
+                    attachments => JsonSerializer.Serialize(attachments, AttachmentJsonOptions),
+                    json => JsonSerializer.Deserialize<List<ConsultationAttachment>>(json, AttachmentJsonOptions) ?? new List<ConsultationAttachment>(),
+                    new ValueComparer<List<ConsultationAttachment>>(
+                        (left, right) => left == right || (left != null && right != null && left.SequenceEqual(right)),
+                        attachments => attachments.Aggregate(0, (hash, attachment) => HashCode.Combine(hash, attachment)),
+                        attachments => attachments.ToList()))
+                .IsRequired();
 
-            modelBuilder.Entity<Pet>()
-                .Property(p => p.BirthDate)
-                .HasColumnType("date");
-
-            modelBuilder.Entity<Consultation>()
-                .Property(c => c.Date)
-                .HasColumnType("datetime2");
-
-            modelBuilder.Entity<User>().Property(u => u.FullName).HasMaxLength(100).IsRequired();
-            modelBuilder.Entity<User>().Property(u => u.Password).HasMaxLength(100).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Email).HasMaxLength(200).IsRequired();
             modelBuilder.Entity<User>().Property(u => u.Phone).HasMaxLength(50).IsRequired();
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
-            modelBuilder.Entity<Pet>().Property(p => p.Name).HasMaxLength(50).IsRequired();
-
-            modelBuilder.Entity<Consultation>().Property(c => c.Description).HasMaxLength(500).IsRequired();
-
-            // Restrict: no se puede borrar una raza asignada a una mascota (tampoco, por cascada, su especie)
-            modelBuilder.Entity<Pet>()
-                .HasOne(p => p.Breed)
-                .WithMany(b => b.Pets)
-                .HasForeignKey(p => p.BreedId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Cascade: borrar una especie borra sus razas (el service ya verificó que ninguna esté en uso)
-            modelBuilder.Entity<Breed>()
-                .HasOne(b => b.Species)
-                .WithMany(s => s.Breeds)
-                .HasForeignKey(b => b.SpeciesId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             // CI_AI: "Hurón", "huron" y "HURON" se consideran el mismo nombre (índice único y búsquedas), pero se guarda como se escribió
-            modelBuilder.Entity<Species>().Property(s => s.Name).HasMaxLength(50).IsRequired().UseCollation("Latin1_General_CI_AI");
+            modelBuilder.Entity<Species>().Property(s => s.Name).UseCollation("Latin1_General_CI_AI");
             modelBuilder.Entity<Species>().HasIndex(s => s.Name).IsUnique();
 
-            modelBuilder.Entity<Breed>().Property(b => b.Name).HasMaxLength(50).IsRequired().UseCollation("Latin1_General_CI_AI");
+            modelBuilder.Entity<Breed>().Property(b => b.Name).UseCollation("Latin1_General_CI_AI");
             modelBuilder.Entity<Breed>().HasIndex(b => new { b.SpeciesId, b.Name }).IsUnique();
 
             modelBuilder.Entity<Species>().HasData(
