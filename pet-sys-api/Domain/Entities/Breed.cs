@@ -17,7 +17,6 @@ namespace Domain.Entities
         [Required]
         [ForeignKey(nameof(Species))]
         public int SpeciesId { get; set; }
-        // Cascade: borrar una especie borra sus razas (el service ya verificó que ninguna esté en uso)
         [DeleteBehavior(DeleteBehavior.Cascade)]
         public Species Species { get; set; }
 
