@@ -21,6 +21,8 @@ namespace Domain.Entities
         [Required]
         [ForeignKey(nameof(Breed))]
         public int BreedId { get; set; }
+        // Restrict: no se puede borrar una raza asignada a una mascota (tampoco, por cascada, su especie)
+        [DeleteBehavior(DeleteBehavior.Restrict)]
         public Breed Breed { get; set; }
         [StringLength(512)]
         public string? BlobImage { get; set; } = null;

@@ -26,20 +26,6 @@ namespace Infrastructure.Context
             modelBuilder.Entity<User>().Property(u => u.Phone).HasMaxLength(50).IsRequired();
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
 
-            // Restrict: no se puede borrar una raza asignada a una mascota (tampoco, por cascada, su especie)
-            modelBuilder.Entity<Pet>()
-                .HasOne(p => p.Breed)
-                .WithMany(b => b.Pets)
-                .HasForeignKey(p => p.BreedId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Cascade: borrar una especie borra sus razas (el service ya verificó que ninguna esté en uso)
-            modelBuilder.Entity<Breed>()
-                .HasOne(b => b.Species)
-                .WithMany(s => s.Breeds)
-                .HasForeignKey(b => b.SpeciesId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             // CI_AI: "Hurón", "huron" y "HURON" se consideran el mismo nombre (índice único y búsquedas), pero se guarda como se escribió
             modelBuilder.Entity<Species>().Property(s => s.Name).UseCollation("Latin1_General_CI_AI");
             modelBuilder.Entity<Species>().HasIndex(s => s.Name).IsUnique();
