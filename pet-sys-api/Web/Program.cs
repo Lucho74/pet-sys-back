@@ -137,7 +137,7 @@ builder.Services.AddScoped<IPetServices, PetServices>();
 builder.Services.AddScoped<IConsultationServices, ConsultationServices>();
 builder.Services.AddScoped<ISpeciesServices, SpeciesServices>();
 builder.Services.AddScoped<IBreedServices, BreedServices>();
-builder.Services.AddScoped<IAzureBlobImageStorage, AzureBlobImageStorage>();
+builder.Services.AddScoped<IAzureBlobStorage, AzureBlobStorage>();
 
 
 #endregion

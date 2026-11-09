@@ -15,9 +15,11 @@ namespace Web.Controllers
     public class PetController : ControllerBase
     {
         private readonly IPetServices _petServices;
-        public PetController(IPetServices petServices)
+        private readonly IAzureBlobStorage _azureBlobStorage;
+        public PetController(IPetServices petServices, IAzureBlobStorage azureBlobStorage)
         {
             _petServices = petServices;
+            _azureBlobStorage = azureBlobStorage;
         }
 
         [HttpGet("{id:int}")]
@@ -88,7 +90,20 @@ namespace Web.Controllers
             return Ok(pets);
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [HttpGet("{id:int}/image")]
+        public async Task<IActionResult> GetImage(int id, CancellationToken cancellationToken)
+        {
+            var pet = await _petServices.GetPetByIdAsync(id);
+            if (!ResourceAccess.CanReadPet(User, pet) || string.IsNullOrWhiteSpace(pet.BlobImage))
+            {
+                return NotFound();
+            }
+
+            var url = await _azureBlobStorage.GetReadUrlAsync(pet.BlobImage, cancellationToken);
+            return Ok(new { url });
+        }
+
+        [Authorize(Policy = Policies.Staff)]
         [HttpPut("{id:int}/image")]
         public async Task<IActionResult> UploadImage(int id, IFormFile file, CancellationToken cancellationToken)
         {
@@ -99,7 +114,7 @@ namespace Web.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "SysAdmin,Admin,Veterinarian")]
+        [Authorize(Policy = Policies.Staff)]
         [HttpDelete("{id:int}/image")]
         public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken)
         {

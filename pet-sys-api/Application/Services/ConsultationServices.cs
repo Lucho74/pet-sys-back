@@ -15,12 +15,14 @@ namespace Application.Services
         public readonly IConsultationRepository _consultationRepository;
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
+        public readonly IAzureBlobStorage _azureBlobStorage;
 
-        public ConsultationServices(IConsultationRepository consultationRepository, IPetRepository petRepository, IUserRepository userRepository)
+        public ConsultationServices(IConsultationRepository consultationRepository, IPetRepository petRepository, IUserRepository userRepository, IAzureBlobStorage azureBlobStorage)
         {
             _consultationRepository = consultationRepository;
             _petRepository = petRepository;
             _userRepository = userRepository;
+            _azureBlobStorage = azureBlobStorage;
         }
 
         public async Task<IEnumerable<ConsultationDTO>> GetAllConsultationAsync()
@@ -29,8 +31,10 @@ namespace Application.Services
             return consultations.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
+                Title = consultation.Title,
                 Description = consultation.Description,
                 Date = consultation.Date,
+                AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
                 IsSuspended = consultation.IsSuspended
@@ -48,8 +52,10 @@ namespace Application.Services
             return new ConsultationDTO
             {
                 Id = consultation.Id,
+                Title = consultation.Title,
                 Description = consultation.Description,
                 Date = consultation.Date,
+                AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
                 IsSuspended = consultation.IsSuspended
@@ -89,8 +95,9 @@ namespace Application.Services
 
             var consultation = new Consultation
             {
+                Title = dto.Title,
                 Description = dto.Description,
-                Date = dto.Date ?? throw new ArgumentException("Date is required."),
+                Date = dto.Date,
                 PetId = dto.PetId,
                 VeterinarianId = veterinarianId
             };
@@ -99,8 +106,10 @@ namespace Application.Services
             return new ConsultationDTO
             {
                 Id = created.Id,
+                Title = consultation.Title,
                 Description = created.Description,
                 Date = created.Date,
+                AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = created.PetId,
                 VeterinarianId = created.VeterinarianId,
                 IsSuspended = created.IsSuspended
@@ -133,8 +142,9 @@ namespace Application.Services
                 throw new ArgumentException($"Pet with id {dto.PetId} is suspended.");
             }
 
+            existing.Title = dto.Title;
             existing.Description = dto.Description;
-            existing.Date = dto.Date ?? throw new ArgumentException("Date is required.");
+            existing.Date = dto.Date;
             existing.PetId = dto.PetId;
 
             await _consultationRepository.UpdateAsync(id, existing);
@@ -142,8 +152,10 @@ namespace Application.Services
             return new ConsultationDTO
             {
                 Id = existing.Id,
+                Title = existing.Title,
                 Description = existing.Description,
                 Date = existing.Date,
+                AttachmentBlobNames = existing.AttachmentBlobNames,
                 PetId = existing.PetId,
                 VeterinarianId = existing.VeterinarianId,
                 IsSuspended = existing.IsSuspended
@@ -156,8 +168,10 @@ namespace Application.Services
             return consultations.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
+                Title = consultation.Title,
                 Description = consultation.Description,
                 Date = consultation.Date,
+                AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
                 IsSuspended = consultation.IsSuspended
@@ -170,8 +184,10 @@ namespace Application.Services
             return consultations.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
+                Title = consultation.Title,
                 Description = consultation.Description,
                 Date = consultation.Date,
+                AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
                 IsSuspended = consultation.IsSuspended
@@ -247,14 +263,69 @@ namespace Application.Services
             var items = page.Items.Select(consultation => new ConsultationDTO
             {
                 Id = consultation.Id,
+                Title = consultation.Title,
                 Description = consultation.Description,
                 Date = consultation.Date,
+                AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
                 VeterinarianId = consultation.VeterinarianId,
                 IsSuspended = consultation.IsSuspended
             }).ToList();
 
             return new PaginatedList<ConsultationDTO>(items, page.PageIndex, page.TotalPages);
+        }
+
+        public async Task UploadAttachmentAsync(int id, Stream fileStream, string contentType, CancellationToken cancellationToken = default)
+        {
+            var existing = await _consultationRepository.GetByIdAsync(id);
+            if (existing == null)
+            {
+                throw new KeyNotFoundException($"Consultation with id {id} was not found.");
+            }
+
+            if (existing.IsSuspended)
+            {
+                throw new ArgumentException($"Consultation with id {id} belongs to a suspended client.");
+            }
+
+            var blobFile = await _azureBlobStorage.UploadAttachmentAsync(fileStream, contentType, cancellationToken);
+
+            existing.AttachmentBlobNames.Add(blobFile);
+
+            var updated = await _consultationRepository.UpdateAsync(id, existing);
+            if (updated == null)
+            {
+                throw new KeyNotFoundException($"Consultation with id {id} was not found.");
+            }
+        }
+
+        public async Task DeleteAttachmentAsync(int id, string blobName, CancellationToken cancellationToken = default)
+        {
+            var existing = await _consultationRepository.GetByIdAsync(id);
+            if (existing == null)
+            {
+                throw new KeyNotFoundException($"Consultation with id {id} was not found.");
+            }
+
+            if (existing.IsSuspended)
+            {
+                throw new ArgumentException($"Consultation with id {id} belongs to a suspended client.");
+            }
+
+            if (!existing.AttachmentBlobNames.Contains(blobName))
+            {
+                return;
+            }
+
+            await _azureBlobStorage.DeleteBlobAsync(blobName, cancellationToken);
+
+            existing.AttachmentBlobNames.Remove(blobName);
+
+            var updated = await _consultationRepository.UpdateAsync(id, existing);
+            if (updated == null)
+            {
+                throw new KeyNotFoundException($"Consultation with id {id} was not found.");
+            }
         }
     }
 }

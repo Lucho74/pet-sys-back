@@ -17,10 +17,12 @@ namespace Web.Controllers
     {
         private readonly IConsultationServices _consultationServices;
         private readonly IPetServices _petServices;
-        public ConsultationController(IConsultationServices consultationServices, IPetServices petServices)
+        private readonly IAzureBlobStorage _azureBlobStorage;
+        public ConsultationController(IConsultationServices consultationServices, IPetServices petServices, IAzureBlobStorage azureBlobStorage)
         {
             _consultationServices = consultationServices;
             _petServices = petServices;
+            _azureBlobStorage = azureBlobStorage;
         }
 
 
@@ -117,6 +119,40 @@ namespace Web.Controllers
         {
             var consultations = await _consultationServices.GetConsultationsPagedAsync(query);
             return Ok(consultations);
+        }
+
+        [HttpGet("{id:int}/attachments")]
+        public async Task<IActionResult> GetImage(int id, [FromQuery] string blobName, CancellationToken cancellationToken)
+        {
+            var consultation = await _consultationServices.GetConsultationByIdAsync(id);
+            var pet = await _petServices.GetPetByIdAsync(consultation.PetId);
+            if (!ResourceAccess.CanReadPet(User, pet) || !consultation.AttachmentBlobNames.Contains(blobName))
+            {
+                return NotFound();
+            }
+
+            var url = await _azureBlobStorage.GetReadUrlAsync(blobName, cancellationToken);
+            return Ok(new { url });
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpPost("{id:int}/attachments")]
+        public async Task<IActionResult> UploadAttachment(int id, IFormFile file, CancellationToken cancellationToken)
+        {
+            using var stream = file.OpenReadStream();
+
+            await _consultationServices.UploadAttachmentAsync(id, stream, file.ContentType, cancellationToken);
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = Policies.Staff)]
+        [HttpDelete("{id:int}/attachments")]
+        public async Task<IActionResult> DeleteAttachment(int id, [FromQuery] string blobName, CancellationToken cancellationToken)
+        {
+            await _consultationServices.DeleteAttachmentAsync(id, blobName, cancellationToken);
+
+            return NoContent();
         }
     }
 }
