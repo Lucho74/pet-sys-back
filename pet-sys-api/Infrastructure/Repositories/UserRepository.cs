@@ -35,8 +35,15 @@ namespace Infrastructure.Repositories
 
             var query = Query.Where(user => allowedRoles.Contains(user.Role.Name));
 
-            if (!filters.IncludeSuspended)
+            if (filters.IsSuspend.HasValue)
+            {
+                var isSuspended = filters.IsSuspend.Value;
+                query = query.Where(user => user.IsSuspended == isSuspended);
+            }
+            else if (!filters.IncludeSuspended)
+            {
                 query = query.Where(user => !user.IsSuspended);
+            }
 
             if (!string.IsNullOrWhiteSpace(filters.Search))
             {

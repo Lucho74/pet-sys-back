@@ -8,12 +8,12 @@ namespace Application.Models
         [Required]
         [StringLength(50)]
         public string Name { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Specie { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Breed { get; set; }
+        public int SpeciesId { get; set; }
+        public string SpeciesName { get; set; }
+        public int BreedId { get; set; }
+        public string BreedName { get; set; }
+        [StringLength(512)]
+        public string? BlobImage { get; set; }
         [Required]
         public DateOnly? BirthDate { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "ClientId must be a positive number.")]

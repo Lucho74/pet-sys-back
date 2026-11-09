@@ -19,11 +19,11 @@ namespace Domain.Entities
         [StringLength(50)]
         public string Name { get; set; }
         [Required]
-        [StringLength(50)]
-        public string Specie { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Breed { get; set; }
+        [ForeignKey(nameof(Breed))]
+        public int BreedId { get; set; }
+        public Breed Breed { get; set; }
+        [StringLength(512)]
+        public string? BlobImage { get; set; } = null;
         [Required]
         [DataType(DataType.Date)]
         public DateOnly BirthDate { get; set; }

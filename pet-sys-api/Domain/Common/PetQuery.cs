@@ -2,7 +2,7 @@ namespace Domain.Common
 {
     public class PetQuery : PaginationQuery
     {
-        public string? Specie { get; set; }
-        public string? Breed { get; set; }
+        public int? SpeciesId { get; set; }
+        public int? BreedId { get; set; }
     }
 }
