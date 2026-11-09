@@ -10,6 +10,7 @@ namespace Web.ExceptionHandling
             {
                 KeyNotFoundException => StatusCodes.Status404NotFound,
                 ArgumentException => StatusCodes.Status400BadRequest,
+                UnauthorizedAccessException => StatusCodes.Status403Forbidden,
                 _ => (int?)null
             };
 

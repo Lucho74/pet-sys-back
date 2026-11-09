@@ -196,6 +196,11 @@ namespace Application.Services
                 throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
+            if (existing.Role.Name == RoleNames.SysAdmin)
+            {
+                throw new UnauthorizedAccessException("The SysAdmin account roles cannot be modified.");
+            }
+
             UserRoleInputValidation.Validate(dto.Role);
 
             UserProfileRules.ValidateRoleTransition(existing, dto.Role);
@@ -230,6 +235,11 @@ namespace Application.Services
             if (existing == null)
             {
                 throw new KeyNotFoundException($"User with id {id} was not found.");
+            }
+
+            if (existing.Role.Name == RoleNames.SysAdmin)
+            {
+                throw new UnauthorizedAccessException("The SysAdmin account status cannot be modified.");
             }
 
             await _userRepository.SetSuspendedAsync(id, isSuspended);
