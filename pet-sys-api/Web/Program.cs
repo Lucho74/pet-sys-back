@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Services;
+using Azure.Core;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Domain.Constants;
@@ -112,9 +113,10 @@ string ContainerName = builder.Configuration["AzureStorage:ContainerName"] ?? th
 
 builder.Services.AddSingleton<BlobContainerClient>(_ =>
 {
-    var blobServiceClient = new BlobServiceClient(
-            new Uri(ServiceUri),
-            new DefaultAzureCredential());
+    TokenCredential credential = builder.Environment.IsDevelopment()
+        ? new DefaultAzureCredential()
+        : new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned);
+    var blobServiceClient = new BlobServiceClient(new Uri(ServiceUri), credential);
 
     return blobServiceClient.GetBlobContainerClient(ContainerName);
 });
