@@ -12,5 +12,6 @@ namespace Domain.Interfaces
     {
         Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId);
         Task<PaginatedList<Pet>> GetPagedAsync(PetQuery q);
+        Task<IEnumerable<Pet>> GetRecentAsync(int take);
     }
 }
