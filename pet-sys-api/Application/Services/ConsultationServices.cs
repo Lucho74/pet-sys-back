@@ -43,7 +43,7 @@ namespace Application.Services
 
         public async Task<ConsultationDTO> GetConsultationByIdAsync(int id)
         {
-            var consultation = await _consultationRepository.GetByIdAsync(id);
+            var consultation = await _consultationRepository.GetByIdWithParticipantsAsync(id);
             if (consultation == null)
             {
                 throw new KeyNotFoundException($"Consultation with id {id} was not found.");
@@ -57,7 +57,9 @@ namespace Application.Services
                 Date = consultation.Date,
                 AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
+                PetName = consultation.Pet?.Name,
                 VeterinarianId = consultation.VeterinarianId,
+                VeterinarianName = consultation.Veterinarian?.User?.FullName,
                 IsSuspended = consultation.IsSuspended
             };
         }
@@ -268,7 +270,9 @@ namespace Application.Services
                 Date = consultation.Date,
                 AttachmentBlobNames = consultation.AttachmentBlobNames,
                 PetId = consultation.PetId,
+                PetName = consultation.Pet?.Name,
                 VeterinarianId = consultation.VeterinarianId,
+                VeterinarianName = consultation.Veterinarian?.User?.FullName,
                 IsSuspended = consultation.IsSuspended
             }).ToList();
 

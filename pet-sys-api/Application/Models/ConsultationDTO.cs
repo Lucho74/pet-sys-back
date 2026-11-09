@@ -18,8 +18,10 @@ namespace Application.Models
         public List<string> AttachmentBlobNames { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "PetId must be a positive number.")]
         public int PetId { get; set; }
+        public string? PetName { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "VeterinarianId must be a positive number.")]
         public int VeterinarianId { get; set; }
+        public string? VeterinarianName { get; set; }
         public bool IsSuspended { get; set; }
     }
 }
