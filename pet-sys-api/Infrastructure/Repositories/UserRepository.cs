@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
@@ -62,6 +63,8 @@ namespace Infrastructure.Repositories
             {
                 "fullname" => ApplyOrder(query, user => user.FullName, filters.SortDesc),
                 "email" => ApplyOrder(query, user => user.Email, filters.SortDesc),
+                "role" => ApplyOrder(query, user => user.Role.Name == RoleNames.Client ? 2
+                    : user.Role.Name == RoleNames.Veterinarian ? 1 : 0, filters.SortDesc),
                 _ => ApplyOrder(query, user => user.Id, filters.SortDesc)
             };
 
