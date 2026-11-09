@@ -14,7 +14,7 @@ namespace Application.Interfaces
         Task UpdateUserRoleAsync(int id, UpdateUserRoleDTO dto);
         Task DeleteUserAsync(int id);
         Task ReactivateUserAsync(int id);
-        Task<UserDTO> AuthenticateAsync(LoginDTO dto);
+        Task<UserDTO?> AuthenticateAsync(LoginDTO dto);
         Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles);
     }
 }

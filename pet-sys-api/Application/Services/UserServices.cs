@@ -1,4 +1,3 @@
-using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
@@ -43,7 +42,7 @@ namespace Application.Services
 
             if (user == null)
             {
-                throw new NotFoundException($"User with id {id} was not found.");
+                throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
             return new UserDTO
@@ -69,7 +68,7 @@ namespace Application.Services
 
             if (sameEmail != null)
             {
-                throw new BadRequestException($"A user with email {dto.Email} already exists.");
+                throw new ArgumentException($"A user with email {dto.Email} already exists.");
             }
 
             Role? role = await _userRepository.GetRoleByNameAsync(dto.Role);
@@ -126,19 +125,19 @@ namespace Application.Services
 
             if (existing == null)
             {
-                throw new NotFoundException($"User with id {id} was not found.");
+                throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
             if (existing.IsSuspended)
             {
-                throw new BadRequestException($"User with id {id} is suspended.");
+                throw new ArgumentException($"User with id {id} is suspended.");
             }
 
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
             if (sameEmail != null && sameEmail.Id != id)
             {
-                throw new BadRequestException($"A user with email {dto.Email} already exists.");
+                throw new ArgumentException($"A user with email {dto.Email} already exists.");
             }
 
             UserProfileRules.ValidateRegistrationNumberUpdate(existing, dto.RegistrationNumber);
@@ -147,13 +146,13 @@ namespace Application.Services
             {
                 if (existing.ClientProfile == null)
                 {
-                    throw new BadRequestException("The user does not have a client profile.");
+                    throw new ArgumentException("The user does not have a client profile.");
                 }
 
                 if (string.IsNullOrWhiteSpace(dto.Dni) ||
                     dto.Dni.Trim().Length > 8)
                 {
-                    throw new BadRequestException("Dni must contain between 1 and 8 characters.");
+                    throw new ArgumentException("Dni must contain between 1 and 8 characters.");
                 }
 
                 existing.ClientProfile.Dni = dto.Dni.Trim();
@@ -194,12 +193,12 @@ namespace Application.Services
 
             if (existing == null)
             {
-                throw new NotFoundException( $"User with id {id} was not found.");
+                throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
             if (existing.Role.Name == RoleNames.SysAdmin)
             {
-                throw new ForbiddenException("The SysAdmin account roles cannot be modified.");
+                throw new UnauthorizedAccessException("The SysAdmin account roles cannot be modified.");
             }
 
             UserRoleInputValidation.Validate(dto.Role);
@@ -235,29 +234,24 @@ namespace Application.Services
 
             if (existing == null)
             {
-                throw new NotFoundException($"User with id {id} was not found.");
+                throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
             if (existing.Role.Name == RoleNames.SysAdmin)
             {
-                throw new ForbiddenException("The SysAdmin account status cannot be modified.");
+                throw new UnauthorizedAccessException("The SysAdmin account status cannot be modified.");
             }
 
             await _userRepository.SetSuspendedAsync(id, isSuspended);
         }
 
-        public async Task<UserDTO> AuthenticateAsync(LoginDTO dto)
+        public async Task<UserDTO?> AuthenticateAsync(LoginDTO dto)
         {
             User? user = await _userRepository.GetByEmailAsync(dto.Email);
 
-            if (user == null || user.IsSuspended)
+            if (user == null || user.IsSuspended || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             {
-                throw new UnauthorizedException("Invalid email or password.");
-            }
-
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            {
-                throw new UnauthorizedException("Invalid email or password.");
+                return null;
             }
 
             return new UserDTO
@@ -277,12 +271,12 @@ namespace Application.Services
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
-                throw new BadRequestException("Page index and page size must be greater than 0.");
+                throw new ArgumentException("Page index and page size must be greater than 0.");
             }
 
             if (q.PageSize > 50)
             {
-                throw new BadRequestException("Page size cannot be greater than 50.");
+                throw new ArgumentException("Page size cannot be greater than 50.");
             }
 
             var page = await _userRepository.GetPagedAsync(q, readableRoles);

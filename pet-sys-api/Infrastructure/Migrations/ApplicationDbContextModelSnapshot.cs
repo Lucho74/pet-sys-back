@@ -378,7 +378,7 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AttachmentBlobNames")
+                    b.Property<string>("Attachments")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

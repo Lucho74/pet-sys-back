@@ -1,5 +1,4 @@
-﻿using Application.Exceptions;
-using Domain.Constants;
+﻿using Domain.Constants;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -22,7 +21,7 @@ namespace Application.Validation
 
             if (string.IsNullOrWhiteSpace(role) || !availableRoles.Contains(role))
             {
-                throw new BadRequestException("The requested role is invalid.");
+                throw new ArgumentException("The requested role is invalid.");
             }
         }
     }

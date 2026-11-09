@@ -1,5 +1,4 @@
-﻿using Application.Exceptions;
-using Domain.Constants;
+﻿using Domain.Constants;
 using Domain.Entities;
 
 namespace Application.Validation
@@ -15,24 +14,24 @@ namespace Application.Validation
             {
                 if (string.IsNullOrWhiteSpace(dni) || dni.Trim().Length > 8)
                 {
-                    throw new BadRequestException("A new client profile requires a Dni with at most 8 characters.");
+                    throw new ArgumentException("A new client profile requires a Dni with at most 8 characters.");
                 }
             }
             else if (dni != null)
             {
-                throw new BadRequestException("Dni can only be provided when assigning Client.");
+                throw new ArgumentException("Dni can only be provided when assigning Client.");
             }
 
             if (isProfessional)
             {
                 if (string.IsNullOrWhiteSpace(registrationNumber) || registrationNumber.Trim().Length > 50)
                 {
-                    throw new BadRequestException("A new veterinarian profile requires a registration number with at most 50 characters.");
+                    throw new ArgumentException("A new veterinarian profile requires a registration number with at most 50 characters.");
                 }
             }
             else if (registrationNumber != null)
             {
-                throw new BadRequestException("RegistrationNumber can only be provided for Veterinarian or Admin.");
+                throw new ArgumentException("RegistrationNumber can only be provided for Veterinarian or Admin.");
             }
         }
 
@@ -43,19 +42,19 @@ namespace Application.Validation
 
             if (currentIsClient != requestedIsClient)
             {
-                throw new BadRequestException("Client and staff accounts must remain separate. Create another account.");
+                throw new ArgumentException("Client and staff accounts must remain separate. Create another account.");
             }
 
             if (requestedIsClient && user.ClientProfile == null)
             {
-                throw new BadRequestException("The user does not have a valid client profile.");
+                throw new ArgumentException("The user does not have a valid client profile.");
             }
 
             bool isProfessional = requestedRole == RoleNames.Veterinarian || requestedRole == RoleNames.Admin;
 
             if (isProfessional && user.VeterinarianProfile == null)
             {
-                throw new BadRequestException("The user does not have a valid veterinarian profile.");
+                throw new ArgumentException("The user does not have a valid veterinarian profile.");
             }
         }
 
@@ -70,12 +69,12 @@ namespace Application.Validation
 
             if (!isProfessional || user.VeterinarianProfile == null)
             {
-                throw new BadRequestException("The user does not have a valid veterinarian profile.");
+                throw new ArgumentException("The user does not have a valid veterinarian profile.");
             }
 
             if (string.IsNullOrWhiteSpace(registrationNumber) || registrationNumber.Trim().Length > 50)
             {
-                throw new BadRequestException("Registration number must contain between 1 and 50 characters.");
+                throw new ArgumentException("Registration number must contain between 1 and 50 characters.");
             }
         }
     }

@@ -1,4 +1,3 @@
-using Application.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace Web.ExceptionHandling
@@ -9,10 +8,9 @@ namespace Web.ExceptionHandling
         {
             var statusCode = exception switch
             {
-                NotFoundException => StatusCodes.Status404NotFound,
-                BadRequestException => StatusCodes.Status400BadRequest,
-                UnauthorizedException => StatusCodes.Status401Unauthorized,
-                ForbiddenException => StatusCodes.Status403Forbidden,
+                KeyNotFoundException => StatusCodes.Status404NotFound,
+                ArgumentException => StatusCodes.Status400BadRequest,
+                UnauthorizedAccessException => StatusCodes.Status403Forbidden,
                 _ => (int?)null
             };
 

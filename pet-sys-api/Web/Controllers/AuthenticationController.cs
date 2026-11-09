@@ -27,6 +27,10 @@ namespace Web.Controllers
         public async Task<IActionResult> Authenticate([FromBody] LoginDTO credentials)
         {
             var user = await _userServices.AuthenticateAsync(credentials);
+            if (user == null)
+            {
+                return Unauthorized(new { title = "Invalid email or password." });
+            }
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Authentication:SecretForKey"]!));
             var signature = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

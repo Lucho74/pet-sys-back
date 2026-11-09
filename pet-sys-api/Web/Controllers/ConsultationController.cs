@@ -126,7 +126,7 @@ namespace Web.Controllers
         {
             var consultation = await _consultationServices.GetConsultationByIdAsync(id);
             var pet = await _petServices.GetPetByIdAsync(consultation.PetId);
-            if (!ResourceAccess.CanReadPet(User, pet) || !consultation.AttachmentBlobNames.Contains(blobName))
+            if (!ResourceAccess.CanReadPet(User, pet) || !consultation.Attachments.Any(attachment => attachment.BlobName == blobName))
             {
                 return NotFound();
             }
@@ -141,7 +141,7 @@ namespace Web.Controllers
         {
             using var stream = file.OpenReadStream();
 
-            await _consultationServices.UploadAttachmentAsync(id, stream, file.ContentType, cancellationToken);
+            await _consultationServices.UploadAttachmentAsync(id, stream, file.ContentType, file.FileName, cancellationToken);
 
             return NoContent();
         }

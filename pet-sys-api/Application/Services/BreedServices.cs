@@ -1,4 +1,3 @@
-using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
@@ -25,12 +24,12 @@ namespace Application.Services
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
-                throw new BadRequestException("Page index and page size must be greater than 0.");
+                throw new ArgumentException("Page index and page size must be greater than 0.");
             }
 
             if (q.PageSize > 50)
             {
-                throw new BadRequestException("Page size cannot be greater than 50.");
+                throw new ArgumentException("Page size cannot be greater than 50.");
             }
 
             var page = await _breedRepository.GetPagedAsync(q);
@@ -49,7 +48,7 @@ namespace Application.Services
         {
             if (await _speciesRepository.GetByIdAsync(speciesId) == null)
             {
-                throw new NotFoundException($"Species with id {speciesId} was not found.");
+                throw new KeyNotFoundException($"Species with id {speciesId} was not found.");
             }
 
             var breeds = await _breedRepository.GetBySpeciesIdAsync(speciesId);
@@ -66,7 +65,7 @@ namespace Application.Services
             var breed = await _breedRepository.GetByIdAsync(id);
             if (breed == null)
             {
-                throw new NotFoundException($"Breed with id {id} was not found.");
+                throw new KeyNotFoundException($"Breed with id {id} was not found.");
             }
 
             return new BreedDTO
@@ -81,13 +80,13 @@ namespace Application.Services
         {
             if (await _speciesRepository.GetByIdAsync(dto.SpeciesId) == null)
             {
-                throw new BadRequestException("SpeciesId does not reference an existing species.");
+                throw new ArgumentException("SpeciesId does not reference an existing species.");
             }
 
             var name = dto.Name.Trim();
             if (await _breedRepository.GetByNameAsync(dto.SpeciesId, name) != null)
             {
-                throw new BadRequestException($"Breed '{name}' already exists for species with id {dto.SpeciesId}.");
+                throw new ArgumentException($"Breed '{name}' already exists for species with id {dto.SpeciesId}.");
             }
 
             var breed = new Breed
@@ -110,7 +109,7 @@ namespace Application.Services
             var existing = await _breedRepository.GetByIdAsync(id);
             if (existing == null)
             {
-                throw new NotFoundException($"Breed with id {id} was not found.");
+                throw new KeyNotFoundException($"Breed with id {id} was not found.");
             }
 
             // La especie de una raza no se cambia: para corregirla se borra y se crea de nuevo
@@ -118,7 +117,7 @@ namespace Application.Services
             var duplicate = await _breedRepository.GetByNameAsync(existing.SpeciesId, name);
             if (duplicate != null && duplicate.Id != id)
             {
-                throw new BadRequestException($"Breed '{name}' already exists for species with id {existing.SpeciesId}.");
+                throw new ArgumentException($"Breed '{name}' already exists for species with id {existing.SpeciesId}.");
             }
 
             existing.Name = name;
@@ -138,19 +137,19 @@ namespace Application.Services
             var breed = await _breedRepository.GetByIdAsync(id);
             if (breed == null)
             {
-                throw new NotFoundException($"Breed with id {id} was not found.");
+                throw new KeyNotFoundException($"Breed with id {id} was not found.");
             }
 
             // Las mascotas suspendidas también cuentan, para no romper su historia clínica
             if (await _breedRepository.HasPetsAsync(id))
             {
-                throw new BadRequestException($"Breed with id {id} is assigned to at least one pet.");
+                throw new ArgumentException($"Breed with id {id} is assigned to at least one pet.");
             }
 
             // Una especie sin razas no se podría asignar a ninguna mascota; para borrarla entera se borra la especie
             if (await _breedRepository.CountBySpeciesIdAsync(breed.SpeciesId) == 1)
             {
-                throw new BadRequestException($"Breed with id {id} is the last breed of its species; delete the species instead.");
+                throw new ArgumentException($"Breed with id {id} is the last breed of its species; delete the species instead.");
             }
 
             await _breedRepository.DeleteAsync(breed);

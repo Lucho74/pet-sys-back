@@ -15,7 +15,7 @@ namespace Application.Models
         [Required]
         public DateTime Date { get; set; }
         [Required]
-        public List<string> AttachmentBlobNames { get; set; }
+        public List<ConsultationAttachment> Attachments { get; set; } = new();
         [Range(1, int.MaxValue, ErrorMessage = "PetId must be a positive number.")]
         public int PetId { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "VeterinarianId must be a positive number.")]
