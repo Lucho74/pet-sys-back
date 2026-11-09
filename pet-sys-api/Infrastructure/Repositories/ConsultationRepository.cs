@@ -17,6 +17,18 @@ namespace Infrastructure.Repositories
         {
         }
 
+        public async Task<IEnumerable<Consultation>> GetRecentAsync(int take)
+        {
+            return await _context.Set<Consultation>()
+                .Include(c => c.Pet)
+                .Include(c => c.Veterinarian)
+                    .ThenInclude(v => v.User)
+                .OrderByDescending(c => c.Date)
+                .ThenByDescending(c => c.Id)
+                .Take(take)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Consultation>> GetByVeterinarianIdAsync(int veterinarianId)
         {
             return await _context.Set<Consultation>()

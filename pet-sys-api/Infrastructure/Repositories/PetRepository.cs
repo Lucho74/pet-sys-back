@@ -21,6 +21,16 @@ namespace Infrastructure.Repositories
             .Include(p => p.Breed)
                 .ThenInclude(b => b.Species);
 
+        public async Task<IEnumerable<Pet>> GetRecentAsync(int take)
+        {
+            return await Query
+                .Include(p => p.Client)
+                    .ThenInclude(c => c.User)
+                .OrderByDescending(p => p.Id)
+                .Take(take)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Pet>> GetByClientIdAsync(int clientId)
         {
             return await Query
