@@ -44,7 +44,6 @@ namespace Application.Services
                 {
                     Id = c.Id,
                     Title = c.Title,
-                    Description = c.Description,
                     Date = c.Date,
                     IsSuspended = c.IsSuspended,
                     PetId = c.PetId,
