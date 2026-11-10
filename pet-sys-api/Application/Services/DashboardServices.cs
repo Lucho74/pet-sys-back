@@ -43,7 +43,7 @@ namespace Application.Services
                 RecentConsultations = consultations.Select(c => new RecentConsultationDTO
                 {
                     Id = c.Id,
-                    Description = c.Description,
+                    Title = c.Title,
                     Date = c.Date,
                     IsSuspended = c.IsSuspended,
                     PetId = c.PetId,
