@@ -48,7 +48,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId)
+        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId, bool veterinarianOnly = false)
         {
             Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
 
@@ -62,22 +62,7 @@ namespace Application.Services
                 throw new ArgumentException($"Pet with id {dto.PetId} is suspended.");
             }
 
-            User? veterinarian = await _userRepository.GetByIdAsync(veterinarianId);
-
-            if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
-            {
-                throw new ArgumentException("VeterinarianId does not reference an existing professional.");
-            }
-
-            if (veterinarian.IsSuspended)
-            {
-                throw new ArgumentException($"Veterinarian with id {veterinarianId} is suspended.");
-            }
-
-            if (veterinarian.VeterinarianProfile == null)
-            {
-                throw new ArgumentException($"Veterinarian with id {veterinarianId} does not have a veterinarian profile.");
-            }
+            await ValidateResponsibleProfessionalAsync(veterinarianId, veterinarianOnly);
 
             var consultation = new Consultation
             {
@@ -102,7 +87,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto)
+        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto, bool veterinarianOnly = false)
         {
             Consultation? existing = await _consultationRepository.GetByIdAsync(id);
 
@@ -128,6 +113,12 @@ namespace Application.Services
                 throw new ArgumentException($"Pet with id {dto.PetId} is suspended.");
             }
 
+            if (dto.VeterinarianId is int veterinarianId && veterinarianId != existing.VeterinarianId)
+            {
+                await ValidateResponsibleProfessionalAsync(veterinarianId, veterinarianOnly);
+                existing.VeterinarianId = veterinarianId;
+            }
+
             existing.Title = dto.Title;
             existing.Description = dto.Description;
             existing.Date = dto.Date;
@@ -146,6 +137,31 @@ namespace Application.Services
                 VeterinarianId = existing.VeterinarianId,
                 IsSuspended = existing.IsSuspended
             };
+        }
+
+        private async Task ValidateResponsibleProfessionalAsync(int veterinarianId, bool veterinarianOnly)
+        {
+            User? veterinarian = await _userRepository.GetByIdAsync(veterinarianId);
+
+            if (veterinarianOnly && veterinarian?.Role.Name != RoleNames.Veterinarian)
+            {
+                throw new UnauthorizedAccessException("Admins can only assign consultations to veterinarians or themselves.");
+            }
+
+            if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
+            {
+                throw new ArgumentException("VeterinarianId does not reference an existing professional.");
+            }
+
+            if (veterinarian.IsSuspended)
+            {
+                throw new ArgumentException($"Veterinarian with id {veterinarianId} is suspended.");
+            }
+
+            if (veterinarian.VeterinarianProfile == null)
+            {
+                throw new ArgumentException($"Veterinarian with id {veterinarianId} does not have a veterinarian profile.");
+            }
         }
 
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId)
@@ -232,7 +248,7 @@ namespace Application.Services
             await _consultationRepository.UpdateAsync(id, existing);
         }
 
-        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q)
+        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, int? responsibleUserId = null)
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
@@ -244,7 +260,7 @@ namespace Application.Services
                 throw new ArgumentException("Page size cannot be greater than 50.");
             }
 
-            var page = await _consultationRepository.GetPagedAsync(q);
+            var page = await _consultationRepository.GetPagedAsync(q, responsibleUserId);
 
             var items = page.Items.Select(consultation => new ConsultationWithParticipantsDTO
             {

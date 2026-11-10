@@ -65,7 +65,8 @@ namespace Web.Controllers
                 return Forbid();
             }
 
-            var created = await _consultationServices.AddConsultationAsync(dto, veterinarianId);
+            bool veterinarianOnly = User.IsInRole(RoleNames.Admin) && veterinarianId != callerId;
+            var created = await _consultationServices.AddConsultationAsync(dto, veterinarianId, veterinarianOnly);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -73,7 +74,18 @@ namespace Web.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateConsultation(int id, [FromBody] UpdateConsultationDTO dto)
         {
-            var updated = await _consultationServices.UpdateConsultationAsync(id, dto);
+            bool veterinarianOnly = false;
+            if (dto.VeterinarianId is int veterinarianId)
+            {
+                bool isAdmin = User.IsInRole(RoleNames.Admin);
+                if (!isAdmin && !User.IsInRole(RoleNames.SysAdmin))
+                    return Forbid();
+
+                veterinarianOnly = isAdmin &&
+                    User.FindFirstValue(ClaimTypes.NameIdentifier) != veterinarianId.ToString();
+            }
+
+            var updated = await _consultationServices.UpdateConsultationAsync(id, dto, veterinarianOnly);
             return Ok(updated);
         }
 
@@ -115,9 +127,18 @@ namespace Web.Controllers
 
         [Authorize(Policy = Policies.Staff)]
         [HttpGet]
-        public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query, [FromQuery] bool mine = false)
         {
-            var consultations = await _consultationServices.GetConsultationsPagedAsync(query);
+            int? responsibleUserId = null;
+            if (mine)
+            {
+                if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId) || callerId <= 0)
+                    return Forbid();
+
+                responsibleUserId = callerId;
+            }
+
+            var consultations = await _consultationServices.GetConsultationsPagedAsync(query, responsibleUserId);
             return Ok(consultations);
         }
 

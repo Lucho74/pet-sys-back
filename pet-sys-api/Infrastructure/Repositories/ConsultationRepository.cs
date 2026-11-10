@@ -53,9 +53,12 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<PaginatedList<Consultation>> GetPagedAsync(PaginationQuery q)
+        public async Task<PaginatedList<Consultation>> GetPagedAsync(PaginationQuery q, int? responsibleUserId = null)
         {
             var query = QueryWithParticipants;
+
+            if (responsibleUserId is int responsibleId)
+                query = query.Where(c => c.VeterinarianId == responsibleId);
 
             if (!q.IncludeSuspended)
                 query = query.Where(c => !c.IsSuspended);

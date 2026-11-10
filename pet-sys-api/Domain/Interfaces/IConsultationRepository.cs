@@ -13,7 +13,7 @@ namespace Domain.Interfaces
         Task<Consultation?> GetByIdWithParticipantsAsync(int id);
         Task<IEnumerable<Consultation>> GetByPetIdAsync(int petId);
         Task<IEnumerable<Consultation>> GetByVeterinarianIdAsync(int veterinarianId);
-        Task<PaginatedList<Consultation>> GetPagedAsync(PaginationQuery q);
+        Task<PaginatedList<Consultation>> GetPagedAsync(PaginationQuery q, int? responsibleUserId = null);
         Task<IEnumerable<Consultation>> GetRecentAsync(int take);
     }
 }

@@ -76,15 +76,12 @@ namespace Web.Authorization.Rules
                 return false;
             }
 
-            if (user.IsInRole(RoleNames.SysAdmin))
+            if (user.IsInRole(RoleNames.SysAdmin) || user.IsInRole(RoleNames.Admin))
             {
                 return true;
             }
 
-            bool isProfessional = user.IsInRole(RoleNames.Veterinarian) ||
-                user.IsInRole(RoleNames.Admin);
-
-            return isProfessional &&
+            return user.IsInRole(RoleNames.Veterinarian) &&
                 int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId) &&
                 callerId == veterinarianId;
         }
