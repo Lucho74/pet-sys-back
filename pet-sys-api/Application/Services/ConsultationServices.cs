@@ -41,9 +41,9 @@ namespace Application.Services
                 Date = consultation.Date,
                 Attachments = consultation.Attachments,
                 PetId = consultation.PetId,
-                PetName = consultation.Pet?.Name,
+                PetName = consultation.Pet.Name,
                 VeterinarianId = consultation.VeterinarianId,
-                VeterinarianName = consultation.Veterinarian?.User?.FullName,
+                VeterinarianName = consultation.Veterinarian.User.FullName,
                 IsSuspended = consultation.IsSuspended
             };
         }
@@ -254,9 +254,9 @@ namespace Application.Services
                 Date = consultation.Date,
                 Attachments = consultation.Attachments,
                 PetId = consultation.PetId,
-                PetName = consultation.Pet?.Name,
+                PetName = consultation.Pet.Name,
                 VeterinarianId = consultation.VeterinarianId,
-                VeterinarianName = consultation.Veterinarian?.User?.FullName,
+                VeterinarianName = consultation.Veterinarian.User.FullName,
                 IsSuspended = consultation.IsSuspended
             }).ToList();
 

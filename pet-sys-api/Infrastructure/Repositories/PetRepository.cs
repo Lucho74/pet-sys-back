@@ -19,13 +19,13 @@ namespace Infrastructure.Repositories
 
         protected override IQueryable<Pet> Query => _context.Set<Pet>()
             .Include(p => p.Breed)
-                .ThenInclude(b => b.Species);
+                .ThenInclude(b => b.Species)
+            .Include(p => p.Client)
+                .ThenInclude(c => c.User);
 
         public async Task<IEnumerable<Pet>> GetRecentAsync(int take)
         {
             return await Query
-                .Include(p => p.Client)
-                    .ThenInclude(c => c.User)
                 .OrderByDescending(p => p.Id)
                 .Take(take)
                 .ToListAsync();
