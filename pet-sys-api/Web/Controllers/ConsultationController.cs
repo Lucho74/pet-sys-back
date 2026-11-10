@@ -115,9 +115,18 @@ namespace Web.Controllers
 
         [Authorize(Policy = Policies.Staff)]
         [HttpGet]
-        public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query, [FromQuery] bool mine = false)
         {
-            var consultations = await _consultationServices.GetConsultationsPagedAsync(query);
+            int? veterinarianId = null;
+            if (mine)
+            {
+                if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId) || callerId <= 0)
+                    return Forbid();
+
+                veterinarianId = callerId;
+            }
+
+            var consultations = await _consultationServices.GetConsultationsPagedAsync(query, veterinarianId);
             return Ok(consultations);
         }
 
