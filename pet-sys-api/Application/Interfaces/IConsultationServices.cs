@@ -15,7 +15,7 @@ namespace Application.Interfaces
         Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId);
         Task SuspendConsultationAsync(int id);
         Task ReactivateConsultationAsync(int id);
-        Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, int? veterinarianId = null);
+        Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, int? responsibleUserId = null);
         Task UploadAttachmentAsync(int id, Stream fileStream, string contentType, string fileName, CancellationToken cancellationToken = default);
         Task DeleteAttachmentAsync(int id, string blobName, CancellationToken cancellationToken = default);
     }

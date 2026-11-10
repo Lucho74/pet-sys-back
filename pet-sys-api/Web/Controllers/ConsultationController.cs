@@ -129,16 +129,16 @@ namespace Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetConsultationsByPagination([FromQuery] PaginationQuery query, [FromQuery] bool mine = false)
         {
-            int? veterinarianId = null;
+            int? responsibleUserId = null;
             if (mine)
             {
                 if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId) || callerId <= 0)
                     return Forbid();
 
-                veterinarianId = callerId;
+                responsibleUserId = callerId;
             }
 
-            var consultations = await _consultationServices.GetConsultationsPagedAsync(query, veterinarianId);
+            var consultations = await _consultationServices.GetConsultationsPagedAsync(query, responsibleUserId);
             return Ok(consultations);
         }
 

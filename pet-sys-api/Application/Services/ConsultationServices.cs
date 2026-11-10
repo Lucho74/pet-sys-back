@@ -248,7 +248,7 @@ namespace Application.Services
             await _consultationRepository.UpdateAsync(id, existing);
         }
 
-        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, int? veterinarianId = null)
+        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, int? responsibleUserId = null)
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
@@ -260,7 +260,7 @@ namespace Application.Services
                 throw new ArgumentException("Page size cannot be greater than 50.");
             }
 
-            var page = await _consultationRepository.GetPagedAsync(q, veterinarianId);
+            var page = await _consultationRepository.GetPagedAsync(q, responsibleUserId);
 
             var items = page.Items.Select(consultation => new ConsultationWithParticipantsDTO
             {
