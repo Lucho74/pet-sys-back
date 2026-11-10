@@ -65,7 +65,8 @@ namespace Web.Controllers
                 return Forbid();
             }
 
-            var created = await _consultationServices.AddConsultationAsync(dto, veterinarianId);
+            bool veterinarianOnly = User.IsInRole(RoleNames.Admin) && veterinarianId != callerId;
+            var created = await _consultationServices.AddConsultationAsync(dto, veterinarianId, veterinarianOnly);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 

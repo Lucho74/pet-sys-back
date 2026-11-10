@@ -48,7 +48,7 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId)
+        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId, bool veterinarianOnly = false)
         {
             Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
 
@@ -63,6 +63,11 @@ namespace Application.Services
             }
 
             User? veterinarian = await _userRepository.GetByIdAsync(veterinarianId);
+
+            if (veterinarianOnly && veterinarian?.Role.Name != RoleNames.Veterinarian)
+            {
+                throw new UnauthorizedAccessException("Admins can only assign consultations to veterinarians or themselves.");
+            }
 
             if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
             {
