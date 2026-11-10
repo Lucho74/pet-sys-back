@@ -74,7 +74,18 @@ namespace Web.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateConsultation(int id, [FromBody] UpdateConsultationDTO dto)
         {
-            var updated = await _consultationServices.UpdateConsultationAsync(id, dto);
+            bool veterinarianOnly = false;
+            if (dto.VeterinarianId is int veterinarianId)
+            {
+                bool isAdmin = User.IsInRole(RoleNames.Admin);
+                if (!isAdmin && !User.IsInRole(RoleNames.SysAdmin))
+                    return Forbid();
+
+                veterinarianOnly = isAdmin &&
+                    User.FindFirstValue(ClaimTypes.NameIdentifier) != veterinarianId.ToString();
+            }
+
+            var updated = await _consultationServices.UpdateConsultationAsync(id, dto, veterinarianOnly);
             return Ok(updated);
         }
 
