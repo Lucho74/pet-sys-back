@@ -17,25 +17,6 @@ namespace Application.Services
             _userRepository = userRepository;
         }
 
-        public async Task<IEnumerable<UserDTO>> GetAllUserAsync(IReadOnlyCollection<string> readableRoles)
-        {
-            var allowedRoles = readableRoles.ToArray();
-
-            IEnumerable<User> users = await _userRepository.FindAsync(user => allowedRoles.Contains(user.Role.Name));
-
-            return users.Select(user => new UserDTO
-            {
-                Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                Phone = user.Phone,
-                IsSuspended = user.IsSuspended,
-                RoleName = user.Role.Name,
-                Dni = user.ClientProfile?.Dni,
-                RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
-            }).ToArray();
-        }
-
         public async Task<UserDTO> GetUserByIdAsync(int id)
         {
             User? user = await _userRepository.GetByIdAsync(id);

@@ -26,25 +26,7 @@ namespace Application.Services
             _breedRepository = breedRepository;
         }
 
-        public async Task<IEnumerable<PetDTO>> GetAllPetAsync()
-        {
-            var pets = await _petRepository.GetAllAsync();
-            return pets.Select(pet => new PetDTO
-            {
-                Id = pet.Id,
-                Name = pet.Name,
-                SpeciesId = pet.Breed.SpeciesId,
-                SpeciesName = pet.Breed.Species.Name,
-                BreedId = pet.BreedId,
-                BreedName = pet.Breed.Name,
-                BlobImage = pet.BlobImage,
-                BirthDate = pet.BirthDate,
-                ClientId = pet.ClientId,
-                IsSuspended = pet.IsSuspended
-            });
-        }
-
-        public async Task<PetDTO> GetPetByIdAsync(int id)
+        public async Task<PetDetailDTO> GetPetByIdAsync(int id)
         {
             var pet = await _petRepository.GetByIdAsync(id);
             if (pet == null)
@@ -52,7 +34,7 @@ namespace Application.Services
                 throw new KeyNotFoundException($"Pet with id {id} was not found.");
             }
 
-            return new PetDTO
+            return new PetDetailDTO
             {
                 Id = pet.Id,
                 Name = pet.Name,
@@ -63,6 +45,7 @@ namespace Application.Services
                 BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
+                ClientName = pet.Client.User.FullName,
                 IsSuspended = pet.IsSuspended
             };
         }

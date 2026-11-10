@@ -8,7 +8,6 @@ namespace Application.Interfaces
 {
     public interface IConsultationServices
     {
-        Task<IEnumerable<ConsultationDTO>> GetAllConsultationAsync();
         Task<ConsultationWithParticipantsDTO> GetConsultationByIdAsync(int id);
         Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId);
         Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto);
