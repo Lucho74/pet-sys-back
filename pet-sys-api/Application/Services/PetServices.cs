@@ -26,24 +26,6 @@ namespace Application.Services
             _breedRepository = breedRepository;
         }
 
-        public async Task<IEnumerable<PetDTO>> GetAllPetAsync()
-        {
-            var pets = await _petRepository.GetAllAsync();
-            return pets.Select(pet => new PetDTO
-            {
-                Id = pet.Id,
-                Name = pet.Name,
-                SpeciesId = pet.Breed.SpeciesId,
-                SpeciesName = pet.Breed.Species.Name,
-                BreedId = pet.BreedId,
-                BreedName = pet.Breed.Name,
-                BlobImage = pet.BlobImage,
-                BirthDate = pet.BirthDate,
-                ClientId = pet.ClientId,
-                IsSuspended = pet.IsSuspended
-            });
-        }
-
         public async Task<PetDTO> GetPetByIdAsync(int id)
         {
             var pet = await _petRepository.GetByIdAsync(id);

@@ -25,22 +25,6 @@ namespace Application.Services
             _azureBlobStorage = azureBlobStorage;
         }
 
-        public async Task<IEnumerable<ConsultationDTO>> GetAllConsultationAsync()
-        {
-            var consultations = await _consultationRepository.GetAllAsync();
-            return consultations.Select(consultation => new ConsultationDTO
-            {
-                Id = consultation.Id,
-                Title = consultation.Title,
-                Description = consultation.Description,
-                Date = consultation.Date,
-                Attachments = consultation.Attachments,
-                PetId = consultation.PetId,
-                VeterinarianId = consultation.VeterinarianId,
-                IsSuspended = consultation.IsSuspended
-            });
-        }
-
         public async Task<ConsultationWithParticipantsDTO> GetConsultationByIdAsync(int id)
         {
             var consultation = await _consultationRepository.GetByIdWithParticipantsAsync(id);
