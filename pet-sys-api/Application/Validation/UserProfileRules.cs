@@ -1,14 +1,14 @@
-﻿using Domain.Constants;
-using Domain.Entities;
+﻿using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Validation
 {
     public static class UserProfileRules
     {
-        public static void ValidateCreation(string role, string? dni, string? registrationNumber)
+        public static void ValidateCreation(UserRole role, string? dni, string? registrationNumber)
         {
-            bool isClient = role == RoleNames.Client;
-            bool isProfessional = role == RoleNames.Veterinarian || role == RoleNames.Admin;
+            bool isClient = role == UserRole.Client;
+            bool isProfessional = role == UserRole.Veterinarian || role == UserRole.Admin;
 
             if (isClient)
             {
@@ -35,10 +35,10 @@ namespace Application.Validation
             }
         }
 
-        public static void ValidateRoleTransition(User user, string requestedRole)
+        public static void ValidateRoleTransition(User user, UserRole requestedRole)
         {
-            bool currentIsClient = user.Role.Name == RoleNames.Client;
-            bool requestedIsClient = requestedRole == RoleNames.Client;
+            bool currentIsClient = user.Role == UserRole.Client;
+            bool requestedIsClient = requestedRole == UserRole.Client;
 
             if (currentIsClient != requestedIsClient)
             {
@@ -50,7 +50,7 @@ namespace Application.Validation
                 throw new ArgumentException("The user does not have a valid client profile.");
             }
 
-            bool isProfessional = requestedRole == RoleNames.Veterinarian || requestedRole == RoleNames.Admin;
+            bool isProfessional = requestedRole == UserRole.Veterinarian || requestedRole == UserRole.Admin;
 
             if (isProfessional && user.VeterinarianProfile == null)
             {
@@ -65,7 +65,7 @@ namespace Application.Validation
                 return;
             }
 
-            bool isProfessional = user.Role.Name == RoleNames.Veterinarian || user.Role.Name == RoleNames.Admin;
+            bool isProfessional = user.Role == UserRole.Veterinarian || user.Role == UserRole.Admin;
 
             if (!isProfessional || user.VeterinarianProfile == null)
             {

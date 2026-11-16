@@ -45,7 +45,7 @@ namespace Web.Controllers
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
-            if (!ResourceAccess.CanManageAccount(User, dto.Role))
+            if (!ResourceAccess.CanManageAccount(User, dto.Role!.Value))
             {
                 return Forbid();
             }

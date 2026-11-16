@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Application.Models
 {
     public class UserDTO
@@ -7,7 +9,7 @@ namespace Application.Models
         public string Email { get; set; }
         public string Phone { get; set; }
         public bool IsSuspended { get; set; }
-        public string RoleName { get; set; } = string.Empty;
+        public UserRole RoleName { get; set; }
         public string? Dni { get; set; }
         public string? RegistrationNumber { get; set; }
     }

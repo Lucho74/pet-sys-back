@@ -1,12 +1,12 @@
 ﻿using Application.Interfaces;
 using Application.Models;
-using Domain.Constants;
 using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Application.Services
 {
@@ -143,12 +143,12 @@ namespace Application.Services
         {
             User? veterinarian = await _userRepository.GetByIdAsync(veterinarianId);
 
-            if (veterinarianOnly && veterinarian?.Role.Name != RoleNames.Veterinarian)
+            if (veterinarianOnly && veterinarian?.Role != UserRole.Veterinarian)
             {
                 throw new UnauthorizedAccessException("Admins can only assign consultations to veterinarians or themselves.");
             }
 
-            if (veterinarian == null || (veterinarian.Role.Name != RoleNames.Veterinarian && veterinarian.Role.Name != RoleNames.Admin))
+            if (veterinarian == null || (veterinarian.Role != UserRole.Veterinarian && veterinarian.Role != UserRole.Admin))
             {
                 throw new ArgumentException("VeterinarianId does not reference an existing professional.");
             }
@@ -231,7 +231,7 @@ namespace Application.Services
 
                 User? client = await _userRepository.GetByIdAsync(pet.ClientId);
 
-                if (client == null || client.Role.Name != RoleNames.Client || client.ClientProfile == null)
+                if (client == null || client.Role != UserRole.Client || client.ClientProfile == null)
                 {
                     throw new ArgumentException("The pet does not have a valid client.");
                 }

@@ -3,18 +3,19 @@ using Application.Services;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Storage.Blobs;
-using Domain.Constants;
+using Domain.Enums;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Infrastructure.ExternalServices;
 using Infrastructure.Repositories;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using Web.Authorization;
 using Web.ExceptionHandling;
 
@@ -86,7 +87,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     identity.RemoveClaim(claim);
                 }
 
-                identity.AddClaim(new Claim(identity.RoleClaimType, user.Role.Name));
+                identity.AddClaim(new Claim(identity.RoleClaimType, user.Role.ToString()));
             }
         };
     });
@@ -98,15 +99,15 @@ var authenticatedPolicy = new AuthorizationPolicyBuilder()
 builder.Services.AddAuthorizationBuilder()
     .SetDefaultPolicy(authenticatedPolicy)
     .SetFallbackPolicy(authenticatedPolicy)
-    .AddPolicy(Policies.Staff, policy =>
+    .AddPolicy("Staff", policy =>
         policy.RequireAuthenticatedUser()
-            .RequireRole(RoleNames.Veterinarian, RoleNames.Admin, RoleNames.SysAdmin))
-    .AddPolicy(Policies.SysAdminOnly, policy =>
+            .RequireRole(nameof(UserRole.Veterinarian), nameof(UserRole.Admin), nameof(UserRole.SysAdmin)))
+    .AddPolicy("SysAdminOnly", policy =>
         policy.RequireAuthenticatedUser()
-            .RequireRole(RoleNames.SysAdmin))
-    .AddPolicy(Policies.ClientOnly, policy =>
+            .RequireRole(nameof(UserRole.SysAdmin)))
+    .AddPolicy("ClientOnly", policy =>
         policy.RequireAuthenticatedUser()
-            .RequireRole(RoleNames.Client));
+            .RequireRole(nameof(UserRole.Client)));
 
 string ServiceUri = builder.Configuration["AzureStorage:ServiceUri"] ?? throw new InvalidOperationException("Falta configurar AzureStorage:ServiceUri."); ;
 string ContainerName = builder.Configuration["AzureStorage:ContainerName"] ?? throw new InvalidOperationException("Falta configurar AzureStorage:ContainerName."); ;
@@ -146,7 +147,11 @@ builder.Services.AddScoped<IAzureBlobStorage, AzureBlobStorage>();
 #endregion
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
+    });
 
 // Configurar CORS para permitir cualquier origen, cabecera y m�todo
 builder.Services.AddCors(options =>

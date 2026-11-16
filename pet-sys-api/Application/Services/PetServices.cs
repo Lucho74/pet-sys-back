@@ -1,8 +1,8 @@
 ﻿using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
-using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,7 +54,7 @@ namespace Application.Services
         {
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
 
-            if (client == null || client.Role.Name != RoleNames.Client)
+            if (client == null || client.Role != UserRole.Client)
             {
                 throw new ArgumentException("ClientId does not reference an existing client.");
             }
@@ -109,7 +109,7 @@ namespace Application.Services
 
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
 
-            if (client == null || client.Role.Name != RoleNames.Client)
+            if (client == null || client.Role != UserRole.Client)
             {
                 throw new ArgumentException("ClientId does not reference an existing client.");
             }
@@ -188,7 +188,7 @@ namespace Application.Services
             {
                 User? client =await _userRepository.GetByIdAsync(existing.ClientId);
 
-                if (client == null || client.Role.Name != RoleNames.Client || client.ClientProfile == null)
+                if (client == null || client.Role != UserRole.Client || client.ClientProfile == null)
                 {
                     throw new ArgumentException("The pet does not have a valid client.");
                 }

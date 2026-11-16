@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,19 +10,17 @@ namespace Application.Validation
 {
     public static class UserRoleInputValidation
     {
-        public static void Validate(string? role)
+        public static UserRole Validate(UserRole? role)
         {
-            var availableRoles = new[]
-            {
-                RoleNames.Client,
-                RoleNames.Veterinarian,
-                RoleNames.Admin
-            };
-
-            if (string.IsNullOrWhiteSpace(role) || !availableRoles.Contains(role))
+            if (role is not (
+                UserRole.Client or
+                UserRole.Veterinarian or
+                UserRole.Admin))
             {
                 throw new ArgumentException("The requested role is invalid.");
             }
+
+            return role.Value;
         }
     }
 }
