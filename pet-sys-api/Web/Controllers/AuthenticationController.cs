@@ -38,7 +38,7 @@ namespace Web.Controllers
             var claimsForToken = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim("role", user.RoleName)
+                new Claim("role", user.RoleName.ToString())
             };
 
             var expirationMinutes =

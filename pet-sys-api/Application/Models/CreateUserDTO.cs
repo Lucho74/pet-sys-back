@@ -1,3 +1,4 @@
+using Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 
@@ -18,8 +19,7 @@ namespace Application.Models
         [StringLength(100, MinimumLength = 6)]
         public string Password { get; set; } = string.Empty;
         [Required]
-        [StringLength(50)]
-        public string Role { get; set; } = string.Empty;
+        public UserRole? Role { get; set; }
         [StringLength(8)]
         public string? Dni { get; set; }
         [StringLength(50)]

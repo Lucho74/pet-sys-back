@@ -1,5 +1,4 @@
-﻿using Domain.Constants;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
@@ -16,7 +15,6 @@ namespace Infrastructure.Context
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Pet> Pets { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
         public DbSet<ClientProfile> ClientProfiles { get; set; }
         public DbSet<VeterinarianProfile> VeterinarianProfiles { get; set; }
         public DbSet<Species> Species { get; set; }
@@ -108,13 +106,6 @@ namespace Infrastructure.Context
                 new Breed { Id = 49, SpeciesId = 6, Name = "Iguana" },
                 new Breed { Id = 50, SpeciesId = 6, Name = "Gecko" },
                 new Breed { Id = 51, SpeciesId = 6, Name = "Serpiente" });
-
-            modelBuilder.Entity<Role>().HasData(
-                new Role { Id = 1, Name = RoleNames.SysAdmin },
-                new Role { Id = 2, Name = RoleNames.Admin },
-                new Role { Id = 3, Name = RoleNames.Veterinarian },
-                new Role { Id = 4, Name = RoleNames.Client }
-            );
         }
     }
 }

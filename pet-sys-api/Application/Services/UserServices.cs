@@ -2,9 +2,9 @@ using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
 using Application.Validation;
-using Domain.Constants;
 using Domain.Entities;
 using Domain.Interfaces;
+using Domain.Enums;
 
 namespace Application.Services
 {
@@ -33,7 +33,7 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsSuspended = user.IsSuspended,
-                RoleName = user.Role.Name,
+                RoleName = user.Role,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };
@@ -41,9 +41,9 @@ namespace Application.Services
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
-            UserRoleInputValidation.Validate(dto.Role);
+            var role = UserRoleInputValidation.Validate(dto.Role);
 
-            UserProfileRules.ValidateCreation(dto.Role, dto.Dni, dto.RegistrationNumber);
+            UserProfileRules.ValidateCreation(role, dto.Dni, dto.RegistrationNumber);
 
             User? sameEmail = await _userRepository.GetByEmailAsync(dto.Email);
 
@@ -52,24 +52,16 @@ namespace Application.Services
                 throw new ArgumentException($"A user with email {dto.Email} already exists.");
             }
 
-            Role? role = await _userRepository.GetRoleByNameAsync(dto.Role);
-
-            if (role == null)
-            {
-                throw new InvalidOperationException($"The role {dto.Role} has not been seeded.");
-            }
-
             User newUser = new User
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 Phone = dto.Phone,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                RoleId = role.Id,
                 Role = role
             };
 
-            if (dto.Role == RoleNames.Client)
+            if (role == UserRole.Client)
             {
                 newUser.ClientProfile = new ClientProfile
                 {
@@ -77,7 +69,7 @@ namespace Application.Services
                 };
             }
 
-            if (dto.Role == RoleNames.Veterinarian || dto.Role == RoleNames.Admin)
+            if (role == UserRole.Veterinarian || role == UserRole.Admin)
             {
                 newUser.VeterinarianProfile = new VeterinarianProfile
                 {
@@ -94,7 +86,7 @@ namespace Application.Services
                 Email = created.Email,
                 Phone = created.Phone,
                 IsSuspended = created.IsSuspended,
-                RoleName = created.Role.Name,
+                RoleName = created.Role,
                 Dni = created.ClientProfile?.Dni,
                 RegistrationNumber = created.VeterinarianProfile?.RegistrationNumber
             };
@@ -162,7 +154,7 @@ namespace Application.Services
                 Email = existing.Email,
                 Phone = existing.Phone,
                 IsSuspended = existing.IsSuspended,
-                RoleName = existing.Role.Name,
+                RoleName = existing.Role,
                 Dni = existing.ClientProfile?.Dni,
                 RegistrationNumber = existing.VeterinarianProfile?.RegistrationNumber
             };
@@ -177,23 +169,15 @@ namespace Application.Services
                 throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
-            if (existing.Role.Name == RoleNames.SysAdmin)
+            if (existing.Role == UserRole.SysAdmin)
             {
                 throw new UnauthorizedAccessException("The SysAdmin account roles cannot be modified.");
             }
 
-            UserRoleInputValidation.Validate(dto.Role);
+            var role = UserRoleInputValidation.Validate(dto.Role);
 
-            UserProfileRules.ValidateRoleTransition(existing, dto.Role);
+            UserProfileRules.ValidateRoleTransition(existing, role);
 
-            Role? role = await _userRepository.GetRoleByNameAsync(dto.Role);
-
-            if (role == null)
-            {
-                throw new InvalidOperationException($"The role {dto.Role} has not been seeded.");
-            }
-
-            existing.RoleId = role.Id;
             existing.Role = role;
 
             await _userRepository.UpdateAsync(id, existing);
@@ -218,7 +202,7 @@ namespace Application.Services
                 throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
-            if (existing.Role.Name == RoleNames.SysAdmin)
+            if (existing.Role == UserRole.SysAdmin)
             {
                 throw new UnauthorizedAccessException("The SysAdmin account status cannot be modified.");
             }
@@ -242,13 +226,13 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsSuspended = user.IsSuspended,
-                RoleName = user.Role.Name,
+                RoleName = user.Role,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             };
         }
 
-        public async Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<string> readableRoles)
+        public async Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<UserRole> readableRoles)
         {
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
@@ -269,7 +253,7 @@ namespace Application.Services
                 Email = user.Email,
                 Phone = user.Phone,
                 IsSuspended = user.IsSuspended,
-                RoleName = user.Role.Name,
+                RoleName = user.Role,
                 Dni = user.ClientProfile?.Dni,
                 RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
             }).ToList();

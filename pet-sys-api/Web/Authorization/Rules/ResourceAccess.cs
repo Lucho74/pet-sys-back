@@ -1,35 +1,35 @@
 using Application.Models;
-using Domain.Constants;
+using Domain.Enums;
 using System.Security.Claims;
 
 namespace Web.Authorization.Rules
 {
     public static class ResourceAccess
     {
-        public static string[] GetManageableRoles(ClaimsPrincipal user)
+        public static UserRole[] GetManageableRoles(ClaimsPrincipal user)
         {
-            if (user.IsInRole(RoleNames.SysAdmin))
+            if (user.IsInRole(nameof(UserRole.SysAdmin)))
             {
-                return new[] { RoleNames.Client, RoleNames.Veterinarian, RoleNames.Admin };
+                return new[] { UserRole.Client, UserRole.Veterinarian, UserRole.Admin };
             }
 
-            if (user.IsInRole(RoleNames.Admin))
+            if (user.IsInRole(nameof(UserRole.Admin)))
             {
-                return new[] { RoleNames.Client, RoleNames.Veterinarian };
+                return new[] { UserRole.Client, UserRole.Veterinarian };
             }
 
-            if (user.IsInRole(RoleNames.Veterinarian))
+            if (user.IsInRole(nameof(UserRole.Veterinarian)))
             {
-                return new[] { RoleNames.Client };
+                return new[] { UserRole.Client };
             }
 
-            return Array.Empty<string>();
+            return Array.Empty<UserRole>();
         }
 
-        public static bool CanManageAccount(ClaimsPrincipal user, string roleName)
+        public static bool CanManageAccount(ClaimsPrincipal user, UserRole role)
         {
             return user.Identity?.IsAuthenticated == true &&
-                GetManageableRoles(user).Contains(roleName);
+                GetManageableRoles(user).Contains(role);
         }
 
         public static bool CanUpdateAccount(ClaimsPrincipal user, UserDTO target)
@@ -49,7 +49,7 @@ namespace Web.Authorization.Rules
         public static bool CanUpdateRegistrationNumber(ClaimsPrincipal user)
         {
             return user.Identity?.IsAuthenticated == true &&
-                (user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SysAdmin));
+                (user.IsInRole(nameof(UserRole.Admin)) || user.IsInRole(nameof(UserRole.SysAdmin)));
         }
 
         public static bool CanReadPet(ClaimsPrincipal user, PetDTO pet)
@@ -64,7 +64,7 @@ namespace Web.Authorization.Rules
                 return true;
             }
 
-            return user.IsInRole(RoleNames.Client) &&
+            return user.IsInRole(nameof(UserRole.Client)) &&
                 int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId) &&
                 callerId > 0 && pet.ClientId == callerId;
         }
@@ -76,21 +76,21 @@ namespace Web.Authorization.Rules
                 return false;
             }
 
-            if (user.IsInRole(RoleNames.SysAdmin) || user.IsInRole(RoleNames.Admin))
+            if (user.IsInRole(nameof(UserRole.SysAdmin)) || user.IsInRole(nameof(UserRole.Admin)))
             {
                 return true;
             }
 
-            return user.IsInRole(RoleNames.Veterinarian) &&
+            return user.IsInRole(nameof(UserRole.Veterinarian)) &&
                 int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId) &&
                 callerId == veterinarianId;
         }
 
         private static bool IsStaff(ClaimsPrincipal user)
         {
-            return user.IsInRole(RoleNames.Veterinarian) ||
-                user.IsInRole(RoleNames.Admin) ||
-                user.IsInRole(RoleNames.SysAdmin);
+            return user.IsInRole(nameof(UserRole.Veterinarian)) ||
+                user.IsInRole(nameof(UserRole.Admin)) ||
+                user.IsInRole(nameof(UserRole.SysAdmin));
         }
     }
 }

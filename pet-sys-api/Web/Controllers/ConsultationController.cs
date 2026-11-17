@@ -1,7 +1,7 @@
 using Application.Interfaces;
 using Application.Models;
 using Domain.Common;
-using Domain.Constants;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -46,7 +46,7 @@ namespace Web.Controllers
             int callerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             int veterinarianId;
 
-            if (User.IsInRole(RoleNames.SysAdmin))
+            if (User.IsInRole(nameof(UserRole.SysAdmin)))
             {
                 if (dto.VeterinarianId == null)
                 {
@@ -65,7 +65,7 @@ namespace Web.Controllers
                 return Forbid();
             }
 
-            bool veterinarianOnly = User.IsInRole(RoleNames.Admin) && veterinarianId != callerId;
+            bool veterinarianOnly = User.IsInRole(nameof(UserRole.Admin)) && veterinarianId != callerId;
             var created = await _consultationServices.AddConsultationAsync(dto, veterinarianId, veterinarianOnly);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
@@ -77,8 +77,8 @@ namespace Web.Controllers
             bool veterinarianOnly = false;
             if (dto.VeterinarianId is int veterinarianId)
             {
-                bool isAdmin = User.IsInRole(RoleNames.Admin);
-                if (!isAdmin && !User.IsInRole(RoleNames.SysAdmin))
+                bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+                if (!isAdmin && !User.IsInRole(nameof(UserRole.SysAdmin)))
                     return Forbid();
 
                 veterinarianOnly = isAdmin &&

@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -29,10 +30,7 @@ namespace Domain.Entities
         [Required]
         [Phone]
         public string Phone { get; set; }
-        public int RoleId { get; set; }
-        [ForeignKey(nameof(RoleId))]
-        [DeleteBehavior(DeleteBehavior.Restrict)]
-        public Role Role { get; set; } = null!;
+        public UserRole Role { get; set; }
         public bool IsSuspended { get; set; } = false;
         public ClientProfile? ClientProfile { get; set; }
         public VeterinarianProfile? VeterinarianProfile { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -10,7 +11,6 @@ namespace Application.Models
     public class UpdateUserRoleDTO
     {
         [Required]
-        [StringLength(50)]
-        public string Role { get; set; } = string.Empty;
+        public UserRole? Role { get; set; }
     }
 }

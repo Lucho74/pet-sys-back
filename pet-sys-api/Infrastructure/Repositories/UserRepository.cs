@@ -1,6 +1,6 @@
 ﻿using Domain.Common;
-using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,6 @@ namespace Infrastructure.Repositories
 
         protected override IQueryable<User> Query =>
             _context.Users
-                .Include(u => u.Role)
                 .Include(u => u.ClientProfile)
                 .Include(u => u.VeterinarianProfile);
 
@@ -24,17 +23,11 @@ namespace Infrastructure.Repositories
             return await Query.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<Role?> GetRoleByNameAsync(string roleName)
-        {
-            return await _context.Roles
-                .SingleOrDefaultAsync(r => r.Name == roleName);
-        }
-
-        public async Task<PaginatedList<User>> GetPagedAsync(UserQuery filters, IReadOnlyCollection<string> readableRoles)
+        public async Task<PaginatedList<User>> GetPagedAsync(UserQuery filters, IReadOnlyCollection<UserRole> readableRoles)
         {
             var allowedRoles = readableRoles.ToArray();
 
-            var query = Query.Where(user => allowedRoles.Contains(user.Role.Name));
+            var query = Query.Where(user => allowedRoles.Contains(user.Role));
 
             if (filters.IsSuspend.HasValue)
             {
@@ -52,19 +45,18 @@ namespace Infrastructure.Repositories
                 query = query.Where(user => EF.Functions.Like(user.FullName, pattern) || EF.Functions.Like(user.Email, pattern));
             }
 
-            if (!string.IsNullOrWhiteSpace(filters.Role))
+            if(filters.Role.HasValue)
             {
-                var role = filters.Role.Trim();
-
-                query = query.Where(user => user.Role.Name == role);
+                var role = filters.Role.Value;
+                query = query.Where(user => user.Role == role);
             }
 
             query = filters.SortBy?.ToLowerInvariant() switch
             {
                 "fullname" => ApplyOrder(query, user => user.FullName, filters.SortDesc),
                 "email" => ApplyOrder(query, user => user.Email, filters.SortDesc),
-                "role" => ApplyOrder(query, user => user.Role.Name == RoleNames.Client ? 2
-                    : user.Role.Name == RoleNames.Veterinarian ? 1 : 0, filters.SortDesc),
+                "role" => ApplyOrder(query, user => user.Role == UserRole.Client ? 2
+                    : user.Role == UserRole.Veterinarian ? 1 : 0, filters.SortDesc),
                 _ => ApplyOrder(query, user => user.Id, filters.SortDesc)
             };
 
