@@ -14,6 +14,7 @@ namespace Application.Models
         public string? BlobImage { get; set; }
         public DateOnly BirthDate { get; set; }
         public int ClientId { get; set; }
+        public string ClientName { get; set; } = string.Empty;
         public bool IsSuspended { get; set; }
     }
 }
