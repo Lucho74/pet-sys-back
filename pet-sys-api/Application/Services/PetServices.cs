@@ -162,6 +162,7 @@ namespace Application.Services
                 BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
+                ClientName = pet.Client.User.FullName,
                 IsSuspended = pet.IsSuspended
             });
         }
@@ -230,6 +231,7 @@ namespace Application.Services
                 BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
+                ClientName = pet.Client.User.FullName,
                 IsSuspended = pet.IsSuspended
             }).ToList();
 
