@@ -5,23 +5,65 @@ using Application.Validation;
 using Domain.Entities;
 using Domain.Interfaces;
 using Domain.Enums;
+using Application.Authorization;
 
 namespace Application.Services
 {
     public class UserServices : IUserServices
     {
-        public readonly IUserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly ICurrentUser _currentUser;
 
-        public UserServices(IUserRepository userRepository)
+        public UserServices(IUserRepository userRepository, ICurrentUser currentUser)
         {
             _userRepository = userRepository;
+            _currentUser = currentUser;
+        }
+
+        public async Task<UserDTO> GetCurrentUserAsync()
+        {
+            var callerId = _currentUser.Id;
+
+            if (!callerId.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+            User? user = await _userRepository.GetByIdAsync(callerId.Value);
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with id {callerId.Value} was not found.");
+            }
+
+            return new UserDTO
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                IsSuspended = user.IsSuspended,
+                RoleName = user.Role,
+                Dni = user.ClientProfile?.Dni,
+                RegistrationNumber = user.VeterinarianProfile?.RegistrationNumber
+            };
         }
 
         public async Task<UserDTO> GetUserByIdAsync(int id)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             User? user = await _userRepository.GetByIdAsync(id);
 
-            if (user == null)
+            if (user == null || !AccessRules.CanManageAccount(callerRole.Value, user.Role))
             {
                 throw new KeyNotFoundException($"User with id {id} was not found.");
             }
@@ -41,6 +83,23 @@ namespace Application.Services
 
         public async Task<UserDTO> AddUserAsync(CreateUserDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+
+            if (dto.Role.HasValue && !AccessRules.CanManageAccount(callerRole.Value, dto.Role.Value))
+            {
+                throw new UnauthorizedAccessException("You cannot create an account with the requested role.");
+            }
+
             var role = UserRoleInputValidation.Validate(dto.Role);
 
             UserProfileRules.ValidateCreation(role, dto.Dni, dto.RegistrationNumber);
@@ -94,11 +153,28 @@ namespace Application.Services
 
         public async Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             User? existing = await _userRepository.GetByIdAsync(id);
 
-            if (existing == null)
+            if (existing == null || !AccessRules.CanUpdateAccount(callerId.Value, callerRole.Value, existing.Id, existing.Role))
             {
                 throw new KeyNotFoundException($"User with id {id} was not found.");
+            }
+
+            if (dto.RegistrationNumber != null && !AccessRules.CanUpdateRegistrationNumber(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("You cannot update a registration number.");
             }
 
             if (existing.IsSuspended)
@@ -162,6 +238,18 @@ namespace Application.Services
 
         public async Task UpdateUserRoleAsync(int id, UpdateUserRoleDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.CanChangeUserRole(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only SysAdmin can change user roles.");
+            }
+
             User? existing = await _userRepository.GetByIdAsync(id);
 
             if (existing == null)
@@ -195,16 +283,22 @@ namespace Application.Services
 
         private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
-            User? existing = await _userRepository.GetByIdAsync(id);
+            var callerRole = _currentUser.Role;
 
-            if (existing == null)
+            if (!callerRole.HasValue)
             {
-                throw new KeyNotFoundException($"User with id {id} was not found.");
+                throw new UnauthorizedAccessException("A valid current user is required.");
             }
 
-            if (existing.Role == UserRole.SysAdmin)
+            if (!AccessRules.IsStaff(callerRole.Value))
             {
-                throw new UnauthorizedAccessException("The SysAdmin account status cannot be modified.");
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+            User? existing = await _userRepository.GetByIdAsync(id);
+
+            if (existing == null || !AccessRules.CanManageAccount(callerRole.Value, existing.Role))
+            {
+                throw new KeyNotFoundException($"User with id {id} was not found.");
             }
 
             await _userRepository.SetSuspendedAsync(id, isSuspended);
@@ -232,8 +326,21 @@ namespace Application.Services
             };
         }
 
-        public async Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q, IReadOnlyCollection<UserRole> readableRoles)
+        public async Task<PaginatedList<UserDTO>> GetUsersPagedAsync(UserQuery q)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+            var readableRoles = AccessRules.GetManageableRoles(callerRole.Value);
+
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
                 throw new ArgumentException("Page index and page size must be greater than 0.");
@@ -260,5 +367,6 @@ namespace Application.Services
 
             return new PaginatedList<UserDTO>(items, page.PageIndex, page.TotalPages);
         }
+
     }
 }

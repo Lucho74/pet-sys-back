@@ -3,9 +3,7 @@ using Application.Models;
 using Domain.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Web.Authorization;
-using Web.Authorization.Rules;
 
 namespace Web.Controllers
 {
@@ -15,17 +13,16 @@ namespace Web.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserServices _userServices;
+
         public UserController(IUserServices userServices)
         {
             _userServices = userServices;
         }
 
-        private int CallerId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
-            var user = await _userServices.GetUserByIdAsync(CallerId);
+            var user = await _userServices.GetCurrentUserAsync();
             return Ok(user);
         }
 
@@ -34,10 +31,6 @@ namespace Web.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userServices.GetUserByIdAsync(id);
-            if (!ResourceAccess.CanManageAccount(User, user.RoleName))
-            {
-                return NotFound();
-            }
             return Ok(user);
         }
 
@@ -45,11 +38,6 @@ namespace Web.Controllers
         [HttpPost("")]
         public async Task<IActionResult> AddUser([FromBody] CreateUserDTO dto)
         {
-            if (!ResourceAccess.CanManageAccount(User, dto.Role!.Value))
-            {
-                return Forbid();
-            }
-
             var created = await _userServices.AddUserAsync(dto);
 
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -59,16 +47,6 @@ namespace Web.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
-            var user = await _userServices.GetUserByIdAsync(id);
-            if (!ResourceAccess.CanUpdateAccount(User, user))
-            {
-                return NotFound();
-            }
-            if (dto.RegistrationNumber != null &&
-                !ResourceAccess.CanUpdateRegistrationNumber(User))
-            {
-                return Forbid();
-            }
             var updated = await _userServices.UpdateUserAsync(id, dto);
             return Ok(updated);
         }
@@ -77,11 +55,6 @@ namespace Web.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _userServices.GetUserByIdAsync(id);
-            if (!ResourceAccess.CanManageAccount(User, user.RoleName))
-            {
-                return NotFound();
-            }
             await _userServices.DeleteUserAsync(id);
             return NoContent();
         }
@@ -90,11 +63,6 @@ namespace Web.Controllers
         [HttpPost("{id:int}/reactivate")]
         public async Task<IActionResult> ReactivateUser(int id)
         {
-            var user = await _userServices.GetUserByIdAsync(id);
-            if (!ResourceAccess.CanManageAccount(User, user.RoleName))
-            {
-                return NotFound();
-            }
             await _userServices.ReactivateUserAsync(id);
             return NoContent();
         }
@@ -111,9 +79,7 @@ namespace Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsersByPagination([FromQuery] UserQuery query)
         {
-            var readableRoles = ResourceAccess.GetManageableRoles(User);
-
-            var users = await _userServices.GetUsersPagedAsync(query, readableRoles);
+            var users = await _userServices.GetUsersPagedAsync(query);
 
             return Ok(users);
         }
