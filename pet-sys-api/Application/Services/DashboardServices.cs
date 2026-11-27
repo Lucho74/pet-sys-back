@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Application.Authorization;
 using Domain.Interfaces;
 
 namespace Application.Services
@@ -9,16 +10,32 @@ namespace Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IPetRepository _petRepository;
         private readonly IConsultationRepository _consultationRepository;
+        private readonly ICurrentUser _currentUser;
 
-        public DashboardServices(IUserRepository userRepository, IPetRepository petRepository, IConsultationRepository consultationRepository)
+        public DashboardServices(IUserRepository userRepository, IPetRepository petRepository, IConsultationRepository consultationRepository, ICurrentUser currentUser)
         {
             _userRepository = userRepository;
             _petRepository = petRepository;
             _consultationRepository = consultationRepository;
+            _currentUser = currentUser;
         }
 
-        public async Task<DashboardDTO> GetDashboardAsync(int userId, int take)
+        public async Task<DashboardDTO> GetDashboardAsync(int take)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+            var userId = callerId.Value;
+
             if (take < 1 || take > 20)
             {
                 throw new ArgumentException("Take must be between 1 and 20.");

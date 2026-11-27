@@ -4,6 +4,6 @@ namespace Application.Interfaces
 {
     public interface IDashboardServices
     {
-        Task<DashboardDTO> GetDashboardAsync(int userId, int take);
+        Task<DashboardDTO> GetDashboardAsync(int take);
     }
 }

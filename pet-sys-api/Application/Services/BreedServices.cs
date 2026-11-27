@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Application.Authorization;
 using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -13,15 +14,28 @@ namespace Application.Services
     {
         public readonly IBreedRepository _breedRepository;
         public readonly ISpeciesRepository _speciesRepository;
+        private readonly ICurrentUser _currentUser;
 
-        public BreedServices(IBreedRepository breedRepository, ISpeciesRepository speciesRepository)
+        public BreedServices(IBreedRepository breedRepository, ISpeciesRepository speciesRepository, ICurrentUser currentUser)
         {
             _breedRepository = breedRepository;
             _speciesRepository = speciesRepository;
+            _currentUser = currentUser;
         }
 
         public async Task<PaginatedList<BreedDTO>> GetBreedsPagedAsync(BreedQuery q)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
                 throw new ArgumentException("Page index and page size must be greater than 0.");
@@ -46,6 +60,17 @@ namespace Application.Services
 
         public async Task<IEnumerable<BreedDTO>> GetBreedsBySpeciesIdAsync(int speciesId)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             if (await _speciesRepository.GetByIdAsync(speciesId) == null)
             {
                 throw new KeyNotFoundException($"Species with id {speciesId} was not found.");
@@ -62,6 +87,17 @@ namespace Application.Services
 
         public async Task<BreedDTO> GetBreedByIdAsync(int id)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var breed = await _breedRepository.GetByIdAsync(id);
             if (breed == null)
             {
@@ -78,6 +114,17 @@ namespace Application.Services
 
         public async Task<BreedDTO> AddBreedAsync(CreateBreedDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             if (await _speciesRepository.GetByIdAsync(dto.SpeciesId) == null)
             {
                 throw new ArgumentException("SpeciesId does not reference an existing species.");
@@ -106,6 +153,17 @@ namespace Application.Services
 
         public async Task<BreedDTO> UpdateBreedAsync(int id, UpdateBreedDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var existing = await _breedRepository.GetByIdAsync(id);
             if (existing == null)
             {
@@ -134,6 +192,17 @@ namespace Application.Services
 
         public async Task DeleteBreedAsync(int id)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var breed = await _breedRepository.GetByIdAsync(id);
             if (breed == null)
             {
