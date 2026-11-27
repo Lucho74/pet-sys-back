@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Models;
+using Application.Authorization;
 using Domain.Common;
 using Domain.Entities;
 using Domain.Enums;
@@ -17,19 +18,28 @@ namespace Application.Services
         public readonly IUserRepository _userRepository;
         public readonly IBreedRepository _breedRepository;
         public readonly IAzureBlobStorage _azureBlobStorage;
+        private readonly ICurrentUser _currentUser;
 
-        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository, IAzureBlobStorage azureBlobStorage)
+        public PetServices(IPetRepository petRepository, IUserRepository userRepository, IBreedRepository breedRepository, IAzureBlobStorage azureBlobStorage, ICurrentUser currentUser)
         {
             _petRepository = petRepository;
             _userRepository = userRepository;
             _azureBlobStorage = azureBlobStorage;
             _breedRepository = breedRepository;
+            _currentUser = currentUser;
         }
 
         public async Task<PetDetailDTO> GetPetByIdAsync(int id)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
             var pet = await _petRepository.GetByIdAsync(id);
-            if (pet == null)
+            if (pet == null || !AccessRules.CanReadPet(callerId.Value, callerRole.Value, pet.ClientId))
             {
                 throw new KeyNotFoundException($"Pet with id {id} was not found.");
             }
@@ -42,7 +52,6 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
-                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 ClientName = pet.Client.User.FullName,
@@ -52,6 +61,17 @@ namespace Application.Services
 
         public async Task<PetDTO> AddPetAsync(CreateEditPetDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             User? client = await _userRepository.GetByIdAsync(dto.ClientId);
 
             if (client == null || client.Role != UserRole.Client)
@@ -96,6 +116,17 @@ namespace Application.Services
 
         public async Task<PetDTO> UpdatePetAsync(int id, CreateEditPetDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             Pet? existing = await _petRepository.GetByIdAsync(id);
             if (existing == null)
             {
@@ -141,7 +172,6 @@ namespace Application.Services
                 SpeciesName = breed.Species.Name,
                 BreedId = existing.BreedId,
                 BreedName = breed.Name,
-                BlobImage = existing.BlobImage,
                 BirthDate = existing.BirthDate,
                 ClientId = existing.ClientId,
                 IsSuspended = existing.IsSuspended
@@ -150,6 +180,19 @@ namespace Application.Services
 
         public async Task<IEnumerable<PetDTO>> GetPetsByClientAsync(int clientId)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.CanReadPet(callerId.Value, callerRole.Value, clientId))
+            {
+                throw new UnauthorizedAccessException("You cannot access another client's pets.");
+            }
+
             var pets = await _petRepository.GetByClientIdAsync(clientId);
             return pets.Select(pet => new PetDTO
             {
@@ -159,7 +202,6 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
-                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 ClientName = pet.Client.User.FullName,
@@ -178,6 +220,17 @@ namespace Application.Services
 
         private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             Pet? existing = await _petRepository.GetByIdAsync(id);
 
             if (existing == null)
@@ -208,6 +261,17 @@ namespace Application.Services
 
         public async Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
                 throw new ArgumentException("Page index and page size must be greater than 0.");
@@ -228,7 +292,6 @@ namespace Application.Services
                 SpeciesName = pet.Breed.Species.Name,
                 BreedId = pet.BreedId,
                 BreedName = pet.Breed.Name,
-                BlobImage = pet.BlobImage,
                 BirthDate = pet.BirthDate,
                 ClientId = pet.ClientId,
                 ClientName = pet.Client.User.FullName,
@@ -251,6 +314,17 @@ namespace Application.Services
 
         public async Task UploadImageAsync(int petId, Stream imageStream, string contentType, CancellationToken cancellationToken = default)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var existing = await _petRepository.GetByIdAsync(petId);
             if (existing == null)
             {
@@ -275,6 +349,17 @@ namespace Application.Services
 
         public async Task DeleteImageAsync(int petId, CancellationToken cancellationToken = default)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var existing = await _petRepository.GetByIdAsync(petId);
             if (existing == null)
             {
@@ -301,6 +386,30 @@ namespace Application.Services
             {
                 throw new KeyNotFoundException($"Pet with id {petId} was not found.");
             }
+        }
+        public async Task<Uri> GetImageUrlAsync(int petId, CancellationToken cancellationToken = default)
+        {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            var pet = await _petRepository.GetByIdAsync(petId);
+
+            if (pet == null || !AccessRules.CanReadPet(callerId.Value, callerRole.Value, pet.ClientId))
+            {
+                throw new KeyNotFoundException($"Pet with id {petId} was not found.");
+            }
+
+            if (string.IsNullOrWhiteSpace(pet.BlobImage))
+            {
+                throw new KeyNotFoundException($"Image for pet with id {petId} was not found.");
+            }
+
+            return await _azureBlobStorage.GetReadUrlAsync(pet.BlobImage, cancellationToken);
         }
     }
 }

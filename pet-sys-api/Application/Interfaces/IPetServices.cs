@@ -14,6 +14,7 @@ namespace Application.Interfaces
         Task SuspendPetAsync(int id);
         Task ReactivatePetAsync(int id);
         Task<PaginatedList<PetDTO>> GetPetsPagedAsync(PetQuery q);
+        Task<Uri> GetImageUrlAsync(int petId, CancellationToken cancellationToken = default);
         Task UploadImageAsync(int petId, Stream imageStream, string contentType, CancellationToken cancellationToken = default);
         Task DeleteImageAsync(int petId, CancellationToken cancellationToken = default);
 
