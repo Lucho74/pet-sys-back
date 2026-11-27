@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Models;
+using Application.Authorization;
 using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -15,14 +16,27 @@ namespace Application.Services
         private const string DefaultBreedName = "No especificada";
 
         public readonly ISpeciesRepository _speciesRepository;
+        private readonly ICurrentUser _currentUser;
 
-        public SpeciesServices(ISpeciesRepository speciesRepository)
+        public SpeciesServices(ISpeciesRepository speciesRepository, ICurrentUser currentUser)
         {
             _speciesRepository = speciesRepository;
+            _currentUser = currentUser;
         }
 
         public async Task<PaginatedList<SpeciesDTO>> GetSpeciesPagedAsync(PaginationQuery q)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
                 throw new ArgumentException("Page index and page size must be greater than 0.");
@@ -46,6 +60,17 @@ namespace Application.Services
 
         public async Task<SpeciesDTO> GetSpeciesByIdAsync(int id)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var species = await _speciesRepository.GetByIdAsync(id);
             if (species == null)
             {
@@ -61,6 +86,17 @@ namespace Application.Services
 
         public async Task<SpeciesDTO> AddSpeciesAsync(CreateEditSpeciesDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var name = dto.Name.Trim();
             if (await _speciesRepository.GetByNameAsync(name) != null)
             {
@@ -83,6 +119,17 @@ namespace Application.Services
 
         public async Task<SpeciesDTO> UpdateSpeciesAsync(int id, CreateEditSpeciesDTO dto)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var existing = await _speciesRepository.GetByIdAsync(id);
             if (existing == null)
             {
@@ -109,6 +156,17 @@ namespace Application.Services
 
         public async Task DeleteSpeciesAsync(int id)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var species = await _speciesRepository.GetByIdAsync(id);
             if (species == null)
             {

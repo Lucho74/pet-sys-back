@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Models;
+using Application.Authorization;
 using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -16,19 +17,28 @@ namespace Application.Services
         public readonly IPetRepository _petRepository;
         public readonly IUserRepository _userRepository;
         public readonly IAzureBlobStorage _azureBlobStorage;
+        private readonly ICurrentUser _currentUser;
 
-        public ConsultationServices(IConsultationRepository consultationRepository, IPetRepository petRepository, IUserRepository userRepository, IAzureBlobStorage azureBlobStorage)
+        public ConsultationServices(IConsultationRepository consultationRepository, IPetRepository petRepository, IUserRepository userRepository, IAzureBlobStorage azureBlobStorage, ICurrentUser currentUser)
         {
             _consultationRepository = consultationRepository;
             _petRepository = petRepository;
             _userRepository = userRepository;
             _azureBlobStorage = azureBlobStorage;
+            _currentUser = currentUser;
         }
 
         public async Task<ConsultationWithParticipantsDTO> GetConsultationByIdAsync(int id)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
             var consultation = await _consultationRepository.GetByIdWithParticipantsAsync(id);
-            if (consultation == null)
+            if (consultation == null || !AccessRules.CanReadPet(callerId.Value, callerRole.Value, consultation.Pet.ClientId))
             {
                 throw new KeyNotFoundException($"Consultation with id {id} was not found.");
             }
@@ -48,8 +58,34 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto, int veterinarianId, bool veterinarianOnly = false)
+        public async Task<ConsultationDTO> AddConsultationAsync(CreateConsultationDTO dto)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+
+            if (callerRole.Value == UserRole.SysAdmin && !dto.VeterinarianId.HasValue)
+            {
+                throw new ArgumentException("SysAdmin must specify the responsible professional.");
+            }
+
+            var veterinarianId = dto.VeterinarianId ?? callerId.Value;
+
+            if (!AccessRules.CanCreateConsultationFor(callerId.Value, callerRole.Value, veterinarianId))
+            {
+                throw new UnauthorizedAccessException("You cannot create a consultation for this professional.");
+            }
+
+            bool veterinarianOnly = callerRole.Value == UserRole.Admin && veterinarianId != callerId.Value;
             Pet? pet = await _petRepository.GetByIdAsync(dto.PetId);
 
             if (pet == null)
@@ -87,8 +123,27 @@ namespace Application.Services
             };
         }
 
-        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto, bool veterinarianOnly = false)
+        public async Task<ConsultationDTO> UpdateConsultationAsync(int id, UpdateConsultationDTO dto)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+
+            if (dto.VeterinarianId.HasValue && !AccessRules.CanChangeConsultationProfessional(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("You cannot change the responsible professional.");
+            }
+
+            bool veterinarianOnly = callerRole.Value == UserRole.Admin && dto.VeterinarianId != callerId.Value;
             Consultation? existing = await _consultationRepository.GetByIdAsync(id);
 
             if (existing == null)
@@ -166,6 +221,20 @@ namespace Application.Services
 
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByPetIdAsync(int petId)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+            var pet = await _petRepository.GetByIdAsync(petId);
+
+            if (pet == null || !AccessRules.CanReadPet(callerId.Value, callerRole.Value, pet.ClientId))
+            {
+                throw new KeyNotFoundException($"Pet with id {petId} was not found.");
+            }
+
             var consultations = await _consultationRepository.GetByPetIdAsync(petId);
             return consultations.Select(consultation => new ConsultationDTO
             {
@@ -182,6 +251,17 @@ namespace Application.Services
 
         public async Task<IEnumerable<ConsultationDTO>> GetConsultationsByVeterinarianIdAsync(int veterinarianId)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var consultations = await _consultationRepository.GetByVeterinarianIdAsync(veterinarianId);
             return consultations.Select(consultation => new ConsultationDTO
             {
@@ -208,6 +288,17 @@ namespace Application.Services
 
         private async Task SetSuspendedAsync(int id, bool isSuspended)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             Consultation? existing = await _consultationRepository.GetByIdAsync(id);
 
             if (existing == null)
@@ -248,8 +339,22 @@ namespace Application.Services
             await _consultationRepository.UpdateAsync(id, existing);
         }
 
-        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, int? responsibleUserId = null)
+        public async Task<PaginatedList<ConsultationWithParticipantsDTO>> GetConsultationsPagedAsync(PaginationQuery q, bool mine = false)
         {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
+            int? responsibleUserId = mine ? callerId.Value : null;
+
             if (q.PageIndex < 1 || q.PageSize < 1)
             {
                 throw new ArgumentException("Page index and page size must be greater than 0.");
@@ -281,6 +386,17 @@ namespace Application.Services
 
         public async Task UploadAttachmentAsync(int id, Stream fileStream, string contentType, string fileName, CancellationToken cancellationToken = default)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var existing = await _consultationRepository.GetByIdAsync(id);
             if (existing == null)
             {
@@ -306,6 +422,17 @@ namespace Application.Services
 
         public async Task DeleteAttachmentAsync(int id, string blobName, CancellationToken cancellationToken = default)
         {
+            var callerRole = _currentUser.Role;
+
+            if (!callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            if (!AccessRules.IsStaff(callerRole.Value))
+            {
+                throw new UnauthorizedAccessException("Only staff can perform this operation.");
+            }
             var existing = await _consultationRepository.GetByIdAsync(id);
             if (existing == null)
             {
@@ -332,6 +459,30 @@ namespace Application.Services
             {
                 throw new KeyNotFoundException($"Consultation with id {id} was not found.");
             }
+        }
+        public async Task<Uri> GetAttachmentUrlAsync(int id, string blobName, CancellationToken cancellationToken = default)
+        {
+            var callerId = _currentUser.Id;
+            var callerRole = _currentUser.Role;
+
+            if (!callerId.HasValue || !callerRole.HasValue)
+            {
+                throw new UnauthorizedAccessException("A valid current user is required.");
+            }
+
+            var consultation = await _consultationRepository.GetByIdWithParticipantsAsync(id);
+
+            if (consultation == null || !AccessRules.CanReadPet(callerId.Value, callerRole.Value, consultation.Pet.ClientId))
+            {
+                throw new KeyNotFoundException($"Consultation with id {id} was not found.");
+            }
+
+            if (!consultation.Attachments.Any(attachment => attachment.BlobName == blobName))
+            {
+                throw new KeyNotFoundException("The requested attachment was not found.");
+            }
+
+            return await _azureBlobStorage.GetReadUrlAsync(blobName, cancellationToken);
         }
     }
 }

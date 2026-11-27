@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Web.Authorization;
-using Web.Authorization.Rules;
 
 namespace Web.Controllers
 {
@@ -15,21 +14,15 @@ namespace Web.Controllers
     public class PetController : ControllerBase
     {
         private readonly IPetServices _petServices;
-        private readonly IAzureBlobStorage _azureBlobStorage;
-        public PetController(IPetServices petServices, IAzureBlobStorage azureBlobStorage)
+        public PetController(IPetServices petServices)
         {
             _petServices = petServices;
-            _azureBlobStorage = azureBlobStorage;
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var pet = await _petServices.GetPetByIdAsync(id);
-            if (!ResourceAccess.CanReadPet(User, pet))
-            {
-                return NotFound();
-            }
             return Ok(pet);
         }
 
@@ -49,7 +42,6 @@ namespace Web.Controllers
             return Ok(updated);
         }
 
-        [Authorize(Policy = Policies.Staff)]
         [HttpGet("client/{clientId:int}")]
         public async Task<IActionResult> GetByClientId(int clientId)
         {
@@ -93,13 +85,7 @@ namespace Web.Controllers
         [HttpGet("{id:int}/image")]
         public async Task<IActionResult> GetImage(int id, CancellationToken cancellationToken)
         {
-            var pet = await _petServices.GetPetByIdAsync(id);
-            if (!ResourceAccess.CanReadPet(User, pet) || string.IsNullOrWhiteSpace(pet.BlobImage))
-            {
-                return NotFound();
-            }
-
-            var url = await _azureBlobStorage.GetReadUrlAsync(pet.BlobImage, cancellationToken);
+            var url = await _petServices.GetImageUrlAsync(id, cancellationToken);
             return Ok(new { url });
         }
 
